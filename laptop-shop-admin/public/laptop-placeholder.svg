@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" rx="16" fill="#f1f5f9"/>
+  <!-- Laptop Screen -->
+  <rect x="45" y="55" width="110" height="72" rx="6" fill="#1e293b"/>
+  <rect x="51" y="61" width="98" height="60" rx="3" fill="#3b82f6" opacity="0.85"/>
+  <path d="M 60 110 L 90 85 L 110 100 L 135 78 L 149 90 L 149 121 L 51 121 Z" fill="#60a5fa" opacity="0.6"/>
+  <circle cx="125" cy="78" r="7" fill="#fbbf24"/>
+  <!-- Camera dot -->
+  <circle cx="100" cy="58" r="1.5" fill="#94a3b8"/>
+  <!-- Laptop Base -->
+  <path d="M 30 132 L 170 132 C 172 132 173 134 172 136 L 165 145 C 163 147 160 148 156 148 L 44 148 C 40 148 37 147 35 145 L 28 136 C 27 134 28 132 30 132 Z" fill="#94a3b8"/>
+  <rect x="85" y="133" width="30" height="3" rx="1.5" fill="#64748b"/>
+</svg>

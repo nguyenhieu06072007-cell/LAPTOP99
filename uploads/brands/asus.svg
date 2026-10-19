@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+    <rect width="160" height="60" rx="8" fill="#ffffff" />
+    <text x="80" y="39" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="28" fill="#00539F" text-anchor="middle" letter-spacing="3">ASUS</text>
+    <line x1="40" y1="29" x2="120" y2="29" stroke="#ffffff" stroke-width="2.5" />
+  </svg>

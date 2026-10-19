@@ -1,0 +1,405 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/App.jsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=b976de43"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$(), _s2 = $RefreshSig$(), _s3 = $RefreshSig$();
+import { Routes, Route, Navigate } from "/node_modules/.vite/deps/react-router-dom.js?v=b976de43";
+import { useAuth } from "/src/contexts/AuthContext.jsx";
+import AdminLayout from "/src/components/layout/AdminLayout.jsx";
+import LoginPage from "/src/pages/LoginPage.jsx";
+import DashboardPage from "/src/pages/DashboardPage.jsx";
+import ProductListPage from "/src/pages/products/ProductListPage.jsx";
+import ProductFormPage from "/src/pages/products/ProductFormPage.jsx";
+import ProductDetailPage from "/src/pages/products/ProductDetailPage.jsx";
+import BrandListPage from "/src/pages/brands/BrandListPage.jsx";
+import CategoryListPage from "/src/pages/categories/CategoryListPage.jsx";
+import InventoryPage from "/src/pages/inventory/InventoryPage.jsx";
+import BatchImportPage from "/src/pages/import/BatchImportPage.jsx";
+import OrderKanbanPage from "/src/pages/orders/OrderKanbanPage.jsx";
+import WarrantySerialPage from "/src/pages/warranty/WarrantySerialPage.jsx";
+import ReturnsManagementPage from "/src/pages/returns/ReturnsManagementPage.jsx";
+import TradeInPage from "/src/pages/tradein/TradeInPage.jsx";
+import ProfilePage from "/src/pages/profile/ProfilePage.jsx";
+import CustomerPurchaseHistoryPage from "/src/pages/customers/CustomerPurchaseHistoryPage.jsx";
+import FeedbackReportsPage from "/src/pages/reports/FeedbackReportsPage.jsx";
+import PromotionCampaignPage from "/src/pages/promotions/PromotionCampaignPage.jsx";
+import BannerManagementPage from "/src/pages/banners/BannerManagementPage.jsx?t=1791909698027";
+import UserListPage from "/src/pages/users/UserListPage.jsx";
+import AuditLogPage from "/src/pages/audit/AuditLogPage.jsx";
+import NotFoundPage from "/src/pages/NotFoundPage.jsx";
+import LoadingSpinner from "/src/components/ui/LoadingSpinner.jsx";
+function PrivateRoute({ children }) {
+  _s();
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return /* @__PURE__ */ jsxDEV(LoadingSpinner, { fullPage: true }, void 0, false, {
+    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+    lineNumber: 48,
+    columnNumber: 23
+  }, this);
+  return isAuthenticated ? children : /* @__PURE__ */ jsxDEV(Navigate, { to: "/login", replace: true }, void 0, false, {
+    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+    lineNumber: 49,
+    columnNumber: 39
+  }, this);
+}
+_s(PrivateRoute, "F3aPsg481KjBH7Z7iYl6LJifZz0=", false, function() {
+  return [useAuth];
+});
+_c = PrivateRoute;
+function GuestRoute({ children }) {
+  _s2();
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return /* @__PURE__ */ jsxDEV(LoadingSpinner, { fullPage: true }, void 0, false, {
+    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+    lineNumber: 54,
+    columnNumber: 23
+  }, this);
+  return isAuthenticated ? /* @__PURE__ */ jsxDEV(Navigate, { to: "/", replace: true }, void 0, false, {
+    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+    lineNumber: 55,
+    columnNumber: 28
+  }, this) : children;
+}
+_s2(GuestRoute, "F3aPsg481KjBH7Z7iYl6LJifZz0=", false, function() {
+  return [useAuth];
+});
+_c2 = GuestRoute;
+function PermissionRoute({ children, permission }) {
+  _s3();
+  const { can } = useAuth();
+  if (!can(permission)) return /* @__PURE__ */ jsxDEV(Navigate, { to: "/", replace: true }, void 0, false, {
+    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+    lineNumber: 60,
+    columnNumber: 32
+  }, this);
+  return children;
+}
+_s3(PermissionRoute, "Q7JEM5q61Ak3+VaKtAZ2DYNWHnM=", false, function() {
+  return [useAuth];
+});
+_c3 = PermissionRoute;
+export default function App() {
+  return /* @__PURE__ */ jsxDEV(Routes, { children: [
+    /* @__PURE__ */ jsxDEV(
+      Route,
+      {
+        path: "/login",
+        element: /* @__PURE__ */ jsxDEV(GuestRoute, { children: /* @__PURE__ */ jsxDEV(LoginPage, {}, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+          lineNumber: 71,
+          columnNumber: 13
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+          lineNumber: 70,
+          columnNumber: 9
+        }, this)
+      },
+      void 0,
+      false,
+      {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+        lineNumber: 67,
+        columnNumber: 7
+      },
+      this
+    ),
+    /* @__PURE__ */ jsxDEV(
+      Route,
+      {
+        path: "/",
+        element: /* @__PURE__ */ jsxDEV(PrivateRoute, { children: /* @__PURE__ */ jsxDEV(AdminLayout, {}, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+          lineNumber: 79,
+          columnNumber: 13
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+          lineNumber: 78,
+          columnNumber: 9
+        }, this),
+        children: [
+          /* @__PURE__ */ jsxDEV(Route, { index: true, element: /* @__PURE__ */ jsxDEV(DashboardPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 83,
+            columnNumber: 31
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 83,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "categories", element: /* @__PURE__ */ jsxDEV(CategoryListPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 84,
+            columnNumber: 43
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 84,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "products", element: /* @__PURE__ */ jsxDEV(ProductListPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 85,
+            columnNumber: 41
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 85,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "products/new", element: /* @__PURE__ */ jsxDEV(ProductFormPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 86,
+            columnNumber: 45
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 86,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "products/:id", element: /* @__PURE__ */ jsxDEV(ProductDetailPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 87,
+            columnNumber: 45
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 87,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "products/:id/edit", element: /* @__PURE__ */ jsxDEV(ProductFormPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 88,
+            columnNumber: 50
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 88,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "brands", element: /* @__PURE__ */ jsxDEV(BrandListPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 89,
+            columnNumber: 39
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 89,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "orders", element: /* @__PURE__ */ jsxDEV(OrderKanbanPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 90,
+            columnNumber: 39
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 90,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "finance", element: /* @__PURE__ */ jsxDEV(OrderKanbanPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 91,
+            columnNumber: 40
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 91,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "inventory", element: /* @__PURE__ */ jsxDEV(InventoryPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 92,
+            columnNumber: 42
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 92,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "batch-import", element: /* @__PURE__ */ jsxDEV(BatchImportPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 93,
+            columnNumber: 45
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 93,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "warranty", element: /* @__PURE__ */ jsxDEV(WarrantySerialPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 94,
+            columnNumber: 41
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 94,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "returns", element: /* @__PURE__ */ jsxDEV(ReturnsManagementPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 95,
+            columnNumber: 40
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 95,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "trade-in", element: /* @__PURE__ */ jsxDEV(TradeInPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 96,
+            columnNumber: 41
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 96,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "profile", element: /* @__PURE__ */ jsxDEV(ProfilePage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 97,
+            columnNumber: 40
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 97,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "promotions", element: /* @__PURE__ */ jsxDEV(PromotionCampaignPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 98,
+            columnNumber: 43
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 98,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "banners", element: /* @__PURE__ */ jsxDEV(BannerManagementPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 99,
+            columnNumber: 40
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 99,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "content", element: /* @__PURE__ */ jsxDEV(BannerManagementPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 100,
+            columnNumber: 40
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 100,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "customers", element: /* @__PURE__ */ jsxDEV(CustomerPurchaseHistoryPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 101,
+            columnNumber: 42
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 101,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(Route, { path: "reports", element: /* @__PURE__ */ jsxDEV(FeedbackReportsPage, {}, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 102,
+            columnNumber: 40
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+            lineNumber: 102,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            Route,
+            {
+              path: "users",
+              element: /* @__PURE__ */ jsxDEV(PermissionRoute, { permission: "user:manage", children: /* @__PURE__ */ jsxDEV(UserListPage, {}, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+                lineNumber: 107,
+                columnNumber: 15
+              }, this) }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+                lineNumber: 106,
+                columnNumber: 11
+              }, this)
+            },
+            void 0,
+            false,
+            {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+              lineNumber: 103,
+              columnNumber: 9
+            },
+            this
+          ),
+          /* @__PURE__ */ jsxDEV(
+            Route,
+            {
+              path: "audit-logs",
+              element: /* @__PURE__ */ jsxDEV(PermissionRoute, { permission: "audit:read", children: /* @__PURE__ */ jsxDEV(AuditLogPage, {}, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+                lineNumber: 115,
+                columnNumber: 15
+              }, this) }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+                lineNumber: 114,
+                columnNumber: 11
+              }, this)
+            },
+            void 0,
+            false,
+            {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+              lineNumber: 111,
+              columnNumber: 9
+            },
+            this
+          )
+        ]
+      },
+      void 0,
+      true,
+      {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+        lineNumber: 75,
+        columnNumber: 7
+      },
+      this
+    ),
+    /* @__PURE__ */ jsxDEV(Route, { path: "*", element: /* @__PURE__ */ jsxDEV(NotFoundPage, {}, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+      lineNumber: 120,
+      columnNumber: 32
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+      lineNumber: 120,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx",
+    lineNumber: 66,
+    columnNumber: 5
+  }, this);
+}
+_c4 = App;
+var _c, _c2, _c3, _c4;
+$RefreshReg$(_c, "PrivateRoute");
+$RefreshReg$(_c2, "GuestRoute");
+$RefreshReg$(_c3, "PermissionRoute");
+$RefreshReg$(_c4, "App");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/App.jsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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O0FBQUE7QUFBQSxXQUEwQztBQUFBLE9BdEQ1QztBQUFBO0FBQUE7QUFBQTtBQUFBLFNBdURBO0FBRUo7QUFBQ0MsTUEzRHVCRDtBQUFHLElBQUFFLElBQUFDLEtBQUFDLEtBQUFIO0FBQUEsYUFBQUMsSUFBQTtBQUFBLGFBQUFDLEtBQUE7QUFBQSxhQUFBQyxLQUFBO0FBQUEsYUFBQUgsS0FBQSIsIm5hbWVzIjpbIlJvdXRlcyIsIlJvdXRlIiwiTmF2aWdhdGUiLCJ1c2VBdXRoIiwiQWRtaW5MYXlvdXQiLCJMb2dpblBhZ2UiLCJEYXNoYm9hcmRQYWdlIiwiUHJvZHVjdExpc3RQYWdlIiwiUHJvZHVjdEZvcm1QYWdlIiwiUHJvZHVjdERldGFpbFBhZ2UiLCJCcmFuZExpc3RQYWdlIiwiQ2F0ZWdvcnlMaXN0UGFnZSIsIkludmVudG9yeVBhZ2UiLCJCYXRjaEltcG9ydFBhZ2UiLCJPcmRlckthbmJhblBhZ2UiLCJXYXJyYW50eVNlcmlhbFBhZ2UiLCJSZXR1cm5zTWFuYWdlbWVudFBhZ2UiLCJUcmFkZUluUGFnZSIsIlByb2ZpbGVQYWdlIiwiQ3VzdG9tZXJQdXJjaGFzZUhpc3RvcnlQYWdlIiwiRmVlZGJhY2tSZXBvcnRzUGFnZSIsIlByb21vdGlvbkNhbXBhaWduUGFnZSIsIkJhbm5lck1hbmFnZW1lbnRQYWdlIiwiVXNlckxpc3RQYWdlIiwiQXVkaXRMb2dQYWdlIiwiTm90Rm91bmRQYWdlIiwiTG9hZGluZ1NwaW5uZXIiLCJQcml2YXRlUm91dGUiLCJjaGlsZHJlbiIsIl9zIiwiaXNBdXRoZW50aWNhdGVkIiwibG9hZGluZyIsIkd1ZXN0Um91dGUiLCJfczIiLCJQZXJtaXNzaW9uUm91dGUiLCJwZXJtaXNzaW9uIiwiX3MzIiwiY2FuIiwiQXBwIiwiX2M0IiwiX2MiLCJfYzIiLCJfYzMiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiQXBwLmpzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBSb3V0ZXMsIFJvdXRlLCBOYXZpZ2F0ZSB9IGZyb20gJ3JlYWN0LXJvdXRlci1kb20nXG5pbXBvcnQgeyB1c2VBdXRoIH0gZnJvbSAnLi9jb250ZXh0cy9BdXRoQ29udGV4dCdcbmltcG9ydCBBZG1pbkxheW91dCBmcm9tICcuL2NvbXBvbmVudHMvbGF5b3V0L0FkbWluTGF5b3V0J1xuaW1wb3J0IExvZ2luUGFnZSBmcm9tICcuL3BhZ2VzL0xvZ2luUGFnZSdcbmltcG9ydCBEYXNoYm9hcmRQYWdlIGZyb20gJy4vcGFnZXMvRGFzaGJvYXJkUGFnZSdcbmltcG9ydCBQcm9kdWN0TGlzdFBhZ2UgZnJvbSAnLi9wYWdlcy9wcm9kdWN0cy9Qcm9kdWN0TGlzdFBhZ2UnXG5pbXBvcnQgUHJvZHVjdEZvcm1QYWdlIGZyb20gJy4vcGFnZXMvcHJvZHVjdHMvUHJvZHVjdEZvcm1QYWdlJ1xuaW1wb3J0IFByb2R1Y3REZXRhaWxQYWdlIGZyb20gJy4vcGFnZXMvcHJvZHVjdHMvUHJvZHVjdERldGFpbFBhZ2UnXG5pbXBvcnQgQnJhbmRMaXN0UGFnZSBmcm9tICcuL3BhZ2VzL2JyYW5kcy9CcmFuZExpc3RQYWdlJ1xuaW1wb3J0IENhdGVnb3J5TGlzdFBhZ2UgZnJvbSAnLi9wYWdlcy9jYXRlZ29yaWVzL0NhdGVnb3J5TGlzdFBhZ2UnXG5pbXBvcnQgSW52ZW50b3J5UGFnZSBmcm9tICcuL3BhZ2VzL2ludmVudG9yeS9JbnZlbnRvcnlQYWdlJ1xuaW1wb3J0IEJhdGNoSW1wb3J0UGFnZSBmcm9tICcuL3BhZ2VzL2ltcG9ydC9CYXRjaEltcG9ydFBhZ2UnXG5pbXBvcnQgT3JkZXJLYW5iYW5QYWdlIGZyb20gJy4vcGFnZXMvb3JkZXJzL09yZGVyS2FuYmFuUGFnZSdcbmltcG9ydCBXYXJyYW50eVNlcmlhbFBhZ2UgZnJvbSAnLi9wYWdlcy93YXJyYW50eS9XYXJyYW50eVNlcmlhbFBhZ2UnXG5pbXBvcnQgUmV0dXJuc01hbmFnZW1lbnRQYWdlIGZyb20gJy4vcGFnZXMvcmV0dXJucy9SZXR1cm5zTWFuYWdlbWVudFBhZ2UnXG5pbXBvcnQgVHJhZGVJblBhZ2UgZnJvbSAnLi9wYWdlcy90cmFkZWluL1RyYWRlSW5QYWdlJ1xuaW1wb3J0IFByb2ZpbGVQYWdlIGZyb20gJy4vcGFnZXMvcHJvZmlsZS9Qcm9maWxlUGFnZSdcbmltcG9ydCBDdXN0b21lclB1cmNoYXNlSGlzdG9yeVBhZ2UgZnJvbSAnLi9wYWdlcy9jdXN0b21lcnMvQ3VzdG9tZXJQdXJjaGFzZUhpc3RvcnlQYWdlJ1xuaW1wb3J0IEZlZWRiYWNrUmVwb3J0c1BhZ2UgZnJvbSAnLi9wYWdlcy9yZXBvcnRzL0ZlZWRiYWNrUmVwb3J0c1BhZ2UnXG5pbXBvcnQgUHJvbW90aW9uQ2FtcGFpZ25QYWdlIGZyb20gJy4vcGFnZXMvcHJvbW90aW9ucy9Qcm9tb3Rpb25DYW1wYWlnblBhZ2UnXG5pbXBvcnQgQmFubmVyTWFuYWdlbWVudFBhZ2UgZnJvbSAnLi9wYWdlcy9iYW5uZXJzL0Jhbm5lck1hbmFnZW1lbnRQYWdlJ1xuaW1wb3J0IFVzZXJMaXN0UGFnZSBmcm9tICcuL3BhZ2VzL3VzZXJzL1VzZXJMaXN0UGFnZSdcbmltcG9ydCBBdWRpdExvZ1BhZ2UgZnJvbSAnLi9wYWdlcy9hdWRpdC9BdWRpdExvZ1BhZ2UnXG5pbXBvcnQgTm90Rm91bmRQYWdlIGZyb20gJy4vcGFnZXMvTm90Rm91bmRQYWdlJ1xuaW1wb3J0IExvYWRpbmdTcGlubmVyIGZyb20gJy4vY29tcG9uZW50cy91aS9Mb2FkaW5nU3Bpbm5lcidcblxuZnVuY3Rpb24gUHJpdmF0ZVJvdXRlKHsgY2hpbGRyZW4gfSkge1xuICBjb25zdCB7IGlzQXV0aGVudGljYXRlZCwgbG9hZGluZyB9ID0gdXNlQXV0aCgpXG4gIGlmIChsb2FkaW5nKSByZXR1cm4gPExvYWRpbmdTcGlubmVyIGZ1bGxQYWdlIC8+XG4gIHJldHVybiBpc0F1dGhlbnRpY2F0ZWQgPyBjaGlsZHJlbiA6IDxOYXZpZ2F0ZSB0bz1cIi9sb2dpblwiIHJlcGxhY2UgLz5cbn1cblxuZnVuY3Rpb24gR3Vlc3RSb3V0ZSh7IGNoaWxkcmVuIH0pIHtcbiAgY29uc3QgeyBpc0F1dGhlbnRpY2F0ZWQsIGxvYWRpbmcgfSA9IHVzZUF1dGgoKVxuICBpZiAobG9hZGluZykgcmV0dXJuIDxMb2FkaW5nU3Bpbm5lciBmdWxsUGFnZSAvPlxuICByZXR1cm4gaXNBdXRoZW50aWNhdGVkID8gPE5hdmlnYXRlIHRvPVwiL1wiIHJlcGxhY2UgLz4gOiBjaGlsZHJlblxufVxuXG5mdW5jdGlvbiBQZXJtaXNzaW9uUm91dGUoeyBjaGlsZHJlbiwgcGVybWlzc2lvbiB9KSB7XG4gIGNvbnN0IHsgY2FuIH0gPSB1c2VBdXRoKClcbiAgaWYgKCFjYW4ocGVybWlzc2lvbikpIHJldHVybiA8TmF2aWdhdGUgdG89XCIvXCIgcmVwbGFjZSAvPlxuICByZXR1cm4gY2hpbGRyZW5cbn1cblxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQXBwKCkge1xuICByZXR1cm4gKFxuICAgIDxSb3V0ZXM+XG4gICAgICA8Um91dGVcbiAgICAgICAgcGF0aD1cIi9sb2dpblwiXG4gICAgICAgIGVsZW1lbnQ9e1xuICAgICAgICAgIDxHdWVzdFJvdXRlPlxuICAgICAgICAgICAgPExvZ2luUGFnZSAvPlxuICAgICAgICAgIDwvR3Vlc3RSb3V0ZT5cbiAgICAgICAgfVxuICAgICAgLz5cbiAgICAgIDxSb3V0ZVxuICAgICAgICBwYXRoPVwiL1wiXG4gICAgICAgIGVsZW1lbnQ9e1xuICAgICAgICAgIDxQcml2YXRlUm91dGU+XG4gICAgICAgICAgICA8QWRtaW5MYXlvdXQgLz5cbiAgICAgICAgICA8L1ByaXZhdGVSb3V0ZT5cbiAgICAgICAgfVxuICAgICAgPlxuICAgICAgICA8Um91dGUgaW5kZXggZWxlbWVudD17PERhc2hib2FyZFBhZ2UgLz59IC8+XG4gICAgICAgIDxSb3V0ZSBwYXRoPVwiY2F0ZWdvcmllc1wiIGVsZW1lbnQ9ezxDYXRlZ29yeUxpc3RQYWdlIC8+fSAvPlxuICAgICAgICA8Um91dGUgcGF0aD1cInByb2R1Y3RzXCIgZWxlbWVudD17PFByb2R1Y3RMaXN0UGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJwcm9kdWN0cy9uZXdcIiBlbGVtZW50PXs8UHJvZHVjdEZvcm1QYWdlIC8+fSAvPlxuICAgICAgICA8Um91dGUgcGF0aD1cInByb2R1Y3RzLzppZFwiIGVsZW1lbnQ9ezxQcm9kdWN0RGV0YWlsUGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJwcm9kdWN0cy86aWQvZWRpdFwiIGVsZW1lbnQ9ezxQcm9kdWN0Rm9ybVBhZ2UgLz59IC8+XG4gICAgICAgIDxSb3V0ZSBwYXRoPVwiYnJhbmRzXCIgZWxlbWVudD17PEJyYW5kTGlzdFBhZ2UgLz59IC8+XG4gICAgICAgIDxSb3V0ZSBwYXRoPVwib3JkZXJzXCIgZWxlbWVudD17PE9yZGVyS2FuYmFuUGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJmaW5hbmNlXCIgZWxlbWVudD17PE9yZGVyS2FuYmFuUGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJpbnZlbnRvcnlcIiBlbGVtZW50PXs8SW52ZW50b3J5UGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJiYXRjaC1pbXBvcnRcIiBlbGVtZW50PXs8QmF0Y2hJbXBvcnRQYWdlIC8+fSAvPlxuICAgICAgICA8Um91dGUgcGF0aD1cIndhcnJhbnR5XCIgZWxlbWVudD17PFdhcnJhbnR5U2VyaWFsUGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJyZXR1cm5zXCIgZWxlbWVudD17PFJldHVybnNNYW5hZ2VtZW50UGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJ0cmFkZS1pblwiIGVsZW1lbnQ9ezxUcmFkZUluUGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJwcm9maWxlXCIgZWxlbWVudD17PFByb2ZpbGVQYWdlIC8+fSAvPlxuICAgICAgICA8Um91dGUgcGF0aD1cInByb21vdGlvbnNcIiBlbGVtZW50PXs8UHJvbW90aW9uQ2FtcGFpZ25QYWdlIC8+fSAvPlxuICAgICAgICA8Um91dGUgcGF0aD1cImJhbm5lcnNcIiBlbGVtZW50PXs8QmFubmVyTWFuYWdlbWVudFBhZ2UgLz59IC8+XG4gICAgICAgIDxSb3V0ZSBwYXRoPVwiY29udGVudFwiIGVsZW1lbnQ9ezxCYW5uZXJNYW5hZ2VtZW50UGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlIHBhdGg9XCJjdXN0b21lcnNcIiBlbGVtZW50PXs8Q3VzdG9tZXJQdXJjaGFzZUhpc3RvcnlQYWdlIC8+fSAvPlxuICAgICAgICA8Um91dGUgcGF0aD1cInJlcG9ydHNcIiBlbGVtZW50PXs8RmVlZGJhY2tSZXBvcnRzUGFnZSAvPn0gLz5cbiAgICAgICAgPFJvdXRlXG4gICAgICAgICAgcGF0aD1cInVzZXJzXCJcbiAgICAgICAgICBlbGVtZW50PXtcbiAgICAgICAgICAgIDxQZXJtaXNzaW9uUm91dGUgcGVybWlzc2lvbj1cInVzZXI6bWFuYWdlXCI+XG4gICAgICAgICAgICAgIDxVc2VyTGlzdFBhZ2UgLz5cbiAgICAgICAgICAgIDwvUGVybWlzc2lvblJvdXRlPlxuICAgICAgICAgIH1cbiAgICAgICAgLz5cbiAgICAgICAgPFJvdXRlXG4gICAgICAgICAgcGF0aD1cImF1ZGl0LWxvZ3NcIlxuICAgICAgICAgIGVsZW1lbnQ9e1xuICAgICAgICAgICAgPFBlcm1pc3Npb25Sb3V0ZSBwZXJtaXNzaW9uPVwiYXVkaXQ6cmVhZFwiPlxuICAgICAgICAgICAgICA8QXVkaXRMb2dQYWdlIC8+XG4gICAgICAgICAgICA8L1Blcm1pc3Npb25Sb3V0ZT5cbiAgICAgICAgICB9XG4gICAgICAgIC8+XG4gICAgICA8L1JvdXRlPlxuICAgICAgPFJvdXRlIHBhdGg9XCIqXCIgZWxlbWVudD17PE5vdEZvdW5kUGFnZSAvPn0gLz5cbiAgICA8L1JvdXRlcz5cbiAgKVxufVxuIl0sImZpbGUiOiJDOi9Vc2Vycy9hZG1pbi9Eb3dubG9hZHMvc3ByaW50Mi9sYXB0b3Atc2hvcC1hZG1pbi9zcmMvQXBwLmpzeCJ9

@@ -1,0 +1,233 @@
+<USER_REQUEST>
+# PROMPT: NÂNG CẤP TOÀN BỘ HIỆU ỨNG UI/UX CAO CẤP CHO WEBSITE LAPTOP99
+
+## 1. Vai trò và mục tiêu
+
+Bạn là Senior Frontend Engineer, UI/UX Designer và Motion Designer chuyên xây dựng website thương mại điện tử hiện đại.
+
+Hãy nâng cấp toàn bộ giao diện website Laptop99 để đạt chất lượng thiết kế cao cấp, chuyên nghiệp, hiện đại như các website bán lẻ công nghệ hàng đầu.
+
+Tập trung vào:
+- Giao diện cao cấp và nhất quán.
+- Animation mượt, tinh tế, có mục đích.
+- Tương tác trực quan và phản hồi tức thì.
+- Trải nghiệm mua sắm thuận tiện.
+- Responsive hoàn chỉnh trên desktop, tablet và mobile.
+- Hiệu suất tải trang và khả năng truy cập.
+
+## 2. Yêu cầu bảo toàn hệ thống hiện tại
+
+Trước khi chỉnh sửa:
+- Kiểm tra cấu trúc dự án, framework, thư viện và các component hiện có.
+- Phân tích các trang, layout, router, API, state management và quy trình mua hàng.
+- Tái sử dụng component và logic đang hoạt động.
+- Không xây dựng lại FE hoặc BE từ đầu.
+- Không tự ý thay đổi API, database, authentication, phân quyền, cấu trúc dữ liệu hoặc nghiệp vụ hiện có.
+- Không thay đổi chức năng đang hoạt động nếu không cần thiết.
+- Không sử dụng dữ liệu giả thay cho API thật.
+- Nếu cần bổ sung thư viện animation, hãy kiểm tra các dependency hiện có trước và chỉ thêm khi thực sự cần thiết.
+
+## 3. Xây dựng hệ thống chuyển động thống nhất
+
+Thiết lập design tokens cho animation, bao gồm:
+- Duration: fast 150–200ms, normal 200–300ms, emphasis 400–650ms.
+- Easing: ease-out cho tương tác xuất hiện, ease-in-out cho chuyển trạng thái.
+- Khoảng dịch chuyển mặc định 8–16px.
+- Hover scale nhỏ, khoảng 1.02–1.04.
+- Zoom ảnh sản phẩm khoảng 1.03–1.06.
+- Quy định delay và stagger nhất quán.
+
+Không sử dụng hiệu ứng nảy quá mức, xoay liên tục, phóng to quá mạnh hoặc chuyển động gây mất tập trung.
+
+## 4. Nâng cấp Header và Navigation
+
+- Tạo sticky header ổn định.
+- Thu gọn header nhẹ khi cuộn xuống nếu phù hợp với cấu trúc hiện tại.
+- Cho header xuất hiện lại khi người dùng cuộn lên.
+- Thêm transition tinh tế cho logo, icon, thanh tìm kiếm và các nút.
+- Mega menu mở bằng fade kết hợp slide-down.
+- Đóng menu khi click ra ngoài, nhấn Escape hoặc điều hướng.
+- Hỗ trợ bàn phím và thao tác cảm ứng.
+- Không gây layout shift khi header thay đổi trạng thái.
+
+## 5. Nâng cấp Hero Banner
+
+- Hỗ trợ slider tự động chuyển slide.
+- Có nút điều hướng, pagination và thao tác vuốt trên mobile.
+- Cho phép tạm dừng hoặc dừng tự động chuyển khi người dùng tương tác.
+- Chuyển slide bằng fade hoặc chuyển động ngang nhẹ.
+- Áp dụng Ken Burns cho hình nền khi phù hợp.
+- Tiêu đề, mô tả và CTA xuất hiện theo từng lớp.
+- Thêm gradient overlay nếu cần để đảm bảo độ tương phản của chữ.
+- Toàn bộ banner có thể click để mở đúng trang sản phẩm hoặc chương trình tương ứng khi dữ liệu cấu hình cho phép.
+- Các nút CTA bên trong phải hoạt động đúng, không kích hoạt điều hướng trùng lặp.
+- Không sử dụng hình ảnh làm giảm khả năng đọc hoặc khiến chữ khó nhìn.
+- Không làm banner che khuất nội dung quan trọng trên màn hình nhỏ.
+
+## 6. Nâng cấp Product Card
+
+Áp dụng cho các trang danh sách sản phẩm, danh mục, trang chủ và sản phẩm liên quan.
+
+- Hover lift nhẹ từ 2–4px.
+- Shadow chuyển trạng thái mềm mại.
+- Ảnh sản phẩm zoom nhẹ, giữ đúng tỷ lệ.
+- Viền và màu nền thay đổi tinh tế khi hover.
+- Nút yêu thích có trạng thái bật/tắt rõ ràng.
+- Nút thêm giỏ hàng có loading, success feedback và xử lý lỗi.
+- Nhãn giảm giá, trả góp, bảo hành và tình trạng kho phải nhất quán.
+- Giá bán, giá gốc, mức tiết kiệm và tên sản phẩm có phân cấp typography rõ ràng.
+- Hỗ trợ bàn phím và cảm ứng, không phụ thuộc hoàn toàn vào hover.
+
+## 7. Scroll Reveal và Section Animation
+
+- Dùng Intersection Observer hoặc giải pháp phù hợp với framework hiện tại.
+- Các section xuất hiện bằng fade-up nhẹ.
+- Các nhóm card dùng stagger delay ngắn.
+- Chỉ chạy animation khi nội dung đi vào viewport lần đầu, tránh lặp liên tục.
+- Không làm nội dung biến mất nếu JavaScript hoặc animation bị lỗi.
+- Không tạo khoảng trống lớn trong lúc chờ animation.
+- Không sử dụng parallax nặng trên mobile hoặc thiết bị hiệu năng thấp.
+
+## 8. Tìm kiếm và bộ lọc
+
+- Thanh tìm kiếm có focus ring, transition và trạng thái loading.
+- Autocomplete gợi ý sản phẩm theo dữ liệu API hiện tại.
+- Debounce truy vấn nếu phù hợp.
+- Dropdown gợi ý có animation nhẹ, hỗ trợ bàn phím.
+- Bộ lọc desktop có trạng thái chọn rõ ràng.
+- Bộ lọc mobile sử dụng drawer hoặc bottom sheet.
+- Khi áp dụng hoặc xóa bộ lọc, danh sách sản phẩm cập nhật đúng.
+- Hiển thị trạng thái loading, không có kết quả và lỗi một cách nhất quán.
+
+## 9. Trang chi tiết sản phẩm
+
+- Gallery hỗ trợ chuyển thumbnail, zoom và lightbox.
+- Chuyển ảnh bằng fade nhẹ.
+- Hỗ trợ vuốt ảnh trên mobile.
+- Lựa chọn màu sắc, cấu hình hoặc phiên bản có trạng thái selected rõ ràng.
+- Cập nhật giá, tồn kho và hình ảnh theo dữ liệu thực tế khi backend hỗ trợ.
+- Nút mua ngay và thêm giỏ hàng có phản hồi tức thì.
+- Có thể sử dụng sticky purchase panel trên desktop nếu không gây cản trở.
+- Trên mobile, cân nhắc thanh mua hàng cố định ở đáy màn hình, bảo đảm không che nội dung hay nút hỗ trợ.
+
+## 10. Giỏ hàng và Checkout
+
+- Mini cart hoặc cart drawer trượt từ cạnh phải.
+- Icon giỏ hàng có micro-animation khi thêm sản phẩm.
+- Số lượng được cập nhật chính xác theo state hiện tại.
+- Toast thông báo thành công hoặc lỗi.
+- Nút checkout có loading và trạng thái disabled hợp lý.
+- Form sử dụng validation rõ ràng.
+- Lỗi được hiển thị gần trường nhập tương ứng.
+- Không làm mất dữ liệu người dùng khi có lỗi không mong muốn.
+- Không giả lập thông báo đặt hàng thành công khi API chưa xác nhận.
+
+## 11. Loading, Modal và Toast
+
+- Skeleton shimmer cho danh sách sản phẩm.
+- Loading spinner nhỏ gọn cho các hành động đang xử lý.
+- Modal xuất hiện bằng fade và scale nhẹ.
+- Drawer có backdrop và transition mượt.
+- Đóng modal bằng nút đóng, Escape hoặc click backdrop khi phù hợp.
+- Toast tự đóng theo thời gian hợp lý và không che nút mua hàng.
+- Tất cả trạng thái loading, empty, success và error phải được xử lý.
+- Tôn trọng thứ tự lớp z-index giữa header, dropdown, modal, drawer và toast.
+
+## 12. Chuyển trang và cuộn trang
+
+- Thêm page transition ngắn nếu router hiện tại hỗ trợ an toàn.
+- Tránh delay trước khi nội dung trang mới có thể tương tác.
+- Bảo đảm back/forward hoạt động đúng.
+- Giữ vị trí cuộn hoặc đưa về đầu trang theo quy tắc điều hướng hiện tại.
+- Thêm nút Back to Top khi thực sự hữu ích.
+- Không làm chậm thao tác điều hướng hoặc gây nhấp nháy toàn trang.
+
+## 13. Footer và các thành phần phụ
+
+- Hover link thay đổi màu hoặc underline mượt.
+- Accordion trên mobile nếu footer có nhiều nhóm thông tin.
+- Icon mạng xã hội có hiệu ứng hover nhẹ.
+- Nút chat và hỗ trợ có trạng thái tương tác rõ ràng.
+- Tránh animation vô hạn gây mất tập trung.
+
+## 14. Design System
+
+Chuẩn hóa:
+- Màu thương hiệu, màu nền, màu chữ và màu trạng thái.
+- Typography, font size, font weight và line-height.
+- Spacing, grid, breakpoint và container width.
+- Border radius và box shadow.
+- Button, input, badge, dropdown, modal, tooltip và toast.
+- Focus state, hover state, active state, disabled state và loading state.
+
+Giữ nguyên nhận diện thương hiệu Laptop99 nếu đã tồn tại. Tối ưu bảng màu để tạo cảm giác công nghệ, tin cậy và cao cấp. Không sử dụng quá nhiều màu nhấn, gradient hoặc bóng đổ.
+
+## 15. Responsive và Accessibility
+
+- Kiểm thử desktop, tablet và mobile.
+- Ưu tiên touch target đủ lớn trên điện thoại.
+- Không yêu cầu hover để truy cập chức năng quan trọng.
+- Sử dụng semantic HTML, aria-label phù hợp và focus-visible.
+- Tôn trọng prefers-reduced-motion.
+- Đảm bảo nội dung có thể sử dụng ngay cả khi animation bị tắt.
+- Không tạo horizontal overflow.
+- Bảo đảm contrast đủ tốt và thứ tự focus hợp lý.
+
+## 16. Hiệu suất
+
+- Ưu tiên transform và opacity cho animation.
+- Tránh animation liên tục trên các vùng lớn.
+- Không lạm dụng blur, backdrop-filter hoặc hiệu ứng 3D.
+- Lazy-load ảnh ngoài vùng nhìn khi phù hợp.
+- Đặt width, height hoặc aspect-ratio cho ảnh để tránh layout shift.
+- Hạn chế re-render không cần thiết.
+- Không thêm thư viện lớn chỉ để tạo một hiệu ứng đơn giản.
+- Kiểm tra hiệu suất trên thiết bị cấu hình thấp và kết nối chậm.
+
+## 17. Kiểm thử và hoàn thiện
+
+Sau khi triển khai:
+- Kiểm tra tất cả trang và component đã chỉnh sửa.
+- Kiểm tra console, lỗi runtime và lỗi build.
+- Kiểm tra router, API, authentication và luồng mua hàng.
+- Kiểm tra thêm giỏ hàng, cập nhật số lượng, lọc, tìm kiếm và checkout.
+- Kiểm tra responsive và khả năng sử dụng bằng bàn phím.
+- Xác nhận animation không chặn thao tác hoặc gây layout shift.
+- Sửa các lỗi phát sinh do thay đổi giao diện.
+
+## 18. Cách triển khai
+
+Thực hiện theo từng giai đoạn:
+1. Kiểm tra cấu trúc dự án và xác định các component cần nâng cấp.
+2. Thiết lập design tokens và animation utilities dùng chung.
+3. Nâng cấp header, navigation và hero banner.
+4. Nâng cấp product card, danh sách sản phẩm và tìm kiếm.
+5. Nâng cấp trang chi tiết, giỏ hàng và checkout.
+6. Nâng cấp loading state, modal, toast và footer.
+7. Kiểm tra responsive, accessibility và hiệu suất.
+8. Chạy build, kiểm thử và sửa lỗi.
+
+Hãy chỉnh sửa trực tiếp trên mã nguồn hiện có, tái sử dụng component, tránh viết lại toàn bộ dự án.
+
+Sau khi hoàn thành, báo cáo:
+- Những file đã chỉnh sửa.
+- Những component mới được tạo.
+- Những hiệu ứng đã triển khai.
+- Các chức năng hiện có được giữ nguyên.
+- Kết quả kiểm thử và những vấn đề còn tồn tại.
+
+**Tiêu chí cuối cùng:** Laptop99 phải có cảm giác của một website bán lẻ công nghệ cao cấp, mượt, tinh tế và đáng tin cậy; hiệu ứng phục vụ trải nghiệm mua sắm, không đánh đổi hiệu suất, khả năng truy cập hoặc tính ổn định của hệ thống.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-13T23:50:09+07:00.
+
+The user's current state is as follows:
+Active Document: c:\Users\admin\Downloads\sprint2\laptop-shop-admin\src\pages\customers\CustomerPurchaseHistoryPage.jsx (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 460
+Other open documents:
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin-backend\laptop-shop-admin-backend\.env.example (LANGUAGE_UNSPECIFIED)
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin\src\pages\import\BatchImportPage.jsx (LANGUAGE_UNSPECIFIED)
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin\src\pages\orders\OrderKanbanPage.jsx (LANGUAGE_UNSPECIFIED)
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin-backend\laptop-shop-admin-backend\src\models\banners.model.js (LANGUAGE_UNSPECIFIED)
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin-backend\laptop-shop-admin-backend\src\scripts\seed-real-banners.js (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>

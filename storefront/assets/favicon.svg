@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="favBg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="favSc" x1="10" y1="10" x2="38" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#favBg)"/>
+  <rect x="10" y="10" width="28" height="18.5" rx="2.5" fill="#0F172A" stroke="#BFDBFE" stroke-width="1.5"/>
+  <rect x="12.5" y="12.5" width="23" height="13.5" rx="1.5" fill="url(#favSc)"/>
+  <path d="M20 16.5L17 19.2L20 22" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M28 16.5L31 19.2L28 22" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7 32C7 31 7.8 30 9 30H39C40.2 30 41 31 41 32L43 37H5L7 32Z" fill="#0F172A"/>
+  <rect x="21" y="32.5" width="6" height="2" rx="1" fill="#60A5FA"/>
+</svg>

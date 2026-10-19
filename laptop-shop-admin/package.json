@@ -1,0 +1,26 @@
+{
+  "name": "laptop-shop-admin",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.29",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~6.0.2",
+    "vite": "^5.4.21"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "axios": "^1.20.0",
+    "react-hot-toast": "^2.6.1",
+    "react-icons": "^5.7.0",
+    "react-router-dom": "^6.30.6",
+    "recharts": "^3.10.1"
+  }
+}

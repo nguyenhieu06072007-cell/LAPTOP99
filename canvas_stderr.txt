@@ -1,0 +1,12 @@
+[2064:23324:1014/005849.341:INFO:components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc:241] No machine level policy manager exists.
+[2064:2152:1014/005849.385:ERROR:chrome\browser\extensions\external_registry_loader_win.cc:147] Missing value path for key Software\Google\Chrome\Extensions\dngcpimnedloihjnnfngkgjoidhnaolf.
+[2064:2152:1014/005849.386:ERROR:chrome\browser\extensions\external_registry_loader_win.cc:147] Missing value path for key Software\Google\Chrome\Extensions\fcoeoabgfenejglbffodgkkbkcdhcgfn.
+[2064:23324:1014/005849.632:INFO:CONSOLE:47] "Uncaught (in promise) SecurityError: Failed to execute 'toDataURL' on 'HTMLCanvasElement': Tainted canvases may not be exported.", source: file:///C:/Users/admin/Downloads/sprint2/process-banner.html (47)
+[2064:23060:1014/005852.056:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+Created TensorFlow Lite XNNPACK delegate for CPU.
+[2064:9488:1014/005908.385:ERROR:chrome\updater\ipc\update_service_dialer_win.cc:76] Failed to open named pipe server process 26448: Access is denied. (0x5)
+[2064:2288:1014/005908.461:ERROR:chrome\updater\ipc\update_service_dialer_win.cc:76] Failed to open named pipe server process 4972: Access is denied. (0x5)
+[2064:9488:1014/005910.548:ERROR:chrome\updater\ipc\update_service_dialer_win.cc:76] Failed to open named pipe server process 9956: Access is denied. (0x5)
+[2064:2288:1014/005912.634:ERROR:chrome\updater\ipc\update_service_dialer_win.cc:76] Failed to open named pipe server process 23608: Access is denied. (0x5)
+[2064:9488:1014/005912.704:ERROR:chrome\updater\ipc\update_service_dialer_win.cc:76] Failed to open named pipe server process 22684: Access is denied. (0x5)
+[2064:23060:1014/005913.687:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT

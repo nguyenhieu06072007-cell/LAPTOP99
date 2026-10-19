@@ -1,0 +1,323 @@
+<USER_REQUEST>
+# PROMPT: REDESIGN GIAO DIỆN LAPTOP99 THEO PHONG CÁCH XÁM THAN CAO CẤP
+
+## 1. Vai trò và mục tiêu
+
+Bạn là Senior UI/UX Designer kiêm Senior Frontend Developer, có kinh nghiệm thiết kế các website thương mại điện tử công nghệ cao cấp.
+
+Hãy chỉnh sửa giao diện website Laptop99 hiện tại theo phong cách **Premium Charcoal – Graphite – Silver – Brand Red**, lấy cảm hứng từ các website bán lẻ laptop và thiết bị công nghệ chuyên nghiệp.
+
+Mục tiêu:
+- Tạo giao diện cao cấp, hiện đại, chuyên nghiệp và đáng tin cậy.
+- Giảm sự xuất hiện quá dày đặc của màu hồng/đỏ hiện tại.
+- Sử dụng xám than làm màu chủ đạo, kết hợp xám bạc và trắng để tạo độ tương phản.
+- Giữ màu đỏ Laptop99 làm điểm nhấn thương hiệu.
+- Tối ưu khả năng đọc, điều hướng, tìm kiếm và mua sắm.
+- Đảm bảo giao diện nhất quán trên toàn bộ website.
+
+**Đây là yêu cầu chỉnh sửa giao diện của dự án hiện có, không phải tạo một website mới.**
+
+## 2. Bảng màu chuẩn
+
+Sử dụng thống nhất các mã màu sau:
+
+### Màu nền và bề mặt
+
+- Background chính: `#F3F4F6`
+- Background khu vực phụ: `#E5E7EB`
+- Card sản phẩm: `#FFFFFF`
+- Header nền xám than: `#171A21`
+- Footer nền xám than đậm: `#111318`
+- Thanh thông báo: `#111318`
+- Border mặc định: `#D1D5DB`
+- Border trên nền tối: `#343943`
+
+### Màu chữ
+
+- Tiêu đề chính: `#171A21`
+- Nội dung: `#374151`
+- Nội dung phụ: `#6B7280`
+- Chữ trên nền tối: `#F9FAFB`
+- Chữ phụ trên nền tối: `#AEB4BF`
+
+### Màu thương hiệu
+
+- Đỏ Laptop99: `#E11D48`
+- Đỏ khi hover: `#BE123C`
+- Nền đỏ nhạt: `#FFF1F2`
+- Viền nhấn: `#FDA4AF`
+- Màu trạng thái thành công: `#15803D`
+- Màu thông tin: `#2563EB`
+
+Không tự ý bổ sung nhiều màu sắc mới. Màu trạng thái chỉ sử dụng đúng ngữ cảnh.
+
+## 3. Quy tắc phối màu
+
+Áp dụng tỷ lệ màu tham khảo:
+
+- 55% nền sáng, trắng và xám bạc.
+- 30% xám than và các bề mặt tối.
+- 10% màu trung tính phụ.
+- 5% đỏ thương hiệu và các màu trạng thái.
+
+Không biến toàn bộ website thành nền đen. Ưu tiên nền sáng cho khu vực nội dung, danh sách sản phẩm, thông tin và biểu mẫu; sử dụng xám than cho header, footer, thanh điều hướng quan trọng và một số khu vực nhấn mạnh.
+
+Không sử dụng gradient hồng rực hoặc hiệu ứng phát sáng đỏ quá mức.
+
+## 4. Thiết kế lại header
+
+### Thanh thông báo trên cùng
+
+- Sử dụng nền `#111318`.
+- Chữ màu `#F9FAFB`, cỡ chữ nhỏ nhưng dễ đọc.
+- Icon màu xám bạc; chỉ sử dụng màu đỏ cho thông tin cần nhấn mạnh.
+- Giữ nguyên các thông tin bảo hành, đổi trả, ưu đãi và tra cứu Serial Number hiện có.
+
+### Thanh điều hướng chính
+
+- Sử dụng nền `#171A21`.
+- Logo Laptop99 giữ nguyên thiết kế và màu nhận diện gốc.
+- Chữ menu màu `#E5E7EB`.
+- Menu đang hoạt động có chữ hoặc gạch nhấn màu `#E11D48`.
+- Nút đăng nhập, so sánh, yêu thích và giỏ hàng có kiểu dáng đồng nhất.
+- Nút chính sử dụng nền đỏ thương hiệu; nút phụ dùng nền xám than hoặc nền trong suốt với viền xám.
+- Ô tìm kiếm có nền `#FFFFFF`, chữ tối, viền trung tính và nút tìm kiếm màu đỏ.
+- Đảm bảo logo, ô tìm kiếm và menu không bị chật hoặc xuống dòng không mong muốn.
+
+### Thanh danh mục phụ
+
+- Dùng nền `#FFFFFF`.
+- Chữ `#374151`.
+- Danh mục được chọn có nền `#FFF1F2` và chữ đỏ.
+- Viền dưới `#E5E7EB`.
+
+## 5. Thiết kế banner trang chủ
+
+Thiết kế banner theo phong cách công nghệ cao cấp, tối giản và có chiều sâu.
+
+- Nền banner sử dụng `#FFFFFF`, `#E5E7EB` hoặc gradient xám bạc rất nhẹ.
+- Có thể dùng khu vực xám than `#171A21` để tạo điểm nhấn.
+- Tiêu đề chính màu `#171A21`, từ khóa quan trọng màu `#E11D48`.
+- Mô tả sử dụng màu `#6B7280`.
+- Hình ảnh laptop phải rõ nét, đúng tỷ lệ, không méo hoặc bị che khuất.
+- Nút CTA chính màu đỏ Laptop99.
+- Nút CTA phụ có nền trắng, chữ tối và viền xám.
+- Thông số nổi bật như CPU, RAM, SSD và màn hình hiển thị bằng các nhãn nhỏ, nền xám nhạt.
+- Badge giảm giá sử dụng màu đỏ vừa phải, không lạm dụng.
+
+Giữ nguyên nội dung, hình ảnh sản phẩm, giá bán, dữ liệu khuyến mãi và hành vi chuyển slide đang có.
+
+Nếu banner hiện có hỗ trợ tự động chuyển slide, hãy giữ nguyên tính năng, thời gian chuyển và nút điều hướng; chỉ chỉnh sửa giao diện và hiệu ứng chuyển động khi cần thiết.
+
+## 6. Sidebar danh mục sản phẩm
+
+- Nền trắng.
+- Tiêu đề danh mục màu `#171A21`.
+- Icon mặc định màu `#6B7280`.
+- Icon hoặc nhãn danh mục đang chọn sử dụng đỏ thương hiệu.
+- Badge số lượng dùng nền `#F3F4F6`, chữ xám than.
+- Khi hover, nền chuyển sang `#F3F4F6`.
+- Border nhẹ `#E5E7EB`.
+- Không dùng bóng đổ quá đậm hoặc viền đỏ bao quanh toàn bộ danh mục.
+
+Giữ nguyên cấu trúc danh mục, số lượng sản phẩm và các liên kết điều hướng.
+
+## 7. Thiết kế card sản phẩm
+
+Đây là khu vực cần được ưu tiên vì ảnh hưởng trực tiếp đến trải nghiệm mua hàng.
+
+### Trạng thái mặc định
+
+- Card nền `#FFFFFF`.
+- Border `1px solid #E5E7EB`.
+- Bo góc khoảng 10–14px.
+- Ảnh sản phẩm đặt trên nền trắng hoặc xám rất nhạt.
+- Tên sản phẩm màu `#171A21`, giới hạn số dòng hợp lý.
+- Giá bán màu `#E11D48`, có độ đậm nổi bật.
+- Giá cũ màu `#9CA3AF`, có gạch ngang.
+- Thông số kỹ thuật màu `#6B7280`.
+- Badge khuyến mãi dùng nền đỏ nhạt hoặc đỏ thương hiệu tùy mức độ quan trọng.
+
+### Khi hover
+
+- Card dịch lên nhẹ khoảng 2–4px.
+- Border chuyển sang `#CBD5E1`.
+- Bóng đổ nhẹ, mềm và tự nhiên.
+- Thời gian chuyển động khoảng 180–250ms.
+- Không dùng hiệu ứng phóng to quá mạnh.
+
+### Nút mua hàng
+
+- Nút chính nền `#E11D48`, chữ trắng.
+- Hover chuyển sang `#BE123C`.
+- Nút phụ sử dụng nền trắng hoặc xám nhạt, viền trung tính.
+- Đảm bảo trạng thái loading, disabled và thêm vào giỏ hàng vẫn hoạt động đúng.
+
+## 8. Các khu vực khác trên trang chủ
+
+Đồng bộ bảng màu mới cho toàn bộ các khu vực sau:
+
+- Sản phẩm nổi bật.
+- Laptop văn phòng.
+- Laptop gaming.
+- MacBook chính hãng.
+- Laptop sinh viên.
+- Laptop đồ họa.
+- Laptop doanh nhân.
+- Laptop AI.
+- Khuyến mãi và voucher.
+- Ưu đãi giáo dục.
+- Thu cũ đổi mới.
+- Sản phẩm vừa xem.
+- Sản phẩm yêu thích.
+- Khu vực so sánh sản phẩm.
+- Popup, modal và thông báo hệ thống.
+- Phân trang và bộ lọc.
+- Footer và nút liên hệ nổi.
+
+Đối với các khối nội dung, sử dụng card trắng trên nền xám bạc để tạo sự phân tầng rõ ràng. Các khối ưu đãi đặc biệt có thể sử dụng nền xám than và chữ sáng.
+
+Không để tất cả các khu vực có cùng một màu nền hoặc cùng một mức độ tương phản.
+
+## 9. Trang danh mục và bộ lọc
+
+- Sidebar bộ lọc nền trắng.
+- Tiêu đề bộ lọc màu xám than.
+- Checkbox, radio và slider dùng màu đỏ thương hiệu khi được chọn.
+- Giá trị đang chọn hiển thị bằng chip nền `#FFF1F2`.
+- Nút xóa bộ lọc sử dụng kiểu nút phụ.
+- Danh sách sản phẩm áp dụng đúng thiết kế card đã quy định.
+- Breadcrumb sử dụng chữ xám; mục hiện tại có màu tối.
+- Thanh sắp xếp có nền trắng, border nhẹ và trạng thái lựa chọn rõ ràng.
+
+## 10. Trang chi tiết sản phẩm
+
+- Nền tổng thể `#F3F4F6`.
+- Khu vực ảnh sản phẩm, thông tin cấu hình và mô tả dùng các card trắng.
+- Tên sản phẩm màu `#171A21`.
+- Giá bán màu đỏ thương hiệu.
+- Giá cũ và thông tin phụ màu xám.
+- Thông số kỹ thuật sử dụng bảng hoặc các khối dữ liệu có phân cấp rõ ràng.
+- Nút mua ngay là CTA chính.
+- Nút thêm vào giỏ hàng là CTA phụ hoặc nút cùng cấp theo nghiệp vụ hiện tại.
+- Các thông tin bảo hành, đổi trả, giao hàng và trả góp hiển thị bằng icon và chữ rõ ràng.
+- Không làm giảm khả năng đọc thông tin hoặc che khuất hình ảnh sản phẩm.
+
+## 11. Footer, popup và nút liên hệ
+
+### Footer
+
+- Nền `#111318`.
+- Tiêu đề màu trắng.
+- Nội dung màu `#AEB4BF`.
+- Link hover màu trắng hoặc đỏ thương hiệu.
+- Đường phân cách màu `#343943`.
+
+### Popup và modal
+
+- Nền trắng.
+- Tiêu đề màu `#171A21`.
+- Nội dung màu `#374151`.
+- Border xám nhạt.
+- Overlay màu đen có độ trong suốt vừa phải.
+- Nút xác nhận sử dụng màu đỏ thương hiệu.
+- Nút hủy sử dụng màu trung tính.
+
+### Nút liên hệ nổi
+
+- Giữ nguyên vị trí và chức năng hiện có.
+- Nền đỏ thương hiệu hoặc xám than tùy độ nổi bật.
+- Chữ và icon có độ tương phản cao.
+- Bóng đổ nhẹ, không phát sáng quá mức.
+
+## 12. Typography và khoảng cách
+
+- Sử dụng font hiện tại nếu đã phù hợp; nếu chưa, ưu tiên Inter hoặc hệ thống font sans-serif hiện đại.
+- Giữ thứ bậc rõ ràng giữa tiêu đề, tên sản phẩm, giá và nội dung phụ.
+- Nội dung thông thường nên đạt kích thước khoảng 14–16px trên desktop.
+- Tiêu đề trang chủ nên nổi bật nhưng không chiếm quá nhiều diện tích.
+- Duy trì khoảng cách thống nhất giữa các section, card và thành phần giao diện.
+- Giữ chiều cao các card sản phẩm tương đối đồng nhất.
+- Không sử dụng quá nhiều kiểu chữ đậm, màu đỏ hoặc chữ in hoa cùng lúc.
+
+## 13. Responsive
+
+Đảm bảo giao diện hoạt động tốt trên:
+
+- Desktop màn hình lớn.
+- Laptop.
+- Tablet.
+- Điện thoại di động.
+
+Trên màn hình nhỏ, điều chỉnh header, thanh tìm kiếm, menu, sidebar và lưới sản phẩm cho phù hợp. Không để tràn ngang, chữ chồng lấn hoặc nút bị cắt.
+
+Giữ nguyên các breakpoint hiện tại nếu chúng đã hoạt động tốt; chỉ điều chỉnh những vị trí cần thiết.
+
+## 14. Yêu cầu kỹ thuật bắt buộc
+
+Trước khi chỉnh sửa:
+
+1. Kiểm tra cấu trúc thư mục và công nghệ frontend hiện tại.
+2. Xác định các component dùng chung cho header, navigation, banner, product card, footer, button và form.
+3. Kiểm tra cách quản lý CSS, SCSS, CSS Modules, Tailwind hoặc hệ thống style đang được dự án sử dụng.
+4. Xác định các biến màu, theme và token đã tồn tại.
+5. Ưu tiên sửa component dùng chung và design token thay vì viết lại từng trang.
+
+### Nguyên tắc triển khai
+
+- Tạo hoặc cập nhật design tokens cho bảng màu mới.
+- Nếu dự án có CSS variables, hãy sử dụng chúng để quản lý màu tập trung.
+- Tái sử dụng component và style hiện có.
+- Không tạo các stylesheet trùng lặp không cần thiết.
+- Không ghi đè CSS toàn cục một cách tùy tiện.
+- Không thay đổi API, backend, database hoặc cấu trúc dữ liệu sản phẩm.
+- Không thay đổi logic nghiệp vụ, định tuyến, xác thực, giỏ hàng, thanh toán, tìm kiếm, lọc, so sánh hoặc yêu thích.
+- Không xóa chức năng đang hoạt động.
+- Không thay đổi tên biến, props, event handler hoặc interface của component nếu không cần thiết.
+- Không thay thế dữ liệu thật bằng dữ liệu mẫu.
+- Không cài thêm thư viện nếu không có nhu cầu thực sự.
+
+Nếu dự án đang dùng kiến trúc MVC hoặc có cấu trúc frontend/backend riêng, hãy giữ nguyên cách phân chia trách nhiệm hiện tại. Chỉ chỉnh sửa phần giao diện và các thành phần liên quan trực tiếp đến trình bày.
+
+## 15. Kiểm thử sau khi chỉnh sửa
+
+Sau khi hoàn thành:
+
+- Kiểm tra trang chủ và tất cả các trang chính.
+- Kiểm tra header, menu, banner và điều hướng.
+- Kiểm tra tìm kiếm, bộ lọc, phân trang và sắp xếp.
+- Kiểm tra chi tiết sản phẩm, giỏ hàng và so sánh.
+- Kiểm tra đăng nhập, popup và các biểu mẫu.
+- Kiểm tra responsive trên desktop và mobile.
+- Kiểm tra lỗi console, lỗi CSS và các thành phần bị vỡ layout.
+- Đảm bảo độ tương phản của chữ và nút đủ tốt.
+- Xác nhận các tính năng hiện có vẫn hoạt động như trước.
+
+## 16. Tiêu chí nghiệm thu
+
+Giao diện mới phải đạt các tiêu chí:
+
+1. Nhìn hiện đại, cao cấp và chuyên nghiệp hơn giao diện cũ.
+2. Tông xám than tạo nhận diện rõ ràng nhưng không khiến toàn bộ trang trở nên tối và nặng nề.
+3. Màu đỏ chỉ đóng vai trò điểm nhấn cho thương hiệu, giá và CTA.
+4. Card sản phẩm dễ nhìn, ảnh rõ, giá nổi bật.
+5. Header và navigation có phân cấp trực quan.
+6. Khoảng cách, viền, bo góc và bóng đổ thống nhất.
+7. Tương thích với dữ liệu và chức năng hiện có.
+8. Không phát sinh lỗi chức năng hoặc thay đổi nghiệp vụ ngoài yêu cầu.
+
+**Hãy trực tiếp kiểm tra mã nguồn và triển khai chỉnh sửa trên dự án hiện có. Không chỉ đưa ra bản thiết kế minh họa hoặc hướng dẫn lý thuyết. Sau khi thực hiện, hãy tổng kết những file đã thay đổi, các component đã cập nhật và kết quả kiểm thử.**
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-13T16:40:33+07:00.
+
+The user's current state is as follows:
+Active Document: c:\Users\admin\Downloads\sprint2\laptop-shop-admin\src\pages\customers\CustomerPurchaseHistoryPage.jsx (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 1
+Other open documents:
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin\src\pages\orders\OrderKanbanPage.jsx (LANGUAGE_UNSPECIFIED)
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin\src\pages\import\BatchImportPage.jsx (LANGUAGE_UNSPECIFIED)
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin-backend\laptop-shop-admin-backend\.env.example (LANGUAGE_UNSPECIFIED)
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin\src\pages\tradein\TradeInPage.jsx (LANGUAGE_UNSPECIFIED)
+- c:\Users\admin\Downloads\sprint2\laptop-shop-admin\src\pages\returns\ReturnsManagementPage.jsx (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>

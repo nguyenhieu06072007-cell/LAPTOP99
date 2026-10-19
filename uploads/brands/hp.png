@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+    <rect width="160" height="60" rx="8" fill="#ffffff" />
+    <circle cx="80" cy="30" r="26" fill="#0096D6" />
+    <text x="78" y="38" font-family="'Trebuchet MS', 'Arial Black', sans-serif" font-weight="bold" font-style="italic" font-size="28" fill="#ffffff" text-anchor="middle">hp</text>
+  </svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+    <rect width="160" height="60" rx="8" fill="#ffffff" />
+    <circle cx="80" cy="30" r="26" fill="none" stroke="#0076CE" stroke-width="3" />
+    <text x="80" y="38" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="20" fill="#0076CE" text-anchor="middle" letter-spacing="2">DELL</text>
+  </svg>

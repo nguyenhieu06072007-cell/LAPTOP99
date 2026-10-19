@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+    <rect width="160" height="60" rx="8" fill="#ffffff" />
+    <g transform="translate(18, 17)">
+      <rect x="0" y="0" width="12" height="12" fill="#F25022"/>
+      <rect x="14" y="0" width="12" height="12" fill="#7FBA00"/>
+      <rect x="0" y="14" width="12" height="12" fill="#00A4EF"/>
+      <rect x="14" y="14" width="12" height="12" fill="#FFB900"/>
+    </g>
+    <text x="52" y="36" font-family="'Segoe UI', Arial, sans-serif" font-weight="600" font-size="16" fill="#5E5E5E">Microsoft</text>
+  </svg>

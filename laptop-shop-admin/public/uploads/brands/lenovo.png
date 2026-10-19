@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+    <rect width="160" height="60" rx="8" fill="#ffffff" />
+    <rect x="20" y="14" width="120" height="32" rx="4" fill="#E2231A" />
+    <text x="80" y="37" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="bold" font-size="20" fill="#ffffff" text-anchor="middle" letter-spacing="1">lenovo</text>
+  </svg>

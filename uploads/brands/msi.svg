@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+    <rect width="160" height="60" rx="8" fill="#ffffff" />
+    <rect x="25" y="14" width="110" height="32" rx="4" fill="#ED1C24" />
+    <text x="80" y="38" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="22" fill="#ffffff" text-anchor="middle" font-style="italic" letter-spacing="3">msi</text>
+  </svg>

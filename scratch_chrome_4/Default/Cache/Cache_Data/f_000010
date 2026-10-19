@@ -1,0 +1,884 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/inventory/InventoryPage.jsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=b976de43"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=b976de43"; const React = __vite__cjsImport3_react.__esModule ? __vite__cjsImport3_react.default : __vite__cjsImport3_react; const useState = __vite__cjsImport3_react["useState"]; const useEffect = __vite__cjsImport3_react["useEffect"];
+import api from "/src/api/axios.js";
+import { useAuth } from "/src/contexts/AuthContext.jsx";
+import Pagination from "/src/components/ui/Pagination.jsx";
+import StatusBadge from "/src/components/ui/StatusBadge.jsx";
+import LoadingSpinner from "/src/components/ui/LoadingSpinner.jsx";
+import { toast } from "/node_modules/.vite/deps/react-hot-toast.js?v=b976de43";
+import { HiPlus, HiXMark } from "/node_modules/.vite/deps/react-icons_hi2.js?v=b976de43";
+const formatCurrency = (amount) => {
+  if (!amount) return "0 ₫";
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+};
+export default function InventoryPage() {
+  _s();
+  const { can } = useAuth();
+  const [activeTab, setActiveTab] = useState("movements");
+  const [movements, setMovements] = useState([]);
+  const [moveLoading, setMoveLoading] = useState(false);
+  const [moveTotal, setMoveTotal] = useState(0);
+  const [movePage, setMovePage] = useState(1);
+  const [filters, setFilters] = useState({ type: "", from: "", to: "" });
+  const [lowStock, setLowStock] = useState([]);
+  const [lowLoading, setLowLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [productSearch, setProductSearch] = useState("");
+  const [formData, setFormData] = useState({
+    product_id: "",
+    type: "import",
+    quantity: 1,
+    unit_cost: 0,
+    reason: ""
+  });
+  useEffect(() => {
+    if (activeTab === "movements") {
+      fetchMovements();
+    } else {
+      fetchLowStock();
+    }
+  }, [activeTab, movePage, filters]);
+  const fetchMovements = async () => {
+    try {
+      setMoveLoading(true);
+      const res = await api.get("/inventory/movements", {
+        params: { ...filters, page: movePage, limit: 10 }
+      });
+      setMovements(res.data.data);
+      setMoveTotal(res.data.meta.total);
+    } catch (err) {
+      toast.error("Lỗi tải lịch sử kho");
+    } finally {
+      setMoveLoading(false);
+    }
+  };
+  const fetchLowStock = async () => {
+    try {
+      setLowLoading(true);
+      const res = await api.get("/inventory/low-stock");
+      setLowStock(res.data.data);
+    } catch (err) {
+      toast.error("Lỗi tải sản phẩm sắp hết hàng");
+    } finally {
+      setLowLoading(false);
+    }
+  };
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (productSearch.length > 1 && isModalOpen) {
+        try {
+          const res = await api.get("/products", { params: { search: productSearch, limit: 5 } });
+          setProducts(res.data.data);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounce);
+  }, [productSearch, isModalOpen]);
+  const handleSaveMovement = async (e) => {
+    e.preventDefault();
+    if (!formData.product_id) return toast.error("Vui lòng chọn sản phẩm");
+    if (formData.type === "adjust" && !formData.reason) return toast.error("Vui lòng nhập lý do điều chỉnh");
+    try {
+      await api.post("/inventory/movements", formData);
+      toast.success("Tạo phiếu kho thành công");
+      setIsModalOpen(false);
+      if (activeTab === "movements") {
+        fetchMovements();
+      } else {
+        fetchLowStock();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Có lỗi xảy ra");
+    }
+  };
+  const getMovementTypeBadge = (type) => {
+    const types = {
+      import: { color: "bg-green-100 text-green-800", label: "Nhập kho" },
+      export: { color: "bg-blue-100 text-blue-800", label: "Xuất kho" },
+      adjust: { color: "bg-purple-100 text-purple-800", label: "Điều chỉnh" },
+      return: { color: "bg-orange-100 text-orange-800", label: "Trả hàng" }
+    };
+    const t = types[type] || { color: "bg-gray-100 text-gray-800", label: type };
+    return /* @__PURE__ */ jsxDEV("span", { className: `px-2.5 py-1 text-xs font-medium rounded-full ${t.color}`, children: t.label }, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 134,
+      columnNumber: 12
+    }, this);
+  };
+  return /* @__PURE__ */ jsxDEV("div", { className: "space-y-6", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between items-center", children: [
+      /* @__PURE__ */ jsxDEV("h1", { className: "text-2xl font-bold text-gray-900", children: "Quản lý kho hàng" }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 140,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          onClick: () => {
+            setFormData({ product_id: "", type: "import", quantity: 1, unit_cost: 0, reason: "" });
+            setProductSearch("");
+            setProducts([]);
+            setIsModalOpen(true);
+          },
+          className: "flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition",
+          children: [
+            /* @__PURE__ */ jsxDEV(HiPlus, { className: "w-5 h-5" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 150,
+              columnNumber: 11
+            }, this),
+            "Tạo phiếu kho"
+          ]
+        },
+        void 0,
+        true,
+        {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 141,
+          columnNumber: 9
+        },
+        this
+      )
+    ] }, void 0, true, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 139,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "flex border-b border-gray-200", children: [
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          className: `py-3 px-6 text-sm font-medium border-b-2 transition-colors ${activeTab === "movements" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`,
+          onClick: () => setActiveTab("movements"),
+          children: "Lịch sử xuất nhập kho"
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 156,
+          columnNumber: 9
+        },
+        this
+      ),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          className: `py-3 px-6 text-sm font-medium border-b-2 transition-colors ${activeTab === "low-stock" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`,
+          onClick: () => setActiveTab("low-stock"),
+          children: "Sản phẩm sắp hết hàng"
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 162,
+          columnNumber: 9
+        },
+        this
+      )
+    ] }, void 0, true, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 155,
+      columnNumber: 7
+    }, this),
+    activeTab === "movements" && /* @__PURE__ */ jsxDEV("div", { className: "space-y-4", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex gap-4 items-center bg-white p-4 rounded-lg shadow-sm", children: [
+        /* @__PURE__ */ jsxDEV(
+          "select",
+          {
+            value: filters.type,
+            onChange: (e) => setFilters({ ...filters, type: e.target.value }),
+            className: "border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500",
+            children: [
+              /* @__PURE__ */ jsxDEV("option", { value: "", children: "Tất cả loại phiếu" }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 178,
+                columnNumber: 15
+              }, this),
+              /* @__PURE__ */ jsxDEV("option", { value: "import", children: "Nhập kho" }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 179,
+                columnNumber: 15
+              }, this),
+              /* @__PURE__ */ jsxDEV("option", { value: "export", children: "Xuất kho" }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 180,
+                columnNumber: 15
+              }, this),
+              /* @__PURE__ */ jsxDEV("option", { value: "adjust", children: "Điều chỉnh" }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 181,
+                columnNumber: 15
+              }, this),
+              /* @__PURE__ */ jsxDEV("option", { value: "return", children: "Trả hàng" }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 182,
+                columnNumber: 15
+              }, this)
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 173,
+            columnNumber: 13
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV(
+          "input",
+          {
+            type: "date",
+            value: filters.from,
+            onChange: (e) => setFilters({ ...filters, from: e.target.value }),
+            className: "border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 184,
+            columnNumber: 13
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV("span", { className: "text-gray-500", children: "-" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 190,
+          columnNumber: 13
+        }, this),
+        /* @__PURE__ */ jsxDEV(
+          "input",
+          {
+            type: "date",
+            value: filters.to,
+            onChange: (e) => setFilters({ ...filters, to: e.target.value }),
+            className: "border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 191,
+            columnNumber: 13
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 172,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "bg-white rounded-lg shadow-sm overflow-hidden", children: moveLoading ? /* @__PURE__ */ jsxDEV("div", { className: "p-8 flex justify-center", children: /* @__PURE__ */ jsxDEV(LoadingSpinner, {}, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 201,
+        columnNumber: 52
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 201,
+        columnNumber: 11
+      }, this) : /* @__PURE__ */ jsxDEV(Fragment, { children: [
+        /* @__PURE__ */ jsxDEV("table", { className: "w-full text-left border-collapse whitespace-nowrap", children: [
+          /* @__PURE__ */ jsxDEV("thead", { children: /* @__PURE__ */ jsxDEV("tr", { className: "bg-gray-50 border-b", children: [
+            /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "ID" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 207,
+              columnNumber: 23
+            }, this),
+            /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Sản phẩm" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 208,
+              columnNumber: 23
+            }, this),
+            /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Loại" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 209,
+              columnNumber: 23
+            }, this),
+            /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Số lượng" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 210,
+              columnNumber: 23
+            }, this),
+            /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Tồn kho" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 211,
+              columnNumber: 23
+            }, this),
+            can("cost:read") && /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Đơn giá" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 212,
+              columnNumber: 44
+            }, this),
+            /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Lý do" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 213,
+              columnNumber: 23
+            }, this),
+            /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Ngày tạo" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 214,
+              columnNumber: 23
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 206,
+            columnNumber: 21
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 205,
+            columnNumber: 19
+          }, this),
+          /* @__PURE__ */ jsxDEV("tbody", { className: "divide-y divide-gray-100", children: movements.length === 0 ? /* @__PURE__ */ jsxDEV("tr", { children: /* @__PURE__ */ jsxDEV("td", { colSpan: "8", className: "p-8 text-center text-gray-500", children: "Không có dữ liệu." }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 219,
+            columnNumber: 21
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 219,
+            columnNumber: 17
+          }, this) : movements.map(
+            (m) => /* @__PURE__ */ jsxDEV("tr", { className: "hover:bg-gray-50", children: [
+              /* @__PURE__ */ jsxDEV("td", { className: "p-4 text-gray-500", children: [
+                "#",
+                m.id
+              ] }, void 0, true, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 223,
+                columnNumber: 27
+              }, this),
+              /* @__PURE__ */ jsxDEV("td", { className: "p-4", children: [
+                /* @__PURE__ */ jsxDEV("div", { className: "font-medium text-gray-900", children: m.product?.name }, void 0, false, {
+                  fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                  lineNumber: 225,
+                  columnNumber: 29
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-gray-500", children: [
+                  "SKU: ",
+                  m.product?.sku
+                ] }, void 0, true, {
+                  fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                  lineNumber: 226,
+                  columnNumber: 29
+                }, this)
+              ] }, void 0, true, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 224,
+                columnNumber: 27
+              }, this),
+              /* @__PURE__ */ jsxDEV("td", { className: "p-4", children: getMovementTypeBadge(m.type) }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 228,
+                columnNumber: 27
+              }, this),
+              /* @__PURE__ */ jsxDEV("td", { className: "p-4", children: /* @__PURE__ */ jsxDEV("span", { className: `font-medium ${m.quantity > 0 ? "text-green-600" : "text-red-600"}`, children: m.quantity > 0 ? `+${m.quantity}` : m.quantity }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 230,
+                columnNumber: 29
+              }, this) }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 229,
+                columnNumber: 27
+              }, this),
+              /* @__PURE__ */ jsxDEV("td", { className: "p-4 text-gray-600 text-sm", children: [
+                m.stock_before,
+                " → ",
+                m.stock_after
+              ] }, void 0, true, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 234,
+                columnNumber: 27
+              }, this),
+              can("cost:read") && /* @__PURE__ */ jsxDEV("td", { className: "p-4 text-gray-600", children: m.unit_cost ? formatCurrency(m.unit_cost) : "-" }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 237,
+                columnNumber: 48
+              }, this),
+              /* @__PURE__ */ jsxDEV("td", { className: "p-4 text-gray-500 truncate max-w-[150px]", title: m.reason, children: m.reason || "-" }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 238,
+                columnNumber: 27
+              }, this),
+              /* @__PURE__ */ jsxDEV("td", { className: "p-4 text-gray-500 text-sm", children: new Date(m.created_at).toLocaleString("vi-VN") }, void 0, false, {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 239,
+                columnNumber: 27
+              }, this)
+            ] }, m.id, true, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 222,
+              columnNumber: 17
+            }, this)
+          ) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 217,
+            columnNumber: 19
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 204,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "p-4 border-t", children: /* @__PURE__ */ jsxDEV(Pagination, { currentPage: movePage, totalPages: Math.ceil(moveTotal / 10), onPageChange: setMovePage }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 248,
+          columnNumber: 19
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 247,
+          columnNumber: 17
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 203,
+        columnNumber: 11
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 199,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 171,
+      columnNumber: 7
+    }, this),
+    activeTab === "low-stock" && /* @__PURE__ */ jsxDEV("div", { className: "bg-white rounded-lg shadow-sm overflow-hidden", children: lowLoading ? /* @__PURE__ */ jsxDEV("div", { className: "p-8 flex justify-center", children: /* @__PURE__ */ jsxDEV(LoadingSpinner, {}, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 259,
+      columnNumber: 50
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 259,
+      columnNumber: 9
+    }, this) : /* @__PURE__ */ jsxDEV("table", { className: "w-full text-left border-collapse", children: [
+      /* @__PURE__ */ jsxDEV("thead", { children: /* @__PURE__ */ jsxDEV("tr", { className: "bg-gray-50 border-b", children: [
+        /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "SKU" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 264,
+          columnNumber: 19
+        }, this),
+        /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Sản phẩm" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 265,
+          columnNumber: 19
+        }, this),
+        /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Thương hiệu" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 266,
+          columnNumber: 19
+        }, this),
+        /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Tồn kho" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 267,
+          columnNumber: 19
+        }, this),
+        /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Cảnh báo" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 268,
+          columnNumber: 19
+        }, this),
+        /* @__PURE__ */ jsxDEV("th", { className: "p-4 font-medium text-gray-600", children: "Trạng thái" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 269,
+          columnNumber: 19
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 263,
+        columnNumber: 17
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 262,
+        columnNumber: 15
+      }, this),
+      /* @__PURE__ */ jsxDEV("tbody", { className: "divide-y divide-gray-100", children: lowStock.length === 0 ? /* @__PURE__ */ jsxDEV("tr", { children: /* @__PURE__ */ jsxDEV("td", { colSpan: "6", className: "p-8 text-center text-gray-500", children: "Không có sản phẩm nào sắp hết hàng." }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 274,
+        columnNumber: 17
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 274,
+        columnNumber: 13
+      }, this) : lowStock.map(
+        (item) => /* @__PURE__ */ jsxDEV("tr", { className: `hover:bg-gray-50 ${item.stock_quantity === 0 ? "bg-red-50/50" : ""}`, children: [
+          /* @__PURE__ */ jsxDEV("td", { className: "p-4 text-gray-500", children: item.sku }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 278,
+            columnNumber: 23
+          }, this),
+          /* @__PURE__ */ jsxDEV("td", { className: "p-4 font-medium", children: item.name }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 279,
+            columnNumber: 23
+          }, this),
+          /* @__PURE__ */ jsxDEV("td", { className: "p-4 text-gray-500", children: item.brand?.name }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 280,
+            columnNumber: 23
+          }, this),
+          /* @__PURE__ */ jsxDEV("td", { className: "p-4", children: /* @__PURE__ */ jsxDEV("span", { className: `font-bold ${item.stock_quantity === 0 ? "text-red-600" : "text-orange-500"}`, children: item.stock_quantity }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 282,
+            columnNumber: 25
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 281,
+            columnNumber: 23
+          }, this),
+          /* @__PURE__ */ jsxDEV("td", { className: "p-4 text-gray-500", children: [
+            "≤ ",
+            item.low_stock_threshold || 10
+          ] }, void 0, true, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 286,
+            columnNumber: 23
+          }, this),
+          /* @__PURE__ */ jsxDEV("td", { className: "p-4", children: /* @__PURE__ */ jsxDEV(StatusBadge, { status: item.status }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 288,
+            columnNumber: 25
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 287,
+            columnNumber: 23
+          }, this)
+        ] }, item.id, true, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 277,
+          columnNumber: 13
+        }, this)
+      ) }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 272,
+        columnNumber: 15
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 261,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 257,
+      columnNumber: 7
+    }, this),
+    isModalOpen && /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4", children: /* @__PURE__ */ jsxDEV("div", { className: "bg-white rounded-xl shadow-lg w-full max-w-lg overflow-hidden flex flex-col", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex justify-between items-center p-6 border-b", children: [
+        /* @__PURE__ */ jsxDEV("h2", { className: "text-xl font-semibold", children: "Tạo phiếu kho" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 304,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV("button", { onClick: () => setIsModalOpen(false), className: "text-gray-500 hover:bg-gray-100 p-2 rounded-full", children: /* @__PURE__ */ jsxDEV(HiXMark, { className: "w-5 h-5" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 306,
+          columnNumber: 17
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 305,
+          columnNumber: 15
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 303,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "p-6 overflow-y-auto", children: /* @__PURE__ */ jsxDEV("form", { id: "inventoryForm", onSubmit: handleSaveMovement, className: "space-y-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "relative", children: [
+          /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Tìm kiếm sản phẩm *" }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 313,
+            columnNumber: 19
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              type: "text",
+              value: productSearch,
+              onChange: (e) => setProductSearch(e.target.value),
+              placeholder: "Nhập tên hoặc SKU...",
+              className: "w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+            },
+            void 0,
+            false,
+            {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 314,
+              columnNumber: 19
+            },
+            this
+          ),
+          products.length > 0 && /* @__PURE__ */ jsxDEV("div", { className: "absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto", children: products.map(
+            (p) => /* @__PURE__ */ jsxDEV(
+              "div",
+              {
+                className: "px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm",
+                onClick: () => {
+                  setFormData({ ...formData, product_id: p.id });
+                  setProductSearch(`${p.sku} - ${p.name}`);
+                  setProducts([]);
+                },
+                children: [
+                  /* @__PURE__ */ jsxDEV("div", { className: "font-medium", children: p.name }, void 0, false, {
+                    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                    lineNumber: 333,
+                    columnNumber: 27
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("div", { className: "text-gray-500 text-xs", children: [
+                    "SKU: ",
+                    p.sku,
+                    " | Tồn: ",
+                    p.stock_quantity
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                    lineNumber: 334,
+                    columnNumber: 27
+                  }, this)
+                ]
+              },
+              p.id,
+              true,
+              {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 324,
+                columnNumber: 19
+              },
+              this
+            )
+          ) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 322,
+            columnNumber: 17
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 312,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "flex gap-4", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "flex-1", children: [
+            /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Loại phiếu *" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 343,
+              columnNumber: 21
+            }, this),
+            /* @__PURE__ */ jsxDEV(
+              "select",
+              {
+                value: formData.type,
+                onChange: (e) => setFormData({ ...formData, type: e.target.value }),
+                className: "w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500",
+                children: [
+                  /* @__PURE__ */ jsxDEV("option", { value: "import", children: "Nhập kho" }, void 0, false, {
+                    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                    lineNumber: 349,
+                    columnNumber: 23
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("option", { value: "export", children: "Xuất kho" }, void 0, false, {
+                    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                    lineNumber: 350,
+                    columnNumber: 23
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("option", { value: "adjust", children: "Điều chỉnh" }, void 0, false, {
+                    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                    lineNumber: 351,
+                    columnNumber: 23
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("option", { value: "return", children: "Trả hàng" }, void 0, false, {
+                    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                    lineNumber: 352,
+                    columnNumber: 23
+                  }, this)
+                ]
+              },
+              void 0,
+              true,
+              {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 344,
+                columnNumber: 21
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 342,
+            columnNumber: 19
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "flex-1", children: [
+            /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Số lượng *" }, void 0, false, {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 356,
+              columnNumber: 21
+            }, this),
+            /* @__PURE__ */ jsxDEV(
+              "input",
+              {
+                type: "number",
+                required: true,
+                value: formData.quantity,
+                onChange: (e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 }),
+                className: "w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+              },
+              void 0,
+              false,
+              {
+                fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+                lineNumber: 357,
+                columnNumber: 21
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 355,
+            columnNumber: 19
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 341,
+          columnNumber: 17
+        }, this),
+        formData.type === "import" && /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Đơn giá (VND)" }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 369,
+            columnNumber: 21
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "input",
+            {
+              type: "number",
+              min: "0",
+              value: formData.unit_cost,
+              onChange: (e) => setFormData({ ...formData, unit_cost: parseInt(e.target.value) || 0 }),
+              className: "w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500"
+            },
+            void 0,
+            false,
+            {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 370,
+              columnNumber: 21
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 368,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: [
+            "Lý do/Ghi chú ",
+            formData.type === "adjust" && "*"
+          ] }, void 0, true, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+            lineNumber: 381,
+            columnNumber: 19
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "textarea",
+            {
+              required: formData.type === "adjust",
+              value: formData.reason,
+              onChange: (e) => setFormData({ ...formData, reason: e.target.value }),
+              className: "w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-blue-500 h-20"
+            },
+            void 0,
+            false,
+            {
+              fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+              lineNumber: 382,
+              columnNumber: 19
+            },
+            this
+          )
+        ] }, void 0, true, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 380,
+          columnNumber: 17
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 311,
+        columnNumber: 15
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 310,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "p-6 border-t bg-gray-50 flex justify-end gap-3", children: [
+        /* @__PURE__ */ jsxDEV("button", { type: "button", onClick: () => setIsModalOpen(false), className: "px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg", children: "Hủy" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 393,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV("button", { type: "submit", form: "inventoryForm", className: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700", children: "Lưu phiếu" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+          lineNumber: 396,
+          columnNumber: 15
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+        lineNumber: 392,
+        columnNumber: 13
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 302,
+      columnNumber: 11
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+      lineNumber: 301,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx",
+    lineNumber: 138,
+    columnNumber: 5
+  }, this);
+}
+_s(InventoryPage, "qjF/Df+EYDm4BgxAbKrdBjAGoO8=", false, function() {
+  return [useAuth];
+});
+_c = InventoryPage;
+var _c;
+$RefreshReg$(_c, "InventoryPage");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/pages/inventory/InventoryPage.jsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QUFDLFNBQUksV0FBVSxrREFDYjtBQUFBLCtCQUFDLFlBQU8sTUFBSyxVQUFTLFNBQVMsTUFBTTlDLGVBQWUsS0FBSyxHQUFHLFdBQVUsc0VBQW9FLG1CQUExSTtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBRUE7QUFBQSxRQUNBLHVCQUFDLFlBQU8sTUFBSyxVQUFTLE1BQUssaUJBQWdCLFdBQVUsaUVBQStELHlCQUFwSDtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBRUE7QUFBQSxXQU5GO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFPQTtBQUFBLFNBakdGO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FrR0EsS0FuR0Y7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQW9HQTtBQUFBLE9BdlFKO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0F5UUE7QUFFSjtBQUFDdEIsR0FuWHVCRCxlQUFhO0FBQUEsVUFDbkJkLE9BQU87QUFBQTtBQUFBLEtBRERjO0FBQWEsSUFBQTBGO0FBQUEsYUFBQUEsSUFBQSIsIm5hbWVzIjpbIlJlYWN0IiwidXNlU3RhdGUiLCJ1c2VFZmZlY3QiLCJhcGkiLCJ1c2VBdXRoIiwiUGFnaW5hdGlvbiIsIlN0YXR1c0JhZGdlIiwiTG9hZGluZ1NwaW5uZXIiLCJ0b2FzdCIsIkhpUGx1cyIsIkhpWE1hcmsiLCJmb3JtYXRDdXJyZW5jeSIsImFtb3VudCIsIkludGwiLCJOdW1iZXJGb3JtYXQiLCJzdHlsZSIsImN1cnJlbmN5IiwiZm9ybWF0IiwiSW52ZW50b3J5UGFnZSIsIl9zIiwiY2FuIiwiYWN0aXZlVGFiIiwic2V0QWN0aXZlVGFiIiwibW92ZW1lbnRzIiwic2V0TW92ZW1lbnRzIiwibW92ZUxvYWRpbmciLCJzZXRNb3ZlTG9hZGluZyIsIm1vdmVUb3RhbCIsInNldE1vdmVUb3RhbCIsIm1vdmVQYWdlIiwic2V0TW92ZVBhZ2UiLCJmaWx0ZXJzIiwic2V0RmlsdGVycyIsInR5cGUiLCJmcm9tIiwidG8iLCJsb3dTdG9jayIsInNldExvd1N0b2NrIiwibG93TG9hZGluZyIsInNldExvd0xvYWRpbmciLCJpc01vZGFsT3BlbiIsInNldElzTW9kYWxPcGVuIiwicHJvZHVjdHMiLCJzZXRQcm9kdWN0cyIsInByb2R1Y3RTZWFyY2giLCJzZXRQcm9kdWN0U2VhcmNoIiwiZm9ybURhdGEiLCJzZXRGb3JtRGF0YSIsInByb2R1Y3RfaWQiLCJxdWFudGl0eSIsInVuaXRfY29zdCIsInJlYXNvbiIsImZldGNoTW92ZW1lbnRzIiwiZmV0Y2hMb3dTdG9jayIsInJlcyIsImdldCIsInBhcmFtcyIsInBhZ2UiLCJsaW1pdCIsImRhdGEiLCJtZXRhIiwidG90YWwiLCJlcnIiLCJlcnJvciIsImRlbGF5RGVib3VuY2UiLCJzZXRUaW1lb3V0IiwibGVuZ3RoIiwic2VhcmNoIiwiY29uc29sZSIsImNsZWFyVGltZW91dCIsImhhbmRsZVNhdmVNb3ZlbWVudCIsImUiLCJwcmV2ZW50RGVmYXVsdCIsInBvc3QiLCJzdWNjZXNzIiwicmVzcG9uc2UiLCJtZXNzYWdlIiwiZ2V0TW92ZW1lbnRUeXBlQmFkZ2UiLCJ0eXBlcyIsImltcG9ydCIsImNvbG9yIiwibGFiZWwiLCJleHBvcnQiLCJhZGp1c3QiLCJyZXR1cm4iLCJ0IiwidGFyZ2V0IiwidmFsdWUiLCJtYXAiLCJtIiwiaWQiLCJwcm9kdWN0IiwibmFtZSIsInNrdSIsInN0b2NrX2JlZm9yZSIsInN0b2NrX2FmdGVyIiwiRGF0ZSIsImNyZWF0ZWRfYXQiLCJ0b0xvY2FsZVN0cmluZyIsIk1hdGgiLCJjZWlsIiwiaXRlbSIsInN0b2NrX3F1YW50aXR5IiwiYnJhbmQiLCJsb3dfc3RvY2tfdGhyZXNob2xkIiwic3RhdHVzIiwicCIsInBhcnNlSW50IiwiX2MiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiSW52ZW50b3J5UGFnZS5qc3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IFJlYWN0LCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tICdyZWFjdCc7XG5pbXBvcnQgYXBpIGZyb20gJy4uLy4uL2FwaS9heGlvcyc7XG5pbXBvcnQgeyB1c2VBdXRoIH0gZnJvbSAnLi4vLi4vY29udGV4dHMvQXV0aENvbnRleHQnO1xuaW1wb3J0IFBhZ2luYXRpb24gZnJvbSAnLi4vLi4vY29tcG9uZW50cy91aS9QYWdpbmF0aW9uJztcbmltcG9ydCBTdGF0dXNCYWRnZSBmcm9tICcuLi8uLi9jb21wb25lbnRzL3VpL1N0YXR1c0JhZGdlJztcbmltcG9ydCBMb2FkaW5nU3Bpbm5lciBmcm9tICcuLi8uLi9jb21wb25lbnRzL3VpL0xvYWRpbmdTcGlubmVyJztcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSAncmVhY3QtaG90LXRvYXN0JztcbmltcG9ydCB7IEhpUGx1cywgSGlYTWFyayB9IGZyb20gJ3JlYWN0LWljb25zL2hpMic7XG5cbmNvbnN0IGZvcm1hdEN1cnJlbmN5ID0gKGFtb3VudCkgPT4ge1xuICBpZiAoIWFtb3VudCkgcmV0dXJuICcwIOKCqyc7XG4gIHJldHVybiBuZXcgSW50bC5OdW1iZXJGb3JtYXQoJ3ZpLVZOJywgeyBzdHlsZTogJ2N1cnJlbmN5JywgY3VycmVuY3k6ICdWTkQnIH0pLmZvcm1hdChhbW91bnQpO1xufTtcblxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gSW52ZW50b3J5UGFnZSgpIHtcbiAgY29uc3QgeyBjYW4gfSA9IHVzZUF1dGgoKTtcbiAgY29uc3QgW2FjdGl2ZVRhYiwgc2V0QWN0aXZlVGFiXSA9IHVzZVN0YXRlKCdtb3ZlbWVudHMnKTsgLy8gJ21vdmVtZW50cycgfCAnbG93LXN0b2NrJ1xuICBcbiAgLy8gTW92ZW1lbnRzIFN0YXRlXG4gIGNvbnN0IFttb3ZlbWVudHMsIHNldE1vdmVtZW50c10gPSB1c2VTdGF0ZShbXSk7XG4gIGNvbnN0IFttb3ZlTG9hZGluZywgc2V0TW92ZUxvYWRpbmddID0gdXNlU3RhdGUoZmFsc2UpO1xuICBjb25zdCBbbW92ZVRvdGFsLCBzZXRNb3ZlVG90YWxdID0gdXNlU3RhdGUoMCk7XG4gIGNvbnN0IFttb3ZlUGFnZSwgc2V0TW92ZVBhZ2VdID0gdXNlU3RhdGUoMSk7XG4gIGNvbnN0IFtmaWx0ZXJzLCBzZXRGaWx0ZXJzXSA9IHVzZVN0YXRlKHsgdHlwZTogJycsIGZyb206ICcnLCB0bzogJycgfSk7XG4gIFxuICAvLyBMb3cgU3RvY2sgU3RhdGVcbiAgY29uc3QgW2xvd1N0b2NrLCBzZXRMb3dTdG9ja10gPSB1c2VTdGF0ZShbXSk7XG4gIGNvbnN0IFtsb3dMb2FkaW5nLCBzZXRMb3dMb2FkaW5nXSA9IHVzZVN0YXRlKGZhbHNlKTtcblxuICAvLyBNb2RhbCBTdGF0ZVxuICBjb25zdCBbaXNNb2RhbE9wZW4sIHNldElzTW9kYWxPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKTtcbiAgY29uc3QgW3Byb2R1Y3RzLCBzZXRQcm9kdWN0c10gPSB1c2VTdGF0ZShbXSk7XG4gIGNvbnN0IFtwcm9kdWN0U2VhcmNoLCBzZXRQcm9kdWN0U2VhcmNoXSA9IHVzZVN0YXRlKCcnKTtcbiAgY29uc3QgW2Zvcm1EYXRhLCBzZXRGb3JtRGF0YV0gPSB1c2VTdGF0ZSh7XG4gICAgcHJvZHVjdF9pZDogJycsIHR5cGU6ICdpbXBvcnQnLCBxdWFudGl0eTogMSwgdW5pdF9jb3N0OiAwLCByZWFzb246ICcnXG4gIH0pO1xuXG4gIHVzZUVmZmVjdCgoKSA9PiB7XG4gICAgaWYgKGFjdGl2ZVRhYiA9PT0gJ21vdmVtZW50cycpIHtcbiAgICAgIGZldGNoTW92ZW1lbnRzKCk7XG4gICAgfSBlbHNlIHtcbiAgICAgIGZldGNoTG93U3RvY2soKTtcbiAgICB9XG4gIH0sIFthY3RpdmVUYWIsIG1vdmVQYWdlLCBmaWx0ZXJzXSk7XG5cbiAgY29uc3QgZmV0Y2hNb3ZlbWVudHMgPSBhc3luYyAoKSA9PiB7XG4gICAgdHJ5IHtcbiAgICAgIHNldE1vdmVMb2FkaW5nKHRydWUpO1xuICAgICAgY29uc3QgcmVzID0gYXdhaXQgYXBpLmdldCgnL2ludmVudG9yeS9tb3ZlbWVudHMnLCB7XG4gICAgICAgIHBhcmFtczogeyAuLi5maWx0ZXJzLCBwYWdlOiBtb3ZlUGFnZSwgbGltaXQ6IDEwIH1cbiAgICAgIH0pO1xuICAgICAgc2V0TW92ZW1lbnRzKHJlcy5kYXRhLmRhdGEpO1xuICAgICAgc2V0TW92ZVRvdGFsKHJlcy5kYXRhLm1ldGEudG90YWwpO1xuICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgdG9hc3QuZXJyb3IoJ0zhu5dpIHThuqNpIGzhu4tjaCBz4butIGtobycpO1xuICAgIH0gZmluYWxseSB7XG4gICAgICBzZXRNb3ZlTG9hZGluZyhmYWxzZSk7XG4gICAgfVxuICB9O1xuXG4gIGNvbnN0IGZldGNoTG93U3RvY2sgPSBhc3luYyAoKSA9PiB7XG4gICAgdHJ5IHtcbiAgICAgIHNldExvd0xvYWRpbmcodHJ1ZSk7XG4gICAgICBjb25zdCByZXMgPSBhd2FpdCBhcGkuZ2V0KCcvaW52ZW50b3J5L2xvdy1zdG9jaycpO1xuICAgICAgc2V0TG93U3RvY2socmVzLmRhdGEuZGF0YSk7XG4gICAgfSBjYXRjaCAoZXJyKSB7XG4gICAgICB0b2FzdC5lcnJvcignTOG7l2kgdOG6o2kgc+G6o24gcGjhuqltIHPhuq9wIGjhur90IGjDoG5nJyk7XG4gICAgfSBmaW5hbGx5IHtcbiAgICAgIHNldExvd0xvYWRpbmcoZmFsc2UpO1xuICAgIH1cbiAgfTtcblxuICAvLyBQcm9kdWN0IFNlYXJjaCBmb3IgTW9kYWxcbiAgdXNlRWZmZWN0KCgpID0+IHtcbiAgICBjb25zdCBkZWxheURlYm91bmNlID0gc2V0VGltZW91dChhc3luYyAoKSA9PiB7XG4gICAgICBpZiAocHJvZHVjdFNlYXJjaC5sZW5ndGggPiAxICYmIGlzTW9kYWxPcGVuKSB7XG4gICAgICAgIHRyeSB7XG4gICAgICAgICAgY29uc3QgcmVzID0gYXdhaXQgYXBpLmdldCgnL3Byb2R1Y3RzJywgeyBwYXJhbXM6IHsgc2VhcmNoOiBwcm9kdWN0U2VhcmNoLCBsaW1pdDogNSB9IH0pO1xuICAgICAgICAgIHNldFByb2R1Y3RzKHJlcy5kYXRhLmRhdGEpO1xuICAgICAgICB9IGNhdGNoIChlcnJvcikge1xuICAgICAgICAgIGNvbnNvbGUuZXJyb3IoZXJyb3IpO1xuICAgICAgICB9XG4gICAgICB9XG4gICAgfSwgNTAwKTtcbiAgICByZXR1cm4gKCkgPT4gY2xlYXJUaW1lb3V0KGRlbGF5RGVib3VuY2UpO1xuICB9LCBbcHJvZHVjdFNlYXJjaCwgaXNNb2RhbE9wZW5dKTtcblxuICBjb25zdCBoYW5kbGVTYXZlTW92ZW1lbnQgPSBhc3luYyAoZSkgPT4ge1xuICAgIGUucHJldmVudERlZmF1bHQoKTtcbiAgICBpZiAoIWZvcm1EYXRhLnByb2R1Y3RfaWQpIHJldHVybiB0b2FzdC5lcnJvcignVnVpIGzDsm5nIGNo4buNbiBz4bqjbiBwaOG6qW0nKTtcbiAgICBpZiAoZm9ybURhdGEudHlwZSA9PT0gJ2FkanVzdCcgJiYgIWZvcm1EYXRhLnJlYXNvbikgcmV0dXJuIHRvYXN0LmVycm9yKCdWdWkgbMOybmcgbmjhuq1wIGzDvSBkbyDEkWnhu4F1IGNo4buJbmgnKTtcblxuICAgIHRyeSB7XG4gICAgICBhd2FpdCBhcGkucG9zdCgnL2ludmVudG9yeS9tb3ZlbWVudHMnLCBmb3JtRGF0YSk7XG4gICAgICB0b2FzdC5zdWNjZXNzKCdU4bqhbyBwaGnhur91IGtobyB0aMOgbmggY8O0bmcnKTtcbiAgICAgIHNldElzTW9kYWxPcGVuKGZhbHNlKTtcbiAgICAgIGlmIChhY3RpdmVUYWIgPT09ICdtb3ZlbWVudHMnKSB7XG4gICAgICAgIGZldGNoTW92ZW1lbnRzKCk7XG4gICAgICB9IGVsc2Uge1xuICAgICAgICBmZXRjaExvd1N0b2NrKCk7XG4gICAgICB9XG4gICAgfSBjYXRjaCAoZXJyKSB7XG4gICAgICB0b2FzdC5lcnJvcihlcnIucmVzcG9uc2U/LmRhdGE/Lm1lc3NhZ2UgfHwgJ0PDsyBs4buXaSB44bqjeSByYScpO1xuICAgIH1cbiAgfTtcblxuICBjb25zdCBnZXRNb3ZlbWVudFR5cGVCYWRnZSA9ICh0eXBlKSA9PiB7XG4gICAgY29uc3QgdHlwZXMgPSB7XG4gICAgICBpbXBvcnQ6IHsgY29sb3I6ICdiZy1ncmVlbi0xMDAgdGV4dC1ncmVlbi04MDAnLCBsYWJlbDogJ05o4bqtcCBraG8nIH0sXG4gICAgICBleHBvcnQ6IHsgY29sb3I6ICdiZy1ibHVlLTEwMCB0ZXh0LWJsdWUtODAwJywgbGFiZWw6ICdYdeG6pXQga2hvJyB9LFxuICAgICAgYWRqdXN0OiB7IGNvbG9yOiAnYmctcHVycGxlLTEwMCB0ZXh0LXB1cnBsZS04MDAnLCBsYWJlbDogJ8SQaeG7gXUgY2jhu4luaCcgfSxcbiAgICAgIHJldHVybjogeyBjb2xvcjogJ2JnLW9yYW5nZS0xMDAgdGV4dC1vcmFuZ2UtODAwJywgbGFiZWw6ICdUcuG6oyBow6BuZycgfVxuICAgIH07XG4gICAgY29uc3QgdCA9IHR5cGVzW3R5cGVdIHx8IHsgY29sb3I6ICdiZy1ncmF5LTEwMCB0ZXh0LWdyYXktODAwJywgbGFiZWw6IHR5cGUgfTtcbiAgICByZXR1cm4gPHNwYW4gY2xhc3NOYW1lPXtgcHgtMi41IHB5LTEgdGV4dC14cyBmb250LW1lZGl1bSByb3VuZGVkLWZ1bGwgJHt0LmNvbG9yfWB9Pnt0LmxhYmVsfTwvc3Bhbj47XG4gIH07XG5cbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNlwiPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGp1c3RpZnktYmV0d2VlbiBpdGVtcy1jZW50ZXJcIj5cbiAgICAgICAgPGgxIGNsYXNzTmFtZT1cInRleHQtMnhsIGZvbnQtYm9sZCB0ZXh0LWdyYXktOTAwXCI+UXXhuqNuIGzDvSBraG8gaMOgbmc8L2gxPlxuICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgb25DbGljaz17KCkgPT4ge1xuICAgICAgICAgICAgc2V0Rm9ybURhdGEoeyBwcm9kdWN0X2lkOiAnJywgdHlwZTogJ2ltcG9ydCcsIHF1YW50aXR5OiAxLCB1bml0X2Nvc3Q6IDAsIHJlYXNvbjogJycgfSk7XG4gICAgICAgICAgICBzZXRQcm9kdWN0U2VhcmNoKCcnKTtcbiAgICAgICAgICAgIHNldFByb2R1Y3RzKFtdKTtcbiAgICAgICAgICAgIHNldElzTW9kYWxPcGVuKHRydWUpO1xuICAgICAgICAgIH19XG4gICAgICAgICAgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgYmctYmx1ZS02MDAgdGV4dC13aGl0ZSBweC00IHB5LTIgcm91bmRlZC1sZyBob3ZlcjpiZy1ibHVlLTcwMCB0cmFuc2l0aW9uXCJcbiAgICAgICAgPlxuICAgICAgICAgIDxIaVBsdXMgY2xhc3NOYW1lPVwidy01IGgtNVwiIC8+XG4gICAgICAgICAgVOG6oW8gcGhp4bq/dSBraG9cbiAgICAgICAgPC9idXR0b24+XG4gICAgICA8L2Rpdj5cblxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGJvcmRlci1iIGJvcmRlci1ncmF5LTIwMFwiPlxuICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgY2xhc3NOYW1lPXtgcHktMyBweC02IHRleHQtc20gZm9udC1tZWRpdW0gYm9yZGVyLWItMiB0cmFuc2l0aW9uLWNvbG9ycyAke2FjdGl2ZVRhYiA9PT0gJ21vdmVtZW50cycgPyAnYm9yZGVyLWJsdWUtNjAwIHRleHQtYmx1ZS02MDAnIDogJ2JvcmRlci10cmFuc3BhcmVudCB0ZXh0LWdyYXktNTAwIGhvdmVyOnRleHQtZ3JheS03MDAnfWB9XG4gICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0QWN0aXZlVGFiKCdtb3ZlbWVudHMnKX1cbiAgICAgICAgPlxuICAgICAgICAgIEzhu4tjaCBz4butIHh14bqldCBuaOG6rXAga2hvXG4gICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgY2xhc3NOYW1lPXtgcHktMyBweC02IHRleHQtc20gZm9udC1tZWRpdW0gYm9yZGVyLWItMiB0cmFuc2l0aW9uLWNvbG9ycyAke2FjdGl2ZVRhYiA9PT0gJ2xvdy1zdG9jaycgPyAnYm9yZGVyLWJsdWUtNjAwIHRleHQtYmx1ZS02MDAnIDogJ2JvcmRlci10cmFuc3BhcmVudCB0ZXh0LWdyYXktNTAwIGhvdmVyOnRleHQtZ3JheS03MDAnfWB9XG4gICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0QWN0aXZlVGFiKCdsb3ctc3RvY2snKX1cbiAgICAgICAgPlxuICAgICAgICAgIFPhuqNuIHBo4bqpbSBz4bqvcCBo4bq/dCBow6BuZ1xuICAgICAgICA8L2J1dHRvbj5cbiAgICAgIDwvZGl2PlxuXG4gICAgICB7YWN0aXZlVGFiID09PSAnbW92ZW1lbnRzJyAmJiAoXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00XCI+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGdhcC00IGl0ZW1zLWNlbnRlciBiZy13aGl0ZSBwLTQgcm91bmRlZC1sZyBzaGFkb3ctc21cIj5cbiAgICAgICAgICAgIDxzZWxlY3RcbiAgICAgICAgICAgICAgdmFsdWU9e2ZpbHRlcnMudHlwZX1cbiAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRGaWx0ZXJzKHsgLi4uZmlsdGVycywgdHlwZTogZS50YXJnZXQudmFsdWUgfSl9XG4gICAgICAgICAgICAgIGNsYXNzTmFtZT1cImJvcmRlciBib3JkZXItZ3JheS0zMDAgcm91bmRlZC1sZyBweC0zIHB5LTIgb3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1ibHVlLTUwMFwiXG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJcIj5U4bqldCBj4bqjIGxv4bqhaSBwaGnhur91PC9vcHRpb24+XG4gICAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJpbXBvcnRcIj5OaOG6rXAga2hvPC9vcHRpb24+XG4gICAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJleHBvcnRcIj5YdeG6pXQga2hvPC9vcHRpb24+XG4gICAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJhZGp1c3RcIj7EkGnhu4F1IGNo4buJbmg8L29wdGlvbj5cbiAgICAgICAgICAgICAgPG9wdGlvbiB2YWx1ZT1cInJldHVyblwiPlRy4bqjIGjDoG5nPC9vcHRpb24+XG4gICAgICAgICAgICA8L3NlbGVjdD5cbiAgICAgICAgICAgIDxpbnB1dFxuICAgICAgICAgICAgICB0eXBlPVwiZGF0ZVwiXG4gICAgICAgICAgICAgIHZhbHVlPXtmaWx0ZXJzLmZyb219XG4gICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0RmlsdGVycyh7IC4uLmZpbHRlcnMsIGZyb206IGUudGFyZ2V0LnZhbHVlIH0pfVxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJib3JkZXIgYm9yZGVyLWdyYXktMzAwIHJvdW5kZWQtbGcgcHgtMyBweS0yIG91dGxpbmUtbm9uZSBmb2N1czpib3JkZXItYmx1ZS01MDBcIlxuICAgICAgICAgICAgLz5cbiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtZ3JheS01MDBcIj4tPC9zcGFuPlxuICAgICAgICAgICAgPGlucHV0XG4gICAgICAgICAgICAgIHR5cGU9XCJkYXRlXCJcbiAgICAgICAgICAgICAgdmFsdWU9e2ZpbHRlcnMudG99XG4gICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0RmlsdGVycyh7IC4uLmZpbHRlcnMsIHRvOiBlLnRhcmdldC52YWx1ZSB9KX1cbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiYm9yZGVyIGJvcmRlci1ncmF5LTMwMCByb3VuZGVkLWxnIHB4LTMgcHktMiBvdXRsaW5lLW5vbmUgZm9jdXM6Ym9yZGVyLWJsdWUtNTAwXCJcbiAgICAgICAgICAgIC8+XG4gICAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLXdoaXRlIHJvdW5kZWQtbGcgc2hhZG93LXNtIG92ZXJmbG93LWhpZGRlblwiPlxuICAgICAgICAgICAge21vdmVMb2FkaW5nID8gKFxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInAtOCBmbGV4IGp1c3RpZnktY2VudGVyXCI+PExvYWRpbmdTcGlubmVyIC8+PC9kaXY+XG4gICAgICAgICAgICApIDogKFxuICAgICAgICAgICAgICA8PlxuICAgICAgICAgICAgICAgIDx0YWJsZSBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1sZWZ0IGJvcmRlci1jb2xsYXBzZSB3aGl0ZXNwYWNlLW5vd3JhcFwiPlxuICAgICAgICAgICAgICAgICAgPHRoZWFkPlxuICAgICAgICAgICAgICAgICAgICA8dHIgY2xhc3NOYW1lPVwiYmctZ3JheS01MCBib3JkZXItYlwiPlxuICAgICAgICAgICAgICAgICAgICAgIDx0aCBjbGFzc05hbWU9XCJwLTQgZm9udC1tZWRpdW0gdGV4dC1ncmF5LTYwMFwiPklEPC90aD5cbiAgICAgICAgICAgICAgICAgICAgICA8dGggY2xhc3NOYW1lPVwicC00IGZvbnQtbWVkaXVtIHRleHQtZ3JheS02MDBcIj5T4bqjbiBwaOG6qW08L3RoPlxuICAgICAgICAgICAgICAgICAgICAgIDx0aCBjbGFzc05hbWU9XCJwLTQgZm9udC1tZWRpdW0gdGV4dC1ncmF5LTYwMFwiPkxv4bqhaTwvdGg+XG4gICAgICAgICAgICAgICAgICAgICAgPHRoIGNsYXNzTmFtZT1cInAtNCBmb250LW1lZGl1bSB0ZXh0LWdyYXktNjAwXCI+U+G7kSBsxrDhu6NuZzwvdGg+XG4gICAgICAgICAgICAgICAgICAgICAgPHRoIGNsYXNzTmFtZT1cInAtNCBmb250LW1lZGl1bSB0ZXh0LWdyYXktNjAwXCI+VOG7k24ga2hvPC90aD5cbiAgICAgICAgICAgICAgICAgICAgICB7Y2FuKCdjb3N0OnJlYWQnKSAmJiA8dGggY2xhc3NOYW1lPVwicC00IGZvbnQtbWVkaXVtIHRleHQtZ3JheS02MDBcIj7EkMahbiBnacOhPC90aD59XG4gICAgICAgICAgICAgICAgICAgICAgPHRoIGNsYXNzTmFtZT1cInAtNCBmb250LW1lZGl1bSB0ZXh0LWdyYXktNjAwXCI+TMO9IGRvPC90aD5cbiAgICAgICAgICAgICAgICAgICAgICA8dGggY2xhc3NOYW1lPVwicC00IGZvbnQtbWVkaXVtIHRleHQtZ3JheS02MDBcIj5OZ8OgeSB04bqhbzwvdGg+XG4gICAgICAgICAgICAgICAgICAgIDwvdHI+XG4gICAgICAgICAgICAgICAgICA8L3RoZWFkPlxuICAgICAgICAgICAgICAgICAgPHRib2R5IGNsYXNzTmFtZT1cImRpdmlkZS15IGRpdmlkZS1ncmF5LTEwMFwiPlxuICAgICAgICAgICAgICAgICAgICB7bW92ZW1lbnRzLmxlbmd0aCA9PT0gMCA/IChcbiAgICAgICAgICAgICAgICAgICAgICA8dHI+PHRkIGNvbFNwYW49XCI4XCIgY2xhc3NOYW1lPVwicC04IHRleHQtY2VudGVyIHRleHQtZ3JheS01MDBcIj5LaMO0bmcgY8OzIGThu68gbGnhu4d1LjwvdGQ+PC90cj5cbiAgICAgICAgICAgICAgICAgICAgKSA6IChcbiAgICAgICAgICAgICAgICAgICAgICBtb3ZlbWVudHMubWFwKG0gPT4gKFxuICAgICAgICAgICAgICAgICAgICAgICAgPHRyIGtleT17bS5pZH0gY2xhc3NOYW1lPVwiaG92ZXI6YmctZ3JheS01MFwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8dGQgY2xhc3NOYW1lPVwicC00IHRleHQtZ3JheS01MDBcIj4je20uaWR9PC90ZD5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHRkIGNsYXNzTmFtZT1cInAtNFwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZm9udC1tZWRpdW0gdGV4dC1ncmF5LTkwMFwiPnttLnByb2R1Y3Q/Lm5hbWV9PC9kaXY+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtZ3JheS01MDBcIj5TS1U6IHttLnByb2R1Y3Q/LnNrdX08L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgPC90ZD5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHRkIGNsYXNzTmFtZT1cInAtNFwiPntnZXRNb3ZlbWVudFR5cGVCYWRnZShtLnR5cGUpfTwvdGQ+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDx0ZCBjbGFzc05hbWU9XCJwLTRcIj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9e2Bmb250LW1lZGl1bSAke20ucXVhbnRpdHkgPiAwID8gJ3RleHQtZ3JlZW4tNjAwJyA6ICd0ZXh0LXJlZC02MDAnfWB9PlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAge20ucXVhbnRpdHkgPiAwID8gYCske20ucXVhbnRpdHl9YCA6IG0ucXVhbnRpdHl9XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8L3RkPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8dGQgY2xhc3NOYW1lPVwicC00IHRleHQtZ3JheS02MDAgdGV4dC1zbVwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHttLnN0b2NrX2JlZm9yZX0gJnJhcnI7IHttLnN0b2NrX2FmdGVyfVxuICAgICAgICAgICAgICAgICAgICAgICAgICA8L3RkPlxuICAgICAgICAgICAgICAgICAgICAgICAgICB7Y2FuKCdjb3N0OnJlYWQnKSAmJiA8dGQgY2xhc3NOYW1lPVwicC00IHRleHQtZ3JheS02MDBcIj57bS51bml0X2Nvc3QgPyBmb3JtYXRDdXJyZW5jeShtLnVuaXRfY29zdCkgOiAnLSd9PC90ZD59XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDx0ZCBjbGFzc05hbWU9XCJwLTQgdGV4dC1ncmF5LTUwMCB0cnVuY2F0ZSBtYXgtdy1bMTUwcHhdXCIgdGl0bGU9e20ucmVhc29ufT57bS5yZWFzb24gfHwgJy0nfTwvdGQ+XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDx0ZCBjbGFzc05hbWU9XCJwLTQgdGV4dC1ncmF5LTUwMCB0ZXh0LXNtXCI+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAge25ldyBEYXRlKG0uY3JlYXRlZF9hdCkudG9Mb2NhbGVTdHJpbmcoJ3ZpLVZOJyl9XG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvdGQ+XG4gICAgICAgICAgICAgICAgICAgICAgICA8L3RyPlxuICAgICAgICAgICAgICAgICAgICAgICkpXG4gICAgICAgICAgICAgICAgICAgICl9XG4gICAgICAgICAgICAgICAgICA8L3Rib2R5PlxuICAgICAgICAgICAgICAgIDwvdGFibGU+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwLTQgYm9yZGVyLXRcIj5cbiAgICAgICAgICAgICAgICAgIDxQYWdpbmF0aW9uIGN1cnJlbnRQYWdlPXttb3ZlUGFnZX0gdG90YWxQYWdlcz17TWF0aC5jZWlsKG1vdmVUb3RhbCAvIDEwKX0gb25QYWdlQ2hhbmdlPXtzZXRNb3ZlUGFnZX0gLz5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPC8+XG4gICAgICAgICAgICApfVxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHthY3RpdmVUYWIgPT09ICdsb3ctc3RvY2snICYmIChcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy13aGl0ZSByb3VuZGVkLWxnIHNoYWRvdy1zbSBvdmVyZmxvdy1oaWRkZW5cIj5cbiAgICAgICAgICB7bG93TG9hZGluZyA/IChcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC04IGZsZXgganVzdGlmeS1jZW50ZXJcIj48TG9hZGluZ1NwaW5uZXIgLz48L2Rpdj5cbiAgICAgICAgICApIDogKFxuICAgICAgICAgICAgPHRhYmxlIGNsYXNzTmFtZT1cInctZnVsbCB0ZXh0LWxlZnQgYm9yZGVyLWNvbGxhcHNlXCI+XG4gICAgICAgICAgICAgIDx0aGVhZD5cbiAgICAgICAgICAgICAgICA8dHIgY2xhc3NOYW1lPVwiYmctZ3JheS01MCBib3JkZXItYlwiPlxuICAgICAgICAgICAgICAgICAgPHRoIGNsYXNzTmFtZT1cInAtNCBmb250LW1lZGl1bSB0ZXh0LWdyYXktNjAwXCI+U0tVPC90aD5cbiAgICAgICAgICAgICAgICAgIDx0aCBjbGFzc05hbWU9XCJwLTQgZm9udC1tZWRpdW0gdGV4dC1ncmF5LTYwMFwiPlPhuqNuIHBo4bqpbTwvdGg+XG4gICAgICAgICAgICAgICAgICA8dGggY2xhc3NOYW1lPVwicC00IGZvbnQtbWVkaXVtIHRleHQtZ3JheS02MDBcIj5UaMawxqFuZyBoaeG7h3U8L3RoPlxuICAgICAgICAgICAgICAgICAgPHRoIGNsYXNzTmFtZT1cInAtNCBmb250LW1lZGl1bSB0ZXh0LWdyYXktNjAwXCI+VOG7k24ga2hvPC90aD5cbiAgICAgICAgICAgICAgICAgIDx0aCBjbGFzc05hbWU9XCJwLTQgZm9udC1tZWRpdW0gdGV4dC1ncmF5LTYwMFwiPkPhuqNuaCBiw6FvPC90aD5cbiAgICAgICAgICAgICAgICAgIDx0aCBjbGFzc05hbWU9XCJwLTQgZm9udC1tZWRpdW0gdGV4dC1ncmF5LTYwMFwiPlRy4bqhbmcgdGjDoWk8L3RoPlxuICAgICAgICAgICAgICAgIDwvdHI+XG4gICAgICAgICAgICAgIDwvdGhlYWQ+XG4gICAgICAgICAgICAgIDx0Ym9keSBjbGFzc05hbWU9XCJkaXZpZGUteSBkaXZpZGUtZ3JheS0xMDBcIj5cbiAgICAgICAgICAgICAgICB7bG93U3RvY2subGVuZ3RoID09PSAwID8gKFxuICAgICAgICAgICAgICAgICAgPHRyPjx0ZCBjb2xTcGFuPVwiNlwiIGNsYXNzTmFtZT1cInAtOCB0ZXh0LWNlbnRlciB0ZXh0LWdyYXktNTAwXCI+S2jDtG5nIGPDsyBz4bqjbiBwaOG6qW0gbsOgbyBz4bqvcCBo4bq/dCBow6BuZy48L3RkPjwvdHI+XG4gICAgICAgICAgICAgICAgKSA6IChcbiAgICAgICAgICAgICAgICAgIGxvd1N0b2NrLm1hcChpdGVtID0+IChcbiAgICAgICAgICAgICAgICAgICAgPHRyIGtleT17aXRlbS5pZH0gY2xhc3NOYW1lPXtgaG92ZXI6YmctZ3JheS01MCAke2l0ZW0uc3RvY2tfcXVhbnRpdHkgPT09IDAgPyAnYmctcmVkLTUwLzUwJyA6ICcnfWB9PlxuICAgICAgICAgICAgICAgICAgICAgIDx0ZCBjbGFzc05hbWU9XCJwLTQgdGV4dC1ncmF5LTUwMFwiPntpdGVtLnNrdX08L3RkPlxuICAgICAgICAgICAgICAgICAgICAgIDx0ZCBjbGFzc05hbWU9XCJwLTQgZm9udC1tZWRpdW1cIj57aXRlbS5uYW1lfTwvdGQ+XG4gICAgICAgICAgICAgICAgICAgICAgPHRkIGNsYXNzTmFtZT1cInAtNCB0ZXh0LWdyYXktNTAwXCI+e2l0ZW0uYnJhbmQ/Lm5hbWV9PC90ZD5cbiAgICAgICAgICAgICAgICAgICAgICA8dGQgY2xhc3NOYW1lPVwicC00XCI+XG4gICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9e2Bmb250LWJvbGQgJHtpdGVtLnN0b2NrX3F1YW50aXR5ID09PSAwID8gJ3RleHQtcmVkLTYwMCcgOiAndGV4dC1vcmFuZ2UtNTAwJ31gfT5cbiAgICAgICAgICAgICAgICAgICAgICAgICAge2l0ZW0uc3RvY2tfcXVhbnRpdHl9XG4gICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+XG4gICAgICAgICAgICAgICAgICAgICAgPC90ZD5cbiAgICAgICAgICAgICAgICAgICAgICA8dGQgY2xhc3NOYW1lPVwicC00IHRleHQtZ3JheS01MDBcIj4mbGU7IHtpdGVtLmxvd19zdG9ja190aHJlc2hvbGQgfHwgMTB9PC90ZD5cbiAgICAgICAgICAgICAgICAgICAgICA8dGQgY2xhc3NOYW1lPVwicC00XCI+XG4gICAgICAgICAgICAgICAgICAgICAgICA8U3RhdHVzQmFkZ2Ugc3RhdHVzPXtpdGVtLnN0YXR1c30gLz5cbiAgICAgICAgICAgICAgICAgICAgICA8L3RkPlxuICAgICAgICAgICAgICAgICAgICA8L3RyPlxuICAgICAgICAgICAgICAgICAgKSlcbiAgICAgICAgICAgICAgICApfVxuICAgICAgICAgICAgICA8L3Rib2R5PlxuICAgICAgICAgICAgPC90YWJsZT5cbiAgICAgICAgICApfVxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBNb2RhbCAqL31cbiAgICAgIHtpc01vZGFsT3BlbiAmJiAoXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZml4ZWQgaW5zZXQtMCBiZy1ibGFjay81MCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciB6LTUwIHAtNFwiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctd2hpdGUgcm91bmRlZC14bCBzaGFkb3ctbGcgdy1mdWxsIG1heC13LWxnIG92ZXJmbG93LWhpZGRlbiBmbGV4IGZsZXgtY29sXCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1iZXR3ZWVuIGl0ZW1zLWNlbnRlciBwLTYgYm9yZGVyLWJcIj5cbiAgICAgICAgICAgICAgPGgyIGNsYXNzTmFtZT1cInRleHQteGwgZm9udC1zZW1pYm9sZFwiPlThuqFvIHBoaeG6v3Uga2hvPC9oMj5cbiAgICAgICAgICAgICAgPGJ1dHRvbiBvbkNsaWNrPXsoKSA9PiBzZXRJc01vZGFsT3BlbihmYWxzZSl9IGNsYXNzTmFtZT1cInRleHQtZ3JheS01MDAgaG92ZXI6YmctZ3JheS0xMDAgcC0yIHJvdW5kZWQtZnVsbFwiPlxuICAgICAgICAgICAgICAgIDxIaVhNYXJrIGNsYXNzTmFtZT1cInctNSBoLTVcIiAvPlxuICAgICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInAtNiBvdmVyZmxvdy15LWF1dG9cIj5cbiAgICAgICAgICAgICAgPGZvcm0gaWQ9XCJpbnZlbnRvcnlGb3JtXCIgb25TdWJtaXQ9e2hhbmRsZVNhdmVNb3ZlbWVudH0gY2xhc3NOYW1lPVwic3BhY2UteS00XCI+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyZWxhdGl2ZVwiPlxuICAgICAgICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT1cImJsb2NrIHRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1ncmF5LTcwMCBtYi0xXCI+VMOsbSBraeG6v20gc+G6o24gcGjhuqltICo8L2xhYmVsPlxuICAgICAgICAgICAgICAgICAgPGlucHV0XG4gICAgICAgICAgICAgICAgICAgIHR5cGU9XCJ0ZXh0XCJcbiAgICAgICAgICAgICAgICAgICAgdmFsdWU9e3Byb2R1Y3RTZWFyY2h9XG4gICAgICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0UHJvZHVjdFNlYXJjaChlLnRhcmdldC52YWx1ZSl9XG4gICAgICAgICAgICAgICAgICAgIHBsYWNlaG9sZGVyPVwiTmjhuq1wIHTDqm4gaG/hurdjIFNLVS4uLlwiXG4gICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctZnVsbCBib3JkZXIgYm9yZGVyLWdyYXktMzAwIHJvdW5kZWQtbGcgcHgtMyBweS0yIG91dGxpbmUtbm9uZSBmb2N1czpib3JkZXItYmx1ZS01MDBcIlxuICAgICAgICAgICAgICAgICAgLz5cbiAgICAgICAgICAgICAgICAgIHtwcm9kdWN0cy5sZW5ndGggPiAwICYmIChcbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSB6LTEwIHctZnVsbCBtdC0xIGJnLXdoaXRlIGJvcmRlciBib3JkZXItZ3JheS0yMDAgcm91bmRlZC1sZyBzaGFkb3ctbGcgbWF4LWgtNDggb3ZlcmZsb3cteS1hdXRvXCI+XG4gICAgICAgICAgICAgICAgICAgICAge3Byb2R1Y3RzLm1hcChwID0+IChcbiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXZcbiAgICAgICAgICAgICAgICAgICAgICAgICAga2V5PXtwLmlkfVxuICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJweC00IHB5LTIgaG92ZXI6YmctZ3JheS0xMDAgY3Vyc29yLXBvaW50ZXIgdGV4dC1zbVwiXG4gICAgICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHtcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBzZXRGb3JtRGF0YSh7IC4uLmZvcm1EYXRhLCBwcm9kdWN0X2lkOiBwLmlkIH0pO1xuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHNldFByb2R1Y3RTZWFyY2goYCR7cC5za3V9IC0gJHtwLm5hbWV9YCk7XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgc2V0UHJvZHVjdHMoW10pO1xuICAgICAgICAgICAgICAgICAgICAgICAgICB9fVxuICAgICAgICAgICAgICAgICAgICAgICAgPlxuICAgICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZvbnQtbWVkaXVtXCI+e3AubmFtZX08L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWdyYXktNTAwIHRleHQteHNcIj5TS1U6IHtwLnNrdX0gfCBU4buTbjoge3Auc3RvY2tfcXVhbnRpdHl9PC9kaXY+XG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgICApKX1cbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgICApfVxuICAgICAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGdhcC00XCI+XG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMVwiPlxuICAgICAgICAgICAgICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPVwiYmxvY2sgdGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWdyYXktNzAwIG1iLTFcIj5Mb+G6oWkgcGhp4bq/dSAqPC9sYWJlbD5cbiAgICAgICAgICAgICAgICAgICAgPHNlbGVjdFxuICAgICAgICAgICAgICAgICAgICAgIHZhbHVlPXtmb3JtRGF0YS50eXBlfVxuICAgICAgICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybURhdGEoeyAuLi5mb3JtRGF0YSwgdHlwZTogZS50YXJnZXQudmFsdWUgfSl9XG4gICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIGJvcmRlciBib3JkZXItZ3JheS0zMDAgcm91bmRlZC1sZyBweC0zIHB5LTIgb3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1ibHVlLTUwMFwiXG4gICAgICAgICAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgICAgICAgICA8b3B0aW9uIHZhbHVlPVwiaW1wb3J0XCI+Tmjhuq1wIGtobzwvb3B0aW9uPlxuICAgICAgICAgICAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJleHBvcnRcIj5YdeG6pXQga2hvPC9vcHRpb24+XG4gICAgICAgICAgICAgICAgICAgICAgPG9wdGlvbiB2YWx1ZT1cImFkanVzdFwiPsSQaeG7gXUgY2jhu4luaDwvb3B0aW9uPlxuICAgICAgICAgICAgICAgICAgICAgIDxvcHRpb24gdmFsdWU9XCJyZXR1cm5cIj5UcuG6oyBow6BuZzwvb3B0aW9uPlxuICAgICAgICAgICAgICAgICAgICA8L3NlbGVjdD5cbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4LTFcIj5cbiAgICAgICAgICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT1cImJsb2NrIHRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1ncmF5LTcwMCBtYi0xXCI+U+G7kSBsxrDhu6NuZyAqPC9sYWJlbD5cbiAgICAgICAgICAgICAgICAgICAgPGlucHV0XG4gICAgICAgICAgICAgICAgICAgICAgdHlwZT1cIm51bWJlclwiXG4gICAgICAgICAgICAgICAgICAgICAgcmVxdWlyZWRcbiAgICAgICAgICAgICAgICAgICAgICB2YWx1ZT17Zm9ybURhdGEucXVhbnRpdHl9XG4gICAgICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRGb3JtRGF0YSh7IC4uLmZvcm1EYXRhLCBxdWFudGl0eTogcGFyc2VJbnQoZS50YXJnZXQudmFsdWUpIHx8IDAgfSl9XG4gICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIGJvcmRlciBib3JkZXItZ3JheS0zMDAgcm91bmRlZC1sZyBweC0zIHB5LTIgb3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1ibHVlLTUwMFwiXG4gICAgICAgICAgICAgICAgICAgIC8+XG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgICAgIHtmb3JtRGF0YS50eXBlID09PSAnaW1wb3J0JyAmJiAoXG4gICAgICAgICAgICAgICAgICA8ZGl2PlxuICAgICAgICAgICAgICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPVwiYmxvY2sgdGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWdyYXktNzAwIG1iLTFcIj7EkMahbiBnacOhIChWTkQpPC9sYWJlbD5cbiAgICAgICAgICAgICAgICAgICAgPGlucHV0XG4gICAgICAgICAgICAgICAgICAgICAgdHlwZT1cIm51bWJlclwiXG4gICAgICAgICAgICAgICAgICAgICAgbWluPVwiMFwiXG4gICAgICAgICAgICAgICAgICAgICAgdmFsdWU9e2Zvcm1EYXRhLnVuaXRfY29zdH1cbiAgICAgICAgICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldEZvcm1EYXRhKHsgLi4uZm9ybURhdGEsIHVuaXRfY29zdDogcGFyc2VJbnQoZS50YXJnZXQudmFsdWUpIHx8IDAgfSl9XG4gICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIGJvcmRlciBib3JkZXItZ3JheS0zMDAgcm91bmRlZC1sZyBweC0zIHB5LTIgb3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1ibHVlLTUwMFwiXG4gICAgICAgICAgICAgICAgICAgIC8+XG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICApfVxuXG4gICAgICAgICAgICAgICAgPGRpdj5cbiAgICAgICAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9XCJibG9jayB0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtZ3JheS03MDAgbWItMVwiPkzDvSBkby9HaGkgY2jDuiB7Zm9ybURhdGEudHlwZSA9PT0gJ2FkanVzdCcgJiYgJyonfTwvbGFiZWw+XG4gICAgICAgICAgICAgICAgICA8dGV4dGFyZWFcbiAgICAgICAgICAgICAgICAgICAgcmVxdWlyZWQ9e2Zvcm1EYXRhLnR5cGUgPT09ICdhZGp1c3QnfVxuICAgICAgICAgICAgICAgICAgICB2YWx1ZT17Zm9ybURhdGEucmVhc29ufVxuICAgICAgICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldEZvcm1EYXRhKHsgLi4uZm9ybURhdGEsIHJlYXNvbjogZS50YXJnZXQudmFsdWUgfSl9XG4gICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctZnVsbCBib3JkZXIgYm9yZGVyLWdyYXktMzAwIHJvdW5kZWQtbGcgcHgtMyBweS0yIG91dGxpbmUtbm9uZSBmb2N1czpib3JkZXItYmx1ZS01MDAgaC0yMFwiXG4gICAgICAgICAgICAgICAgICAvPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICA8L2Zvcm0+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIFxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwLTYgYm9yZGVyLXQgYmctZ3JheS01MCBmbGV4IGp1c3RpZnktZW5kIGdhcC0zXCI+XG4gICAgICAgICAgICAgIDxidXR0b24gdHlwZT1cImJ1dHRvblwiIG9uQ2xpY2s9eygpID0+IHNldElzTW9kYWxPcGVuKGZhbHNlKX0gY2xhc3NOYW1lPVwicHgtNCBweS0yIHRleHQtZ3JheS03MDAgYmctd2hpdGUgYm9yZGVyIGJvcmRlci1ncmF5LTMwMCByb3VuZGVkLWxnXCI+XG4gICAgICAgICAgICAgICAgSOG7p3lcbiAgICAgICAgICAgICAgPC9idXR0b24+XG4gICAgICAgICAgICAgIDxidXR0b24gdHlwZT1cInN1Ym1pdFwiIGZvcm09XCJpbnZlbnRvcnlGb3JtXCIgY2xhc3NOYW1lPVwicHgtNCBweS0yIGJnLWJsdWUtNjAwIHRleHQtd2hpdGUgcm91bmRlZC1sZyBob3ZlcjpiZy1ibHVlLTcwMFwiPlxuICAgICAgICAgICAgICAgIEzGsHUgcGhp4bq/dVxuICAgICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG4gICAgPC9kaXY+XG4gICk7XG59XG4iXSwiZmlsZSI6IkM6L1VzZXJzL2FkbWluL0Rvd25sb2Fkcy9zcHJpbnQyL2xhcHRvcC1zaG9wLWFkbWluL3NyYy9wYWdlcy9pbnZlbnRvcnkvSW52ZW50b3J5UGFnZS5qc3gifQ==

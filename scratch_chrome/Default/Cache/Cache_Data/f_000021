@@ -1,0 +1,186 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/ui/ConfirmDialog.jsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=b976de43"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=b976de43"; const React = __vite__cjsImport3_react.__esModule ? __vite__cjsImport3_react.default : __vite__cjsImport3_react;
+import { HiExclamationTriangle, HiInformationCircle, HiCheckCircle } from "/node_modules/.vite/deps/react-icons_hi2.js?v=b976de43";
+const ConfirmDialog = ({
+  isOpen,
+  title,
+  message,
+  confirmText = "Xác nhận",
+  cancelText = "Hủy",
+  onConfirm,
+  onCancel,
+  variant = "warning"
+}) => {
+  if (!isOpen) return null;
+  const config = {
+    danger: {
+      icon: HiExclamationTriangle,
+      iconColor: "text-red-600",
+      iconBg: "bg-red-100",
+      buttonBg: "bg-red-600 hover:bg-red-700",
+      buttonFocus: "focus:ring-red-500"
+    },
+    warning: {
+      icon: HiExclamationTriangle,
+      iconColor: "text-yellow-600",
+      iconBg: "bg-yellow-100",
+      buttonBg: "bg-yellow-600 hover:bg-yellow-700",
+      buttonFocus: "focus:ring-yellow-500"
+    },
+    info: {
+      icon: HiInformationCircle,
+      iconColor: "text-blue-600",
+      iconBg: "bg-blue-100",
+      buttonBg: "bg-blue-600 hover:bg-blue-700",
+      buttonFocus: "focus:ring-blue-500"
+    },
+    success: {
+      icon: HiCheckCircle,
+      iconColor: "text-green-600",
+      iconBg: "bg-green-100",
+      buttonBg: "bg-green-600 hover:bg-green-700",
+      buttonFocus: "focus:ring-green-500"
+    }
+  };
+  const currentConfig = config[variant] || config.warning;
+  const Icon = currentConfig.icon;
+  return /* @__PURE__ */ jsxDEV("div", { className: "relative z-50", "aria-labelledby": "modal-title", role: "dialog", "aria-modal": "true", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" }, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+      lineNumber: 71,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "fixed inset-0 z-10 overflow-y-auto", children: /* @__PURE__ */ jsxDEV("div", { className: "flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0", children: /* @__PURE__ */ jsxDEV("div", { className: "relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg animate-fade-in-up", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4", children: /* @__PURE__ */ jsxDEV("div", { className: "sm:flex sm:items-start", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: `mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full ${currentConfig.iconBg} sm:mx-0 sm:h-10 sm:w-10`, children: /* @__PURE__ */ jsxDEV(Icon, { className: `h-6 w-6 ${currentConfig.iconColor}`, "aria-hidden": "true" }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+          lineNumber: 79,
+          columnNumber: 19
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+          lineNumber: 78,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left", children: [
+          /* @__PURE__ */ jsxDEV("h3", { className: "text-lg font-semibold leading-6 text-gray-900", id: "modal-title", children: title }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+            lineNumber: 82,
+            columnNumber: 19
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "mt-2", children: /* @__PURE__ */ jsxDEV("p", { className: "text-sm text-gray-500", children: message }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+            lineNumber: 86,
+            columnNumber: 21
+          }, this) }, void 0, false, {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+            lineNumber: 85,
+            columnNumber: 19
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+          lineNumber: 81,
+          columnNumber: 17
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+        lineNumber: 77,
+        columnNumber: 15
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+        lineNumber: 76,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6", children: [
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            onClick: onConfirm,
+            className: `inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto ${currentConfig.buttonBg} focus:outline-none focus:ring-2 focus:ring-offset-2 ${currentConfig.buttonFocus}`,
+            children: confirmText
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+            lineNumber: 94,
+            columnNumber: 15
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            onClick: onCancel,
+            className: "mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto",
+            children: cancelText
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+            lineNumber: 101,
+            columnNumber: 15
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+        lineNumber: 93,
+        columnNumber: 13
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+      lineNumber: 75,
+      columnNumber: 11
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+      lineNumber: 74,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+      lineNumber: 73,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx",
+    lineNumber: 70,
+    columnNumber: 5
+  }, this);
+};
+_c = ConfirmDialog;
+export default ConfirmDialog;
+var _c;
+$RefreshReg$(_c, "ConfirmDialog");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/admin/Downloads/sprint2/laptop-shop-admin/src/components/ui/ConfirmDialog.jsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QSxZQUVURjtBQUFBQTtBQUFBQSxVQUxIO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxRQU1BO0FBQUEsV0FkRjtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBZUE7QUFBQSxTQWpDRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBa0NBLEtBbkNGO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FvQ0EsS0FyQ0Y7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQXNDQTtBQUFBLE9BekNGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0EwQ0E7QUFFSjtBQUFFZ0IsS0EzRklyQjtBQTZGTixlQUFlQTtBQUFjLElBQUFxQjtBQUFBLGFBQUFBLElBQUEiLCJuYW1lcyI6WyJSZWFjdCIsIkhpRXhjbGFtYXRpb25UcmlhbmdsZSIsIkhpSW5mb3JtYXRpb25DaXJjbGUiLCJIaUNoZWNrQ2lyY2xlIiwiQ29uZmlybURpYWxvZyIsImlzT3BlbiIsInRpdGxlIiwibWVzc2FnZSIsImNvbmZpcm1UZXh0IiwiY2FuY2VsVGV4dCIsIm9uQ29uZmlybSIsIm9uQ2FuY2VsIiwidmFyaWFudCIsImNvbmZpZyIsImRhbmdlciIsImljb24iLCJpY29uQ29sb3IiLCJpY29uQmciLCJidXR0b25CZyIsImJ1dHRvbkZvY3VzIiwid2FybmluZyIsImluZm8iLCJzdWNjZXNzIiwiY3VycmVudENvbmZpZyIsIkljb24iLCJfYyJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJDb25maXJtRGlhbG9nLmpzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgUmVhY3QgZnJvbSAncmVhY3QnO1xuaW1wb3J0IHsgSGlFeGNsYW1hdGlvblRyaWFuZ2xlLCBIaUluZm9ybWF0aW9uQ2lyY2xlLCBIaUNoZWNrQ2lyY2xlIH0gZnJvbSAncmVhY3QtaWNvbnMvaGkyJztcblxuY29uc3QgQ29uZmlybURpYWxvZyA9ICh7XG4gIGlzT3BlbixcbiAgdGl0bGUsXG4gIG1lc3NhZ2UsXG4gIGNvbmZpcm1UZXh0ID0gJ1jDoWMgbmjhuq1uJyxcbiAgY2FuY2VsVGV4dCA9ICdI4buneScsXG4gIG9uQ29uZmlybSxcbiAgb25DYW5jZWwsXG4gIHZhcmlhbnQgPSAnd2FybmluZydcbn0pID0+IHtcbiAgaWYgKCFpc09wZW4pIHJldHVybiBudWxsO1xuXG4gIGNvbnN0IGNvbmZpZyA9IHtcbiAgICBkYW5nZXI6IHtcbiAgICAgIGljb246IEhpRXhjbGFtYXRpb25UcmlhbmdsZSxcbiAgICAgIGljb25Db2xvcjogJ3RleHQtcmVkLTYwMCcsXG4gICAgICBpY29uQmc6ICdiZy1yZWQtMTAwJyxcbiAgICAgIGJ1dHRvbkJnOiAnYmctcmVkLTYwMCBob3ZlcjpiZy1yZWQtNzAwJyxcbiAgICAgIGJ1dHRvbkZvY3VzOiAnZm9jdXM6cmluZy1yZWQtNTAwJ1xuICAgIH0sXG4gICAgd2FybmluZzoge1xuICAgICAgaWNvbjogSGlFeGNsYW1hdGlvblRyaWFuZ2xlLFxuICAgICAgaWNvbkNvbG9yOiAndGV4dC15ZWxsb3ctNjAwJyxcbiAgICAgIGljb25CZzogJ2JnLXllbGxvdy0xMDAnLFxuICAgICAgYnV0dG9uQmc6ICdiZy15ZWxsb3ctNjAwIGhvdmVyOmJnLXllbGxvdy03MDAnLFxuICAgICAgYnV0dG9uRm9jdXM6ICdmb2N1czpyaW5nLXllbGxvdy01MDAnXG4gICAgfSxcbiAgICBpbmZvOiB7XG4gICAgICBpY29uOiBIaUluZm9ybWF0aW9uQ2lyY2xlLFxuICAgICAgaWNvbkNvbG9yOiAndGV4dC1ibHVlLTYwMCcsXG4gICAgICBpY29uQmc6ICdiZy1ibHVlLTEwMCcsXG4gICAgICBidXR0b25CZzogJ2JnLWJsdWUtNjAwIGhvdmVyOmJnLWJsdWUtNzAwJyxcbiAgICAgIGJ1dHRvbkZvY3VzOiAnZm9jdXM6cmluZy1ibHVlLTUwMCdcbiAgICB9LFxuICAgIHN1Y2Nlc3M6IHtcbiAgICAgIGljb246IEhpQ2hlY2tDaXJjbGUsXG4gICAgICBpY29uQ29sb3I6ICd0ZXh0LWdyZWVuLTYwMCcsXG4gICAgICBpY29uQmc6ICdiZy1ncmVlbi0xMDAnLFxuICAgICAgYnV0dG9uQmc6ICdiZy1ncmVlbi02MDAgaG92ZXI6YmctZ3JlZW4tNzAwJyxcbiAgICAgIGJ1dHRvbkZvY3VzOiAnZm9jdXM6cmluZy1ncmVlbi01MDAnXG4gICAgfVxuICB9O1xuXG4gIGNvbnN0IGN1cnJlbnRDb25maWcgPSBjb25maWdbdmFyaWFudF0gfHwgY29uZmlnLndhcm5pbmc7XG4gIGNvbnN0IEljb24gPSBjdXJyZW50Q29uZmlnLmljb247XG5cbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInJlbGF0aXZlIHotNTBcIiBhcmlhLWxhYmVsbGVkYnk9XCJtb2RhbC10aXRsZVwiIHJvbGU9XCJkaWFsb2dcIiBhcmlhLW1vZGFsPVwidHJ1ZVwiPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmaXhlZCBpbnNldC0wIGJnLWdyYXktNTAwIGJnLW9wYWNpdHktNzUgdHJhbnNpdGlvbi1vcGFjaXR5IGJhY2tkcm9wLWJsdXItc21cIj48L2Rpdj5cblxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmaXhlZCBpbnNldC0wIHotMTAgb3ZlcmZsb3cteS1hdXRvXCI+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBtaW4taC1mdWxsIGl0ZW1zLWVuZCBqdXN0aWZ5LWNlbnRlciBwLTQgdGV4dC1jZW50ZXIgc206aXRlbXMtY2VudGVyIHNtOnAtMFwiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmUgdHJhbnNmb3JtIG92ZXJmbG93LWhpZGRlbiByb3VuZGVkLWxnIGJnLXdoaXRlIHRleHQtbGVmdCBzaGFkb3cteGwgdHJhbnNpdGlvbi1hbGwgc206bXktOCBzbTp3LWZ1bGwgc206bWF4LXctbGcgYW5pbWF0ZS1mYWRlLWluLXVwXCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLXdoaXRlIHB4LTQgcGItNCBwdC01IHNtOnAtNiBzbTpwYi00XCI+XG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic206ZmxleCBzbTppdGVtcy1zdGFydFwiPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPXtgbXgtYXV0byBmbGV4IGgtMTIgdy0xMiBmbGV4LXNocmluay0wIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciByb3VuZGVkLWZ1bGwgJHtjdXJyZW50Q29uZmlnLmljb25CZ30gc206bXgtMCBzbTpoLTEwIHNtOnctMTBgfT5cbiAgICAgICAgICAgICAgICAgIDxJY29uIGNsYXNzTmFtZT17YGgtNiB3LTYgJHtjdXJyZW50Q29uZmlnLmljb25Db2xvcn1gfSBhcmlhLWhpZGRlbj1cInRydWVcIiAvPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibXQtMyB0ZXh0LWNlbnRlciBzbTptbC00IHNtOm10LTAgc206dGV4dC1sZWZ0XCI+XG4gICAgICAgICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1sZyBmb250LXNlbWlib2xkIGxlYWRpbmctNiB0ZXh0LWdyYXktOTAwXCIgaWQ9XCJtb2RhbC10aXRsZVwiPlxuICAgICAgICAgICAgICAgICAgICB7dGl0bGV9XG4gICAgICAgICAgICAgICAgICA8L2gzPlxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtdC0yXCI+XG4gICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmF5LTUwMFwiPlxuICAgICAgICAgICAgICAgICAgICAgIHttZXNzYWdlfVxuICAgICAgICAgICAgICAgICAgICA8L3A+XG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctZ3JheS01MCBweC00IHB5LTMgc206ZmxleCBzbTpmbGV4LXJvdy1yZXZlcnNlIHNtOnB4LTZcIj5cbiAgICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9e29uQ29uZmlybX1cbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2BpbmxpbmUtZmxleCB3LWZ1bGwganVzdGlmeS1jZW50ZXIgcm91bmRlZC1tZCBweC0zIHB5LTIgdGV4dC1zbSBmb250LXNlbWlib2xkIHRleHQtd2hpdGUgc2hhZG93LXNtIHNtOm1sLTMgc206dy1hdXRvICR7Y3VycmVudENvbmZpZy5idXR0b25CZ30gZm9jdXM6b3V0bGluZS1ub25lIGZvY3VzOnJpbmctMiBmb2N1czpyaW5nLW9mZnNldC0yICR7Y3VycmVudENvbmZpZy5idXR0b25Gb2N1c31gfVxuICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAge2NvbmZpcm1UZXh0fVxuICAgICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgICAgPGJ1dHRvblxuICAgICAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9e29uQ2FuY2VsfVxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cIm10LTMgaW5saW5lLWZsZXggdy1mdWxsIGp1c3RpZnktY2VudGVyIHJvdW5kZWQtbWQgYmctd2hpdGUgcHgtMyBweS0yIHRleHQtc20gZm9udC1zZW1pYm9sZCB0ZXh0LWdyYXktOTAwIHNoYWRvdy1zbSByaW5nLTEgcmluZy1pbnNldCByaW5nLWdyYXktMzAwIGhvdmVyOmJnLWdyYXktNTAgc206bXQtMCBzbTp3LWF1dG9cIlxuICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAge2NhbmNlbFRleHR9XG4gICAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gICk7XG59O1xuXG5leHBvcnQgZGVmYXVsdCBDb25maXJtRGlhbG9nO1xuIl0sImZpbGUiOiJDOi9Vc2Vycy9hZG1pbi9Eb3dubG9hZHMvc3ByaW50Mi9sYXB0b3Atc2hvcC1hZG1pbi9zcmMvY29tcG9uZW50cy91aS9Db25maXJtRGlhbG9nLmpzeCJ9
