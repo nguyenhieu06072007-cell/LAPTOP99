@@ -116,6 +116,24 @@ const HomeController = {
     render();
   },
 
+  stepBestSellers(dir) {
+    const cats = ['all', '2', 'Apple', '1', '5', '4'];
+    let cur = cache.smartCat || 'all';
+    if (cache.smartBrand === 'Apple') cur = 'Apple';
+    let idx = cats.indexOf(cur);
+    if (idx === -1) idx = 0;
+    idx = (idx + dir + cats.length) % cats.length;
+    const target = cats[idx];
+    if (target === 'Apple') {
+      cache.smartCat = 'all';
+      cache.smartBrand = 'Apple';
+    } else {
+      cache.smartCat = target;
+      cache.smartBrand = 'all';
+    }
+    render();
+  },
+
   switchBrandCampaign(brand) {
     cache.activeBrandCampaign = brand;
     render();

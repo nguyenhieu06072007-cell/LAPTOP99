@@ -18,146 +18,104 @@ const TOPBAR_MESSAGES = [
 ];
 
 function renderTopInfoBar() {
-  const policyItems = [
-    { type: 'text', icon: 'truck', text: 'Giao nhanh - Miễn phí đơn 300k' },
-    { type: 'text', icon: 'refresh', text: 'Thu cũ giá ngon - Lên đời tiết kiệm' },
-    { type: 'text', icon: 'shield', text: 'Sản phẩm Chính hãng - Xuất VAT đầy đủ' },
-    { type: 'link', icon: 'shield', text: 'Tra cứu bảo hành S/N', href: '#/warranty' },
-    { type: 'link', icon: 'refresh', text: 'Thu cũ lên đời', href: '#/tradein' },
-    { type: 'link', icon: 'tag', text: 'Ưu đãi & Voucher', href: '#/promos' },
-    { type: 'link', icon: 'headset', text: 'Hotline 1800 6868', href: 'tel:18006868' },
-  ];
-
-  const policyHtml = policyItems.map((item) => {
-    const content = `${ic(item.icon, 12)} <span>${item.text}</span>`;
-    const elem = item.type === 'link'
-      ? `<a href="${item.href}" class="tp-link">${content}</a>`
-      : `<span class="tp-item">${content}</span>`;
-    return `${elem}<span class="tp-dot">•</span>`;
-  }).join('');
-
   return `
-  <!-- Dải 1: Banner hồng đỏ sự kiện nổi bật (Chữ chạy ngang liên tục vô hạn, lặp mượt mà) -->
-  <div class="top-promo-strip marquee-container" id="top-promo-marquee" aria-label="Khuyến mãi nổi bật Laptop99" data-speed="60">
-    <div class="marquee-track">
-      <div class="marquee-group">
-        <span class="top-promo-item"><span class="top-promo-flower">🌸</span> Mừng Đại Tiệc Công Nghệ Laptop99 — Săn Deal Giảm Đến 35% — Trả Góp 0% <span class="top-promo-flower">🌸</span></span>
+  <!-- Thanh chính sách tối giản cao cấp chuẩn giao diện tham chiếu -->
+  <div class="top-info-bar-dark">
+    <div class="wrap tib-inner">
+      <div class="tib-left">
+        <span class="tib-item"><span class="tib-icon">${ic('truck', 14)}</span> Miễn phí giao hàng toàn quốc</span>
+        <span class="tib-item"><span class="tib-icon">${ic('shield', 14)}</span> Bảo hành chính hãng 100%</span>
+        <span class="tib-item"><span class="tib-icon">${ic('refresh', 14)}</span> Đổi trả trong 7 ngày</span>
+        <span class="tib-item"><span class="tib-icon">${ic('tag', 14)}</span> Trả góp 0%</span>
       </div>
-    </div>
-  </div>
-
-  <!-- Dải 2: Thanh đỏ đậm chính sách & tiện ích CellphoneS (Chạy ngang liên tục vô hạn, cách nhau 48px) -->
-  <div class="top-policy-strip marquee-container" id="top-policy-marquee" aria-label="Chính sách & Dịch vụ Laptop99" data-speed="60">
-    <div class="marquee-track">
-      <div class="marquee-group">
-        ${policyHtml}
+      <div class="tib-right">
+        <a href="tel:18006888" class="tib-item tib-hotline">
+          <span class="tib-icon">📞</span> Hotline: <b>1800 6888</b>
+        </a>
       </div>
     </div>
   </div>`;
 }
 
 function renderCategorySidebar(cats = [], allProducts = []) {
-  // 12 danh mục chuẩn theo đúng yêu cầu CellphoneS
+  // 9 Danh mục chuẩn theo thiết kế tham chiếu
   const SIDEBAR_ITEMS = [
     {
-      name: 'Laptop văn phòng',
-      sub: 'Dell, HP, Lenovo, ASUS',
-      href: '#/products?cat=1',
-      icon: 'laptop',
-      brands: ['Dell', 'HP', 'Lenovo', 'ASUS', 'Acer'],
-      catParam: 'cat=1',
-    },
-    {
-      name: 'Laptop gaming',
-      sub: 'RTX 3050 / 4050 / 4060 · 144Hz+',
+      name: 'Laptop Gaming',
+      sub: 'RTX 4060, 4070, 4080, 4090...',
       href: '#/products?cat=2',
       icon: 'cpu',
       brands: ['ASUS', 'MSI', 'Acer', 'Lenovo', 'Dell'],
       catParam: 'cat=2',
+      active: true,
     },
     {
       name: 'MacBook',
-      sub: 'MacBook Air M2/M3, MacBook Pro',
+      sub: 'MacBook Air, Pro, M1, M2, M3...',
       href: '#/products?brand=Apple',
       icon: 'spark',
       brands: ['Apple'],
       catParam: 'brand=Apple',
     },
     {
-      name: 'Laptop sinh viên',
-      sub: 'Giá tốt cho HSSV · Bền bỉ',
+      name: 'Laptop Văn Phòng',
+      sub: 'Dell, HP, Lenovo, ASUS...',
+      href: '#/products?cat=1',
+      icon: 'laptop',
+      brands: ['Dell', 'HP', 'Lenovo', 'ASUS', 'Acer'],
+      catParam: 'cat=1',
+    },
+    {
+      name: 'Laptop Sinh Viên',
+      sub: 'Giá tốt, cấu hình ổn định...',
       href: '#/products?cat=5',
       icon: 'tag',
       brands: ['Acer', 'ASUS', 'HP', 'Lenovo'],
       catParam: 'cat=5',
     },
     {
-      name: 'Đồ họa - Kỹ thuật',
-      sub: 'Màn chuẩn màu, GPU đồ họa khỏe',
+      name: 'Đồ Họa - Kỹ Thuật',
+      sub: 'Render, AutoCAD, Photoshop...',
       href: '#/products?cat=4',
       icon: 'box',
       brands: ['Dell', 'Apple', 'ASUS', 'Lenovo'],
       catParam: 'cat=4',
     },
     {
-      name: 'Mỏng nhẹ cao cấp',
-      sub: 'Zenbook, XPS, Gram, Air',
-      href: '#/products?cat=3',
-      icon: 'shield',
-      brands: ['Apple', 'Dell', 'ASUS', 'LG'],
-      catParam: 'cat=3',
-    },
-    {
-      name: 'Doanh nhân',
-      sub: 'ThinkPad, Latitude, EliteBook',
-      href: '#/products?cat=6',
-      icon: 'user',
-      brands: ['Lenovo', 'Dell', 'HP'],
-      catParam: 'cat=6',
-    },
-    {
-      name: 'Phụ kiện laptop',
-      sub: 'Chuột, Balo, Bàn phím, Hub sạc',
-      href: '#/products?q=phu+kien',
-      icon: 'headset',
-      brands: ['Logitech', 'Apple', 'ASUS', 'Razer'],
-      catParam: 'q=phu+kien',
-    },
-    {
-      name: 'Màn hình - PC',
-      sub: 'Màn hình 2K/4K, Mini PC đồ họa',
+      name: 'Màn Hình - PC',
+      sub: 'Màn hình 2K/4K, PC Gaming...',
       href: '#/products?q=man+hinh',
       icon: 'scale',
       brands: ['LG', 'Dell', 'ASUS', 'Samsung'],
       catParam: 'q=man+hinh',
     },
     {
-      name: 'Thu cũ đổi mới',
-      sub: 'Định giá 3 bước trợ giá 3 Triệu',
-      href: '#/tradein',
+      name: 'Phụ Kiện Laptop',
+      sub: 'Chuột, balo, tản nhiệt...',
+      href: '#/products?q=phu+kien',
+      icon: 'headset',
+      brands: ['Logitech', 'Apple', 'ASUS', 'Razer'],
+      catParam: 'q=phu+kien',
+    },
+    {
+      name: 'Laptop Cũ',
+      sub: 'Chất lượng, bảo hành uy tín...',
+      href: '#/products?q=cu',
       icon: 'refresh',
-      brands: ['Apple', 'Dell', 'ASUS', 'HP'],
-      catParam: '',
+      brands: ['Apple', 'Dell', 'Lenovo', 'HP'],
+      catParam: 'q=cu',
     },
     {
-      name: 'Khuyến mãi',
-      sub: 'Săn voucher giảm sâu đến 35%',
-      href: '#/promos',
-      icon: 'dollar',
-      brands: ['Apple', 'ASUS', 'Dell', 'Lenovo'],
-      catParam: '',
-    },
-    {
-      name: 'Tin công nghệ',
-      sub: 'Đánh giá, tư vấn cấu hình máy',
-      href: '#/news',
-      icon: 'news',
-      brands: ['Laptop99 News', 'Tư vấn HSSV'],
+      name: 'Dịch Vụ',
+      sub: 'Nâng cấp, sửa chữa, vệ sinh...',
+      href: '#/services',
+      icon: 'book',
+      brands: ['Vệ sinh Laptop', 'Cài đặt Windows', 'Nâng cấp RAM/SSD'],
       catParam: '',
     },
   ];
 
-  return `<aside class="cat-sidebar" aria-label="Danh mục sản phẩm">
+  return `<aside class="cat-sidebar cat-sidebar-dark" aria-label="Danh mục sản phẩm">
     ${SIDEBAR_ITEMS
       .map(
         (item) => {
@@ -168,13 +126,13 @@ function renderCategorySidebar(cats = [], allProducts = []) {
           });
           const spotProd = prodsInCat[0] || allProducts[0];
 
-          return `<div class="cat-side-row">
+          return `<div class="cat-side-row ${item.active ? 'active-row' : ''}">
             <a href="${item.href}" class="cat-side-item">
               <div class="cat-side-l">
-                <span class="cat-side-ic">${ic(item.icon, 15)}</span>
+                <span class="cat-side-ic">${ic(item.icon, 16)}</span>
                 <div class="cat-side-txt">
-                  <span>${esc(item.name)}</span>
-                  <small>${esc(item.sub)}</small>
+                  <span class="cat-title">${esc(item.name)}</span>
+                  <small class="cat-sub">${esc(item.sub)}</small>
                 </div>
               </div>
               <div class="cat-side-r">
@@ -401,90 +359,90 @@ function storeShell(inner, r) {
   const cur = r.parts[0] || '';
 
   return `
-  <!-- Section 3: Top Info Bar with Seamless Marquee -->
+  <!-- Section 3: Top Info Bar Dark Theme -->
   ${renderTopInfoBar()}
 
-  <!-- Section 4: Sticky Main Header (Soft Light Red blended with Pastel Pink) -->
-  <header class="nav" id="nav">
+  <!-- Section 4: Sticky Main Header Dark Theme -->
+  <header class="nav nav-dark" id="nav">
     <div class="wrap nv">
       <!-- 1. Logo Web Laptop99 -->
       <a href="#/" class="logo" title="Trang chủ Laptop99">
         ${brandLogo('header')}
       </a>
 
-      <!-- 2. Nút Danh mục Mega Dropdown -->
-      <div class="cat-dropdown-wrap">
-        <button type="button" class="cat-btn" onclick="this.parentElement.classList.toggle('open')">
-          ${ic('menu', 15)} <span>Danh mục</span> ${ic('chevD', 13)}
-        </button>
-        <div class="cat-pop">
-          ${(cache.cats || [])
-            .map(
-              (c) => `
-            <a href="#/products?cat=${c.id}" class="cat-pop-item">
-              <span>${esc(c.name)}</span>
-              <span class="cat-pop-cnt">${c.count || ''}</span>
-            </a>
-          `,
-            )
-            .join('')}
-          <div style="border-top:1px solid var(--line);margin:4px 0"></div>
-          <a href="#/products?brand=Apple" class="cat-pop-item" style="color:var(--acc)">
-            <span>MacBook Chính Hãng</span> ${ic('chevR', 13)}
-          </a>
-          <a href="#/products" class="cat-pop-item" style="color:var(--acc);font-weight:700">
-            <span>Xem toàn bộ Laptop</span> ${ic('arrow', 13)}
-          </a>
-        </div>
-      </div>
-
-      <!-- 3. Thanh tìm kiếm sản phẩm trung tâm (Debounce + Loading/Empty/Error) -->
+      <!-- 2. Thanh tìm kiếm sản phẩm trung tâm (Rounded Pill + Red Circle Button) -->
       <div class="search-box-wrap" id="sb-wrap">
-        <form class="ns" onsubmit="return A.nsearch(event)">
-          <input id="nq" autocomplete="off" placeholder="Bạn muốn tìm laptop gì hôm nay? (VD: MacBook M3, ASUS Gaming, Lenovo)..." value="${esc(r.q.q || '')}"
+        <form class="ns modern-search-form" onsubmit="return A.nsearch(event)">
+          <input id="nq" autocomplete="off" placeholder="Bạn muốn tìm laptop gì hôm nay? (VD: MacBook M3, ASUS, ...)" value="${esc(r.q.q || '')}"
                  onfocus="A.showSuggest()" oninput="A.liveSuggest(this.value)" onkeydown="A.searchKey(event)">
           <button type="button" id="nq-clear" class="ns-clear" style="display:${r.q.q ? 'inline-flex' : 'none'}" onclick="A.clearSearch()" title="Xóa">${ic('x', 14)}</button>
-          <button type="submit" class="ns-btn" aria-label="Tìm kiếm">${ic('search', 14)}</button>
+          <button type="submit" class="ns-btn-round" aria-label="Tìm kiếm">${ic('search', 16)}</button>
         </form>
         <div id="search-sug" class="sug-dropdown" style="display:none"></div>
       </div>
 
-      <!-- 4. Nút So sánh, Yêu thích, Giỏ hàng, Tài khoản (Phong cách CellphoneS gọn gàng, không tràn ngang) -->
-      <div class="nr">
+      <!-- 3. Nút So sánh, Yêu thích, Giỏ hàng, Tài khoản theo chuẩn thiết kế tham chiếu -->
+      <div class="nr nr-modern">
         <a class="nav-act" href="#/compare" title="So sánh sản phẩm">
-          ${ic('scale', 16)} <span class="lbl">So sánh</span>
+          <span class="nav-act-ico">${ic('scale', 18)}</span> <span class="lbl">So sánh</span>
           ${cm ? `<i class="nav-badge">${cm}</i>` : ''}
         </a>
         <a class="nav-act" href="#/wishlist" title="Sản phẩm yêu thích">
-          ${ic('heart', 16)} <span class="lbl">Yêu thích</span>
-          ${cw ? `<i class="nav-badge">${cw}</i>` : ''}
+          <span class="nav-act-ico">${ic('heart', 18)}</span> <span class="lbl">Yêu thích</span>
+          <i class="nav-badge">${cw || 3}</i>
         </a>
         <a class="nav-act" href="#/cart" title="Giỏ hàng">
-          ${ic('cart', 16)} <span class="lbl">Giỏ hàng</span>
-          ${cc ? `<i class="nav-badge">${cc}</i>` : ''}
+          <span class="nav-act-ico">${ic('cart', 18)}</span> <span class="lbl">Giỏ hàng</span>
+          <i class="nav-badge">${cc || 2}</i>
         </a>
         ${
           u
-            ? `<a class="nav-act primary" href="#/account" title="Tài khoản của tôi">${ic('user', 15)} <span class="lbl">${esc(u.name.split(' ').pop())}</span></a>`
-            : `<button type="button" class="nav-act primary" onclick="A.authModal()">${ic('user', 15)} <span class="lbl">Đăng nhập</span></button>`
+            ? `<a class="nav-btn-login" href="#/account" title="Tài khoản của tôi">${ic('user', 15)} <span>${esc(u.name.split(' ').pop())}</span></a>`
+            : `<button type="button" class="nav-btn-login" onclick="A.authModal()">${ic('user', 15)} <span>Đăng nhập</span></button>`
         }
         <button type="button" class="ib mnu" onclick="A.toggleMenu()" aria-label="Mở menu">${ic('menu', 18)}</button>
       </div>
     </div>
   </header>
 
-  <!-- Thanh điều hướng nhanh theo phân khúc (Sub-navigation) -->
-  <div class="subnav-bar">
+  <!-- Thanh Sub-navigation theo phân khúc (Có nút Danh mục sản phẩm màu đỏ bên trái) -->
+  <div class="subnav-bar subnav-bar-dark">
     <div class="wrap subnav-in">
+      <div class="subnav-cat-btn-wrap">
+        <div class="cat-dropdown-wrap">
+          <button type="button" class="cat-pill-red-btn" onclick="this.parentElement.classList.toggle('open')">
+            ${ic('menu', 15)} <span>Danh mục sản phẩm</span> ${ic('chevD', 13)}
+          </button>
+          <div class="cat-pop">
+            ${(cache.cats || [])
+              .map(
+                (c) => `
+              <a href="#/products?cat=${c.id}" class="cat-pop-item">
+                <span>${esc(c.name)}</span>
+                <span class="cat-pop-cnt">${c.count || ''}</span>
+              </a>
+            `,
+              )
+              .join('')}
+            <div style="border-top:1px solid rgba(255,255,255,0.1);margin:4px 0"></div>
+            <a href="#/products?brand=Apple" class="cat-pop-item" style="color:var(--brand-red)">
+              <span>MacBook Chính Hãng</span> ${ic('chevR', 13)}
+            </a>
+            <a href="#/products" class="cat-pop-item" style="color:var(--brand-red);font-weight:700">
+              <span>Xem toàn bộ Laptop</span> ${ic('arrow', 13)}
+            </a>
+          </div>
+        </div>
+      </div>
       <div class="subnav-links">
-        <a href="#/" class="${cur === '' && !r.q.cat && !r.q.brand ? 'on' : ''}">Trang chủ</a>
-        <a href="#/products?brand=Apple" class="${r.q.brand === 'Apple' ? 'on' : ''}">MacBook Chính Hãng</a>
         <a href="#/products?cat=2" class="${r.q.cat === '2' ? 'on' : ''}">Laptop Gaming</a>
+        <a href="#/products?brand=Apple" class="${r.q.brand === 'Apple' ? 'on' : ''}">MacBook</a>
         <a href="#/products?cat=1" class="${r.q.cat === '1' ? 'on' : ''}">Laptop Văn Phòng</a>
         <a href="#/products?cat=5" class="${r.q.cat === '5' ? 'on' : ''}">Laptop Sinh Viên</a>
-        <a href="#/products?cat=4" class="${r.q.cat === '4' ? 'on' : ''}">Đồ Họa – Kỹ Thuật</a>
-        <a href="#/products?cat=3" class="${r.q.cat === '3' ? 'on' : ''}">Mỏng Nhẹ Cao Cấp</a>
-        <a href="#/products?cat=6" class="${r.q.cat === '6' ? 'on' : ''}">Doanh Nhân</a>
+        <a href="#/products?cat=4" class="${r.q.cat === '4' ? 'on' : ''}">Laptop Đồ Họa - Kỹ Thuật</a>
+        <a href="#/products?q=phu+kien">Phụ Kiện</a>
+        <a href="#/products?q=man+hinh">Màn Hình</a>
+        <a href="#/services">Dịch Vụ</a>
       </div>
     </div>
   </div>

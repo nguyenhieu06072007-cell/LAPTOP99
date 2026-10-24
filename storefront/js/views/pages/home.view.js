@@ -345,216 +345,268 @@ async function viewHome() {
   }
   if (!smartProds.length) smartProds = all;
 
-  return `
-  <div class="wrap">
-    <!-- SECTION 8: Dải thông tin thương mại điện tử tự chuyển đổi -->
-    ${renderTrustSlider()}
+  // Chuẩn bị danh sách 5 sản phẩm bán chạy tiêu biểu (hoặc lọc theo tab)
+  let bestSellerList = [...all];
+  if (activeSmartCat !== 'all') {
+    bestSellerList = bestSellerList.filter((p) => String(p.cat) === String(activeSmartCat));
+  }
+  if (activeSmartBrand !== 'all') {
+    bestSellerList = bestSellerList.filter((p) => p.brand.toLowerCase() === activeSmartBrand.toLowerCase());
+  }
+  if (!bestSellerList.length) bestSellerList = all;
+  const bestSellers5 = bestSellerList.slice(0, 5);
 
-    <!-- SECTION 5, 6, 9: Bố cục Hero 3 Cột chuẩn CellphoneS -->
-    <section class="cps-hero-sec reveal-on-scroll">
-      <div class="cps-hero-grid">
-        <!-- Cột Trái (Section 5): 12 Danh mục sản phẩm chuẩn CellphoneS -->
+  return `
+  <div class="wrap modern-home-wrap">
+    <!-- SECTION HERO 3 CỘT: DANH MỤC TRÁI + BANNER MSI RAIDER GIỮA + KHỐI TIỆN ÍCH PHẢI -->
+    <section class="cps-hero-sec modern-hero-sec reveal-on-scroll">
+      <div class="cps-hero-grid modern-hero-grid">
+        <!-- Cột 1 (Trái): 9 Danh mục sản phẩm theme tối sang trọng -->
         ${renderCategorySidebar(cats, all)}
 
-        <!-- Cột Giữa (Section 6): Tabs trên + Slider Track Flex 5s + 3 Sub-banners dưới -->
-        <div class="hero-center-col" id="hero-slider" tabindex="0" aria-label="Banner chiến dịch nổi bật"
-             onmouseenter="A.pauseHero()" onmouseleave="A.resumeHero()"
-             onfocusin="A.pauseHero()" onfocusout="A.resumeHero()"
-             ontouchstart="A.heroTouchStart(event)" ontouchend="A.heroTouchEnd(event)"
-             onkeydown="A.heroKey(event)">
-
-          <!-- 1. Thanh Tab chiến dịch nằm ở PHÍA TRÊN Slider (đồng bộ với slide đang active) -->
-          <div class="hs-tabs" style="grid-template-columns: repeat(${Math.min(heroCampaigns.length, 5)}, 1fr)">
-            ${heroCampaigns
-              .slice(0, 5)
-              .map(
-                (s, idx) => `
-              <div class="hs-tab ${idx === curHero ? 'active' : ''}" onclick="A.goHero(${idx})">
-                <div class="hs-tab-title">${esc(s.tabTitle || s.prodName || s.title || 'Chiến dịch')}</div>
-                <div class="hs-tab-sub">${esc(s.tabSub || s.badge || 'Ưu đãi hot')}</div>
+        <!-- Cột 2 (Giữa): Banner Game MSI RAIDER GE78HX 13VH Đẳng Cấp -->
+        <div class="hero-center-col modern-hero-banner" id="hero-slider" tabindex="0" aria-label="Banner chiến dịch nổi bật"
+             onmouseenter="A.pauseHero()" onmouseleave="A.resumeHero()">
+          
+          <div class="mhb-card">
+            <div class="mhb-top-row">
+              <div class="mhb-brand-logo">
+                <svg width="78" height="26" viewBox="0 0 100 32" fill="none">
+                  <path d="M12 4L4 12V28H12V14L20 22L28 14V28H36V12L28 4L20 12L12 4Z" fill="#E11D48"/>
+                  <text x="44" y="24" fill="#FFFFFF" font-family="'Inter',sans-serif" font-weight="900" font-size="22">msi</text>
+                </svg>
               </div>
-            `,
-              )
-              .join('')}
-          </div>
-
-          <!-- 2. Slider Banner: Container .slider + Track Flex + Caption Overlay + Prev/Next/Dots -->
-          <div class="slider">
-            <!-- Thanh tiến trình 5s tự động chuyển slide -->
-            <div class="hero-progress-track">
-              <div class="hero-progress-bar" id="hero-progress-bar"></div>
+              <span class="mhb-bestseller-badge">BEST SELLER</span>
             </div>
 
-            <!-- Mũi tên chuyển slide nằm đè lên ảnh -->
-            <button type="button" class="hs-nav prev" onclick="event.stopPropagation(); event.preventDefault(); A.stepHero(-1)" aria-label="Banner trước">${ic('chevL', 18)}</button>
-            <button type="button" class="hs-nav next" onclick="event.stopPropagation(); event.preventDefault(); A.stepHero(1)" aria-label="Banner tiếp theo">${ic('chevR', 18)}</button>
+            <div class="mhb-content-wrap">
+              <div class="mhb-text-box">
+                <h2 class="mhb-main-title">RAIDER GE78HX 13VH</h2>
+                <p class="mhb-sub-title">Sức mạnh tối thượng cho game thủ</p>
+                
+                <div class="mhb-specs-grid">
+                  <div class="mhb-spec-box">
+                    <span class="mhb-sb-val">i9 13980HX</span>
+                    <span class="mhb-sb-lbl">Intel Core™</span>
+                  </div>
+                  <div class="mhb-spec-box">
+                    <span class="mhb-sb-val">32GB</span>
+                    <span class="mhb-sb-lbl">DDR5 RAM</span>
+                  </div>
+                  <div class="mhb-spec-box">
+                    <span class="mhb-sb-val">2TB</span>
+                    <span class="mhb-sb-lbl">SSD</span>
+                  </div>
+                  <div class="mhb-spec-box">
+                    <span class="mhb-sb-val">RTX 4080</span>
+                    <span class="mhb-sb-lbl">Laptop GPU</span>
+                  </div>
+                </div>
 
-            <!-- Track Flex trượt mượt mà theo trục X -->
-            <div class="hero-track" id="hero-track" style="transform: translateX(-${curHero * 100}%)">
-              ${heroCampaigns
-                .map(
-                  (s, idx) => `
-                  <a href="${esc(s.targetUrl || s.ctaHref || '#/products')}" 
-                     class="hero-slide ${idx === curHero ? 'active' : ''}" 
-                     data-slide="${idx}"
-                     title="Xem chi tiết ${esc(s.tabTitle || s.prodName || s.title)}">
-                    <img src="${esc(s.imgUrl)}" 
-                         alt="${esc(s.tabTitle || s.prodName || s.title)}" 
-                         class="hero-bg-img" 
-                         style="object-position: ${esc(s.imagePosition || 'center center')};"
-                         loading="${idx === 0 ? 'eager' : 'lazy'}">
-                    ${s.imageMode === 'complete' ? `
-                      <!-- Chế độ A: Ảnh poster hoàn chỉnh phủ 100% khung, click toàn banner chuyển trang -->
-                    ` : `
-                      <!-- Caption góc trái dưới, nền gradient tối mờ, chữ trắng, nút CTA đỏ bo tròn -->
-                      <div class="hero-caption">
-                        <div class="hero-caption-info">
-                          <span class="hero-caption-tag">${esc(s.badge || 'CHÍNH HÃNG APPLE')}</span>
-                          <h3 class="hero-caption-title">${esc(s.prodName || s.title)}</h3>
-                          <p class="hero-caption-sub">${esc(s.desc || s.tabSub || 'Đặc quyền HSSV giảm 1.000.000₫')}</p>
-                        </div>
-                        <span class="hero-caption-cta">${esc(s.ctaText || 'Xem chi tiết')} &rarr;</span>
-                      </div>
-                    `}
-                  </a>`,
-                )
-                .join('')}
+                <a href="#/products?cat=2" class="mhb-cta-btn">
+                  <span>Xem chi tiết</span> &rarr;
+                </a>
+              </div>
+
+              <div class="mhb-visual-box">
+                <img src="${resolveAssetUrl('/uploads/products/real-asus-rog.jpg')}" alt="MSI Raider Gaming" class="mhb-laptop-img">
+              </div>
             </div>
 
-            <!-- Chấm Indicator chuyển slide -->
-            <div class="hs-dots" role="tablist" aria-label="Chỉ báo slide">
-              ${heroCampaigns
-                .map(
-                  (_, idx) =>
-                    `<button type="button" class="hs-dot ${idx === curHero ? 'on' : ''}" onclick="event.stopPropagation(); event.preventDefault(); A.goHero(${idx})" aria-label="Chuyển tới banner ${idx + 1}"></button>`,
-                )
-                .join('')}
+            <!-- Left / Right Navigation Arrows -->
+            <button type="button" class="mhb-nav-arrow prev" onclick="event.stopPropagation(); A.stepHero(-1)" aria-label="Banner trước">${ic('chevL', 16)}</button>
+            <button type="button" class="mhb-nav-arrow next" onclick="event.stopPropagation(); A.stepHero(1)" aria-label="Banner tiếp theo">${ic('chevR', 16)}</button>
+
+            <!-- Bottom feature pills -->
+            <div class="mhb-bottom-features">
+              <div class="mhb-bf-item"><span class="mhb-bf-ico">⚡</span> Hiệu năng vượt trội</div>
+              <div class="mhb-bf-item"><span class="mhb-bf-ico">❄️</span> Tản nhiệt Cooler Boost</div>
+              <div class="mhb-bf-item"><span class="mhb-bf-ico">🖥️</span> Màn hình 240Hz</div>
+              <div class="mhb-bf-item"><span class="mhb-bf-ico">💎</span> Thiết kế đẳng cấp</div>
             </div>
-          </div>
-
-          <!-- 3. Hàng 3 Banner nhỏ ngay dưới slider chính (Hover phóng nhẹ) -->
-          <div class="hero-center-subs">
-            <a href="#/products?brand=Apple" class="hcs-card">
-              <div class="hcs-info">
-                <span class="hcs-tag">CHÍNH HÃNG APPLE</span>
-                <div class="hcs-title">MacBook Air M3</div>
-                <div class="hcs-sub">Đặc quyền HSSV giảm 1.000.000₫</div>
-              </div>
-              <div class="hcs-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-macbook-pro.jpg')}" alt="MacBook Chính Hãng VN/A" class="hcs-real-img">
-              </div>
-            </a>
-
-            <a href="#/products?cat=2" class="hcs-card">
-              <div class="hcs-info">
-                <span class="hcs-tag">GAMING ROG RTX</span>
-                <div class="hcs-title">Chiến Game 165Hz+</div>
-                <div class="hcs-sub">Trả góp 0% · Tặng Balo + Gear</div>
-              </div>
-              <div class="hcs-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-asus-rog.jpg')}" alt="Laptop Gaming RTX" class="hcs-real-img">
-              </div>
-            </a>
-
-            <a href="#/products?cat=5" class="hcs-card">
-              <div class="hcs-info">
-                <span class="hcs-tag">BACK TO SCHOOL</span>
-                <div class="hcs-title">Laptop Sinh Viên AI</div>
-                <div class="hcs-sub">Giảm trực tiếp đến 2.000.000₫</div>
-              </div>
-              <div class="hcs-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-dell-inspiron.jpg')}" alt="Laptop Học Tập Sinh Viên" class="hcs-real-img">
-              </div>
-            </a>
           </div>
         </div>
 
-        <!-- Cột Phải (Section 9): Box Xin chào + Ưu đãi sinh viên + Thu cũ lên đời + 2 Banner nhỏ -->
-        <div class="hero-right-col">
-          <!-- 1. Box Tài khoản khách hàng -->
-          <div class="member-hero-card">
-            ${
-              u
-                ? `<div class="mhc-top">
-                    <div class="mhc-avatar">${esc(u.name.charAt(0).toUpperCase())}</div>
-                    <div style="min-width:0">
-                      <div style="font-weight:800;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Hi, ${esc(u.name)}</div>
-                      <span class="bd bad" style="font-size:.62rem;padding:1px 6px">Hạng S-Member VIP</span>
-                    </div>
-                  </div>
-                  <div class="row" style="gap:6px;margin-top:6px">
-                    <a href="#/account?tab=orders" class="btn a sm grow">Đơn hàng</a>
-                    <a href="#/account?tab=warranty" class="btn sm grow">Bảo hành S/N</a>
-                  </div>`
-                : `<div class="mhc-top">
-                    <div class="mhc-avatar">${ic('user', 18)}</div>
-                    <div>
-                      <div style="font-weight:800;font-size:.84rem">Xin chào Quý khách!</div>
-                      <div class="xs muted">Đăng nhập nhận đặc quyền S-Student</div>
-                    </div>
-                  </div>
-                  <div class="row" style="gap:6px;margin-top:6px">
-                    <button type="button" class="btn a sm grow" onclick="A.authModal()">Đăng nhập</button>
-                    <button type="button" class="btn sm grow" onclick="A.authModal('reg')">Đăng ký</button>
-                  </div>`
-            }
-          </div>
-
-          <!-- 2. Khối Ưu đãi cho sinh viên (3 link có icon) -->
-          <div class="priv-box">
-            <div class="priv-head">
-              <span class="row" style="gap:6px;align-items:center;font-weight:800">${ic('spark', 15)} Ưu đãi cho sinh viên</span>
-              <a href="#/products?cat=5"><span class="more">Xem thêm &gt;</span></a>
-            </div>
-            <a href="#/account" class="priv-item-link">
-              <span class="pi-ico">${ic('user', 14)}</span>
-              <span>Đăng ký <b>nhận ưu đãi</b></span>
-            </a>
-            <a href="#/products?cat=5" class="priv-item-link">
-              <span class="pi-ico">${ic('tag', 14)}</span>
-              <span>Deal hot <b>học sinh sinh viên</b></span>
-            </a>
-            <a href="#/products?cat=5" class="priv-item-link">
-              <span class="pi-ico">${ic('laptop', 14)}</span>
-              <span>Laptop <b>ưu đãi khủng</b></span>
-            </a>
-          </div>
-
-          <!-- 3. Khối Thu cũ lên đời giá hời (2-3 link có icon) -->
-          <div class="priv-box">
-            <div class="priv-head">
-              <span class="row" style="gap:6px;align-items:center;font-weight:800">${ic('refresh', 15)} Thu cũ lên đời giá hời</span>
-              <a href="#/tradein"><span class="more">Xem thêm &gt;</span></a>
-            </div>
-            <a href="#/tradein" class="priv-item-link">
-              <span class="pi-ico">${ic('refresh', 14)}</span>
-              <span>Định giá máy <b>chuyên sâu trực tuyến</b></span>
-            </a>
-            <a href="#/tradein" class="priv-item-link">
-              <span class="pi-ico">${ic('dollar', 14)}</span>
-              <span>Laptop lên đời <b>trợ giá đến 3 Triệu</b></span>
-            </a>
-            <a href="#/warranty" class="priv-item-link">
-              <span class="pi-ico">${ic('shield', 14)}</span>
-              <span>Bảo hành điện tử <b>S/N 24 tháng</b></span>
-            </a>
-          </div>
-
-          <!-- 4. Banner nhỏ khuyến mãi chuẩn CellphoneS Image 2 -->
-          <div class="hero-mini-promos">
-            <a href="#/promos" class="mini-promo-card-wide">
-              <div class="mpw-content">
-                <span class="mpw-tag">GIẢM ĐẾN 50% · HOT DEAL</span>
-                <div class="mpw-title">Hàng mới đổ bộ</div>
-                <div class="mpw-sub">Đại tiệc Voucher Laptop99</div>
+        <!-- Cột 3 (Phải): 4 Box Widget Đăng nhập + Ưu đãi + Thu cũ + Phụ kiện -->
+        <div class="hero-right-col modern-right-col">
+          <!-- Widget 1: Box Xin chào Quý khách -->
+          <div class="mrc-user-card">
+            <div class="mrc-user-top">
+              <div class="mrc-avatar-circle">${ic('user', 20)}</div>
+              <div class="mrc-user-info">
+                <div class="mrc-user-greeting">${u ? 'Hi, ' + esc(u.name) : 'Xin chào Quý khách!'}</div>
+                <div class="mrc-user-sub">${u ? 'Thành viên S-Member VIP' : 'Đăng nhập để có trải nghiệm tốt hơn'}</div>
               </div>
-              <div class="mpw-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-lenovo-legion.jpg')}" alt="Khuyến mãi" class="mpw-img">
+            </div>
+            <div class="mrc-btn-row">
+              ${
+                u
+                  ? `<a href="#/account?tab=orders" class="mrc-btn-login" style="text-decoration:none">Đơn hàng</a>
+                     <a href="#/account?tab=warranty" class="mrc-btn-reg" style="text-decoration:none">Bảo hành S/N</a>`
+                  : `<button type="button" class="mrc-btn-login" onclick="A.authModal()">Đăng nhập</button>
+                     <button type="button" class="mrc-btn-reg" onclick="A.authModal('reg')">Đăng ký</button>`
+              }
+            </div>
+          </div>
+
+          <!-- Widget 2: Khối Ưu đãi sinh viên & Deal hot -->
+          <div class="mrc-promo-card">
+            <a href="#/products?cat=5" class="mrc-promo-row">
+              <div class="mrc-pr-icon-red">🎓</div>
+              <div class="mrc-pr-text">
+                <div class="mrc-pr-title">Ưu đãi cho sinh viên</div>
+                <div class="mrc-pr-desc">Giảm thêm đến 5% khi mua laptop</div>
+              </div>
+              <span class="mrc-pr-arrow">Xem ngay &gt;</span>
+            </a>
+            <a href="#/promos" class="mrc-promo-row">
+              <div class="mrc-pr-icon-red">🏷️</div>
+              <div class="mrc-pr-text">
+                <div class="mrc-pr-title">Deal hot mỗi ngày</div>
+                <div class="mrc-pr-desc">Sản phẩm giá tốt, số lượng có hạn</div>
+              </div>
+            </a>
+            <a href="#/tradein" class="mrc-promo-row">
+              <div class="mrc-pr-icon-red">🔄</div>
+              <div class="mrc-pr-text">
+                <div class="mrc-pr-title">Laptop cũ đổi mới</div>
+                <div class="mrc-pr-desc">Trợ giá lên đến 3 triệu</div>
+              </div>
+            </a>
+          </div>
+
+          <!-- Widget 3: Thu cũ lên đời giá tốt nhất -->
+          <div class="mrc-tradein-card">
+            <a href="#/tradein" class="mrc-tradein-row">
+              <div class="mrc-pr-icon-red">🔄</div>
+              <div class="mrc-pr-text">
+                <div class="mrc-pr-title">Thu cũ lên đời - Giá tốt nhất</div>
+                <div class="mrc-pr-desc">Định giá nhanh - Thu mua tận nơi</div>
+              </div>
+              <span class="mrc-pr-arrow">Xem ngay &gt;</span>
+            </a>
+          </div>
+
+          <!-- Widget 4: Banner Phụ kiện giảm đến 50% -->
+          <div class="mrc-mini-banner">
+            <a href="#/products?q=phu+kien" class="mrc-mb-link">
+              <div class="mrc-mb-text">
+                <div class="mrc-mb-badge">Giảm đến 50%</div>
+                <div class="mrc-mb-title">Phụ kiện · Balo · Chuột · Túi chống sốc</div>
+                <div class="mrc-mb-cta">Mua ngay &gt;</div>
+              </div>
+              <div class="mrc-mb-thumb">
+                <img src="${resolveAssetUrl('/uploads/products/real-lenovo-legion.jpg')}" alt="Phụ kiện" class="mrc-mb-img">
               </div>
             </a>
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- DẢI LOGO THƯƠNG HIỆU NỔI BẬT (ASUS, ACER, DELL, HP, LENOVO, APPLE, MSI) -->
+    <section class="sec brand-logos-strip-sec reveal-on-scroll">
+      <div class="brand-logos-card">
+        <span class="blc-title">THƯƠNG HIỆU NỔI BẬT</span>
+        <div class="blc-logos-track">
+          <a href="#/products?brand=ASUS" class="blc-item" title="Laptop ASUS"><img src="${resolveAssetUrl('/uploads/asus.svg')}" alt="ASUS"></a>
+          <a href="#/products?brand=Acer" class="blc-item" title="Laptop Acer"><img src="${resolveAssetUrl('/uploads/acer.svg')}" alt="Acer"></a>
+          <a href="#/products?brand=Dell" class="blc-item" title="Laptop Dell"><img src="${resolveAssetUrl('/uploads/dell.svg')}" alt="Dell"></a>
+          <a href="#/products?brand=HP" class="blc-item" title="Laptop HP"><img src="${resolveAssetUrl('/uploads/hp.svg')}" alt="HP"></a>
+          <a href="#/products?brand=Lenovo" class="blc-item" title="Laptop Lenovo"><img src="${resolveAssetUrl('/uploads/lenovo.svg')}" alt="Lenovo"></a>
+          <a href="#/products?brand=Apple" class="blc-item" title="MacBook Apple"><img src="${resolveAssetUrl('/uploads/apple.svg')}" alt="Apple"></a>
+          <a href="#/products?brand=MSI" class="blc-item" title="Laptop MSI"><img src="${resolveAssetUrl('/uploads/msi.svg')}" alt="MSI"></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SẢN PHẨM BÁN CHẠY (TẤT CẢ, GAMING, MACBOOK, VĂN PHÒNG, SINH VIÊN, ĐỒ HỌA) -->
+    <section class="sec best-sellers-sec reveal-on-scroll">
+      <div class="bss-head">
+        <div class="bss-left">
+          <h2 class="bss-title">SẢN PHẨM BÁN CHẠY</h2>
+          <div class="bss-tabs">
+            <button type="button" class="bss-tab ${activeSmartCat === 'all' && activeSmartBrand === 'all' ? 'active' : ''}" onclick="A.setSmartFilter('cat','all'); A.setSmartFilter('brand','all')">Tất cả</button>
+            <button type="button" class="bss-tab ${activeSmartCat === '2' ? 'active' : ''}" onclick="A.setSmartFilter('cat','2')">Laptop Gaming</button>
+            <button type="button" class="bss-tab ${activeSmartBrand === 'Apple' ? 'active' : ''}" onclick="A.setSmartFilter('brand','Apple')">MacBook</button>
+            <button type="button" class="bss-tab ${activeSmartCat === '1' ? 'active' : ''}" onclick="A.setSmartFilter('cat','1')">Laptop Văn Phòng</button>
+            <button type="button" class="bss-tab ${activeSmartCat === '5' ? 'active' : ''}" onclick="A.setSmartFilter('cat','5')">Laptop Sinh Viên</button>
+            <button type="button" class="bss-tab ${activeSmartCat === '4' ? 'active' : ''}" onclick="A.setSmartFilter('cat','4')">Đồ Họa - Kỹ Thuật</button>
+          </div>
+        </div>
+        <div class="bss-nav-arrows">
+          <button type="button" class="bss-arrow" onclick="A.stepBestSellers(-1)" aria-label="Trước">${ic('chevL', 14)}</button>
+          <button type="button" class="bss-arrow" onclick="A.stepBestSellers(1)" aria-label="Tiếp">${ic('chevR', 14)}</button>
+        </div>
+      </div>
+
+      <!-- Lưới 5 Cột Sản Phẩm Bán Chạy -->
+      <div class="pg pg-5cols">
+        ${bestSellers5.map(pcard).join('')}
+      </div>
+    </section>
+
+    <!-- BANNER NGANG TOÀN KHUNG: MACBOOK PRO 16" M3 PRO SANG TRỌNG -->
+    <section class="sec reveal-on-scroll">
+      <div class="macbook-showcase-banner">
+        <div class="msb-left">
+          <img src="${resolveAssetUrl('/uploads/products/real-macbook-pro.jpg')}" alt="MacBook Pro 16 M3 Pro" class="msb-img">
+        </div>
+        <div class="msb-center">
+          <div class="msb-title-row">
+            <span class="msb-apple-logo">🍎</span>
+            <h3 class="msb-title">MacBook Pro 16" M3 Pro</h3>
+          </div>
+          <p class="msb-sub">Hiệu năng vượt trội - Sáng tạo không giới hạn</p>
+          
+          <div class="msb-specs-row">
+            <div class="msb-spec-chip">
+              <span class="msb-sc-ico">⚡</span>
+              <div>
+                <div class="msb-sc-v">M3 Pro</div>
+                <div class="msb-sc-l">Chip Apple</div>
+              </div>
+            </div>
+            <div class="msb-spec-chip">
+              <span class="msb-sc-ico">🧠</span>
+              <div>
+                <div class="msb-sc-v">18GB</div>
+                <div class="msb-sc-l">Unified Memory</div>
+              </div>
+            </div>
+            <div class="msb-spec-chip">
+              <span class="msb-sc-ico">💾</span>
+              <div>
+                <div class="msb-sc-v">512GB</div>
+                <div class="msb-sc-l">SSD</div>
+              </div>
+            </div>
+          </div>
+
+          <a href="#/products?brand=Apple" class="msb-cta-btn">
+            <span>Khám phá ngay</span> &rarr;
+          </a>
+        </div>
+        <div class="msb-right">
+          <div class="msb-feature-col">
+            <div class="msb-feat-ico">⚡</div>
+            <div class="msb-feat-txt">Hiệu suất mạnh mẽ</div>
+          </div>
+          <div class="msb-feature-col">
+            <div class="msb-feat-ico">🖥️</div>
+            <div class="msb-feat-txt">Màn hình Liquid Retina XDR</div>
+          </div>
+          <div class="msb-feature-col">
+            <div class="msb-feat-ico">🔋</div>
+            <div class="msb-feat-txt">Pin bền bỉ cả ngày</div>
+          </div>
+          <div class="msb-feature-col">
+            <div class="msb-feat-ico">💎</div>
+            <div class="msb-feat-txt">Thiết kế tinh tế</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
       <!-- BANNER NGANG FLASH SALE KÈM ĐỒNG HỒ ĐẾM NGƯỢC (ĐỒNG BỘ TỪ ADMIN CMS) -->
       ${(() => {

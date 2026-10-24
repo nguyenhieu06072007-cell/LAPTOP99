@@ -4984,3 +4984,1005 @@ p { margin: 0; }
   .ep-pill-text { font-size: 0.65rem; }
   .ep-pill-hero-text { font-size: 0.76rem; }
 }
+
+/* ==========================================================================
+   THIẾT KẾ GIAO DIỆN HIỆN ĐẠI MỚI CHUẨN THAM CHIẾU (LAPTOP99 FLAGSHIP)
+   - Top Bar tối giản nền đen đỏ tinh tế
+   - Header & Subnav Dark Gaming
+   - Sidebar 9 Danh mục theme tối
+   - Banner Hero Game MSI Raider GE78HX
+   - Cột phải 4 widget tiện ích
+   - Dải logo Thương hiệu nổi bật
+   - Lưới 5 Cột Sản phẩm Bán chạy
+   - Banner ngang MacBook Pro 16 M3 Pro
+   ========================================================================== */
+
+/* 1. TOP BAR DARK */
+.top-info-bar-dark {
+  background: #0E1017;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.76rem;
+  color: #AEB4BF;
+  padding: 6px 0;
+}
+.tib-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tib-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.tib-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #CBD5E1;
+  font-weight: 500;
+}
+.tib-icon {
+  color: #E11D48;
+  display: inline-flex;
+}
+.tib-hotline {
+  color: #F8FAFC;
+  text-decoration: none;
+  font-weight: 600;
+}
+.tib-hotline b {
+  color: #E11D48;
+}
+
+/* 2. HEADER DARK & SEARCH */
+.nav-dark {
+  background: #161822 !important;
+  border-bottom: 1px solid #232736 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+.modern-search-form {
+  background: #FFFFFF !important;
+  border-radius: 9999px !important;
+  padding: 3px 4px 3px 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+  border: 1.5px solid transparent !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.modern-search-form:focus-within {
+  border-color: #E11D48 !important;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25) !important;
+}
+.modern-search-form input {
+  background: transparent !important;
+  border: none !important;
+  color: #1E293B !important;
+  font-size: 0.84rem !important;
+  font-weight: 500 !important;
+  flex: 1 !important;
+  outline: none !important;
+  padding: 6px 0 !important;
+}
+.modern-search-form input::placeholder {
+  color: #94A3B8 !important;
+}
+.ns-btn-round {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: #E11D48 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
+  flex-shrink: 0 !important;
+}
+.ns-btn-round:hover {
+  background: #BE123C !important;
+  transform: scale(1.05) !important;
+}
+.nr-modern .nav-act {
+  color: #F8FAFC !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+}
+.nr-modern .nav-act:hover {
+  color: #E11D48 !important;
+}
+.nr-modern .nav-act-ico {
+  color: #F8FAFC;
+  display: inline-flex;
+}
+.nr-modern .nav-badge {
+  background: #E11D48 !important;
+  color: #FFFFFF !important;
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+  padding: 1px 5px !important;
+  border-radius: 999px !important;
+  line-height: 1.2 !important;
+}
+.nav-btn-login {
+  background: #E11D48;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 9999px;
+  padding: 7px 18px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.18s ease, transform 0.15s ease;
+  box-shadow: 0 3px 12px rgba(225, 29, 72, 0.4);
+  text-decoration: none;
+}
+.nav-btn-login:hover {
+  background: #BE123C;
+  transform: translateY(-1px);
+}
+
+/* 3. SUBNAV BAR DARK */
+.subnav-bar-dark {
+  background: #12141C !important;
+  border-bottom: 1px solid #1E2230 !important;
+}
+.subnav-in {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+.cat-pill-red-btn {
+  background: #E11D48 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: background 0.16s ease !important;
+  white-space: nowrap !important;
+}
+.cat-pill-red-btn:hover {
+  background: #BE123C !important;
+}
+.subnav-bar-dark .subnav-links a {
+  color: #AEB4BF !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+}
+.subnav-bar-dark .subnav-links a:hover,
+.subnav-bar-dark .subnav-links a.on {
+  color: #FFFFFF !important;
+}
+
+/* 4. CATEGORY SIDEBAR DARK */
+.cat-sidebar-dark {
+  background: #191B24 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2) !important;
+}
+.cat-sidebar-dark .cat-side-item {
+  color: #FFFFFF !important;
+  padding: 10px 14px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  transition: background 0.15s ease !important;
+}
+.cat-sidebar-dark .cat-side-item:hover,
+.cat-sidebar-dark .cat-side-row.active-row .cat-side-item {
+  background: rgba(225, 29, 72, 0.1) !important;
+}
+.cat-sidebar-dark .cat-side-row.active-row {
+  border-left: 3.5px solid #E11D48 !important;
+}
+.cat-sidebar-dark .cat-side-ic {
+  color: #E11D48 !important;
+}
+.cat-sidebar-dark .cat-title {
+  color: #F8FAFC !important;
+  font-weight: 700 !important;
+  font-size: 0.82rem !important;
+}
+.cat-sidebar-dark .cat-sub {
+  color: #94A3B8 !important;
+  font-size: 0.68rem !important;
+}
+.cat-sidebar-dark .cat-side-r {
+  color: #64748B !important;
+}
+
+/* 5. MODERN HERO BANNER (MSI RAIDER GAMING) */
+.modern-hero-banner .mhb-card {
+  background: radial-gradient(circle at 82% 35%, #2B101E 0%, #161824 55%, #0F1017 100%);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  padding: 22px 26px 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 380px;
+}
+.mhb-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.mhb-bestseller-badge {
+  background: #E11D48;
+  color: #FFFFFF;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.5);
+}
+.mhb-content-wrap {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  align-items: center;
+  gap: 20px;
+}
+.mhb-main-title {
+  font-size: 1.85rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+  margin: 0 0 6px 0;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+.mhb-sub-title {
+  font-size: 0.88rem;
+  color: #94A3B8;
+  margin: 0 0 16px 0;
+  font-weight: 500;
+}
+.mhb-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.mhb-spec-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 4px;
+  text-align: center;
+}
+.mhb-sb-val {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+.mhb-sb-lbl {
+  display: block;
+  font-size: 0.62rem;
+  color: #94A3B8;
+  margin-top: 2px;
+}
+.mhb-cta-btn {
+  background: #E11D48;
+  color: #FFFFFF;
+  padding: 10px 24px;
+  border-radius: 9999px;
+  font-weight: 800;
+  font-size: 0.84rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(225, 29, 72, 0.45);
+  transition: transform 0.16s ease, background 0.16s ease;
+}
+.mhb-cta-btn:hover {
+  background: #BE123C;
+  transform: translateY(-2px);
+}
+.mhb-visual-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.mhb-laptop-img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.65));
+  transition: transform 0.3s ease;
+}
+.mhb-card:hover .mhb-laptop-img {
+  transform: scale(1.04);
+}
+.mhb-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(15, 16, 23, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: background 0.15s ease;
+}
+.mhb-nav-arrow:hover {
+  background: #E11D48;
+}
+.mhb-nav-arrow.prev { left: 10px; }
+.mhb-nav-arrow.next { right: 10px; }
+.mhb-bottom-features {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.mhb-bf-item {
+  font-size: 0.76rem;
+  color: #CBD5E1;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 6. RIGHT COLUMN WIDGETS */
+.modern-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mrc-user-card {
+  background: #191B24;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+.mrc-user-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mrc-avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #E11D48;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+}
+.mrc-user-greeting {
+  font-weight: 800;
+  font-size: 0.84rem;
+  color: #FFFFFF;
+}
+.mrc-user-sub {
+  font-size: 0.7rem;
+  color: #94A3B8;
+  margin-top: 1px;
+}
+.mrc-btn-row {
+  display: flex;
+  gap: 8px;
+}
+.mrc-btn-login {
+  background: #E11D48;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  flex: 1;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.mrc-btn-login:hover {
+  background: #BE123C;
+}
+.mrc-btn-reg {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex: 1;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.mrc-btn-reg:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.mrc-promo-card,
+.mrc-tradein-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+.mrc-promo-row,
+.mrc-tradein-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #F1F5F9;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.14s ease;
+}
+.mrc-promo-row:last-child {
+  border-bottom: none;
+}
+.mrc-promo-row:hover,
+.mrc-tradein-row:hover {
+  transform: translateX(3px);
+}
+.mrc-pr-icon-red {
+  font-size: 1.15rem;
+  color: #E11D48;
+  flex-shrink: 0;
+}
+.mrc-pr-text {
+  flex: 1;
+  min-width: 0;
+}
+.mrc-pr-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1E293B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mrc-pr-desc {
+  font-size: 0.68rem;
+  color: #64748B;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mrc-pr-arrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #E11D48;
+  white-space: nowrap;
+}
+.mrc-mini-banner {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+.mrc-mb-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: inherit;
+  gap: 10px;
+}
+.mrc-mb-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #E11D48;
+  text-transform: uppercase;
+}
+.mrc-mb-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 2px 0 4px;
+  line-height: 1.25;
+}
+.mrc-mb-cta {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #E11D48;
+}
+.mrc-mb-thumb {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #F8FAFC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mrc-mb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 7. BRAND LOGOS STRIP */
+.brand-logos-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  margin-top: 14px;
+  gap: 24px;
+}
+.blc-title {
+  font-weight: 900;
+  font-size: 0.88rem;
+  letter-spacing: 0.05em;
+  color: #0F172A;
+  white-space: nowrap;
+}
+.blc-logos-track {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.blc-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.16s ease;
+}
+.blc-item img {
+  max-height: 22px;
+  max-width: 80px;
+  object-fit: contain;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.blc-item:hover img {
+  transform: scale(1.1);
+}
+
+/* 8. BEST SELLERS 5 COLUMNS & TABS */
+.best-sellers-sec {
+  margin-top: 24px;
+}
+.bss-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.bss-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.bss-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: #0F172A;
+  margin: 0;
+  text-transform: uppercase;
+}
+.bss-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bss-tab {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.bss-tab:hover {
+  border-color: #E11D48;
+  color: #E11D48;
+}
+.bss-tab.active {
+  background: #E11D48;
+  border-color: #E11D48;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+}
+.bss-nav-arrows {
+  display: flex;
+  gap: 6px;
+}
+.bss-arrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.bss-arrow:hover {
+  background: #E11D48;
+  border-color: #E11D48;
+  color: #FFFFFF;
+}
+.pg-5cols {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 14px !important;
+}
+
+/* 9. MODERN PRODUCT CARD */
+.pc-modern-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+.pc-modern-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08) !important;
+  border-color: #FDA4AF !important;
+}
+.pc-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  z-index: 2;
+  text-transform: capitalize;
+}
+.pc-badge-sale {
+  background: #E11D48;
+  color: #FFFFFF;
+}
+.pc-badge-bestseller,
+.pc-badge-hot {
+  background: #E11D48;
+  color: #FFFFFF;
+}
+.pc-badge-new {
+  background: #2563EB;
+  color: #FFFFFF;
+}
+.pc-modern-card .pc-img-box {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 8px;
+}
+.pc-modern-card .pc-img-link {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pc-modern-card .pc-img-link img {
+  max-width: 100%;
+  max-height: 130px;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+.pc-modern-card:hover .pc-img-link img {
+  transform: scale(1.05);
+}
+.pc-actions-floating {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.pc-modern-card:hover .pc-actions-floating {
+  opacity: 1;
+}
+.pc-modern-card .pc-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 4px 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-decoration: none;
+}
+.pc-modern-card .pc-title:hover {
+  color: #E11D48;
+}
+.pc-spec-summary {
+  font-size: 0.7rem;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.pc-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.pc-modern-card .pc-price {
+  font-size: 0.96rem;
+  font-weight: 900;
+  color: #E11D48;
+}
+.pc-modern-card .pc-old {
+  font-size: 0.74rem;
+  color: #94A3B8;
+  text-decoration: line-through;
+}
+.pc-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid #F1F5F9;
+}
+.pc-rating-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #F59E0B;
+  font-size: 0.74rem;
+}
+.pc-rev-count {
+  font-size: 0.68rem;
+  color: #94A3B8;
+  margin-left: 2px;
+}
+.pc-cart-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #E11D48;
+  color: #FFFFFF;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.16s ease, transform 0.15s ease;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.4);
+}
+.pc-cart-btn:hover {
+  background: #BE123C;
+  transform: scale(1.08);
+}
+
+/* 10. MACBOOK PRO WIDESCREEN BANNER */
+.macbook-showcase-banner {
+  background: radial-gradient(circle at 18% 50%, #2E0E1B 0%, #151824 55%, #0B0D14 100%);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  border-radius: 14px;
+  padding: 24px 36px;
+  display: grid;
+  grid-template-columns: 240px 1.4fr 1.1fr;
+  gap: 28px;
+  align-items: center;
+  margin-top: 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+.msb-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.msb-img {
+  max-height: 160px;
+  width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6));
+}
+.msb-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.msb-apple-logo {
+  font-size: 1.25rem;
+}
+.msb-title {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin: 0;
+}
+.msb-sub {
+  font-size: 0.84rem;
+  color: #94A3B8;
+  margin: 0 0 16px 0;
+}
+.msb-specs-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.msb-spec-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.msb-sc-ico {
+  font-size: 1rem;
+}
+.msb-sc-v {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+.msb-sc-l {
+  font-size: 0.62rem;
+  color: #94A3B8;
+}
+.msb-cta-btn {
+  background: #1E2230;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  padding: 8px 20px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.16s ease;
+}
+.msb-cta-btn:hover {
+  background: #E11D48;
+  border-color: #E11D48;
+}
+.msb-right {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.msb-feature-col {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #CBD5E1;
+}
+.msb-feat-ico {
+  font-size: 1.15rem;
+}
+
+/* RESPONSIVE CHO THIẾT KẾ MỚI */
+@media (max-width: 1200px) {
+  .pg-5cols {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  .macbook-showcase-banner {
+    grid-template-columns: 180px 1.2fr 1fr;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 992px) {
+  .pg-5cols {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .macbook-showcase-banner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .msb-title-row,
+  .msb-specs-row {
+    justify-content: center;
+  }
+  .msb-right {
+    margin-top: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pg-5cols {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .tib-inner {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+  .tib-left {
+    justify-content: center;
+    gap: 10px;
+  }
+  .mhb-content-wrap {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .mhb-specs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .brand-logos-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
