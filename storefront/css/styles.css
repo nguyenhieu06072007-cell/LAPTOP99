@@ -4325,6 +4325,11 @@ p { margin: 0; }
   max-height: 56vh;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.promo-popup-body::-webkit-scrollbar {
+  display: none;
 }
 .promo-voucher-list {
   display: flex;
@@ -4628,4 +4633,354 @@ p { margin: 0; }
   .promo-ticket-notch { display: none; }
   .promo-ticket-divider { width: 100%; height: 1px; border-left: none; border-top: 1.5px dashed #FDA4AF; }
   .promo-ticket-right { width: 100%; flex-direction: row; justify-content: space-between; padding: 10px 14px; }
+}
+
+/* ==========================================================================
+   LAPTOP88-STYLE ENTRY POPUP BANNER ("DEAL CỰC SỐC — LOQ 2026")
+   ========================================================================== */
+.mb.mb-entry-popup {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+  max-width: 480px !important;
+  overflow: visible !important;
+}
+
+.entry-popup-container {
+  position: relative;
+  width: 100%;
+  max-width: 470px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Floating Close Button at top-right above card */
+.ep-close-btn {
+  position: absolute;
+  top: -42px;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  color: #111827;
+  font-size: 16px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 30;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), background 0.2s ease;
+}
+.ep-close-btn:hover {
+  background: #FFFFFF;
+  transform: scale(1.15) rotate(90deg);
+}
+
+/* Main Graphic Card */
+.entry-popup-card {
+  position: relative;
+  width: 100%;
+  border-radius: 28px;
+  background: radial-gradient(ellipse at 50% 15%, #241142 0%, #110723 60%, #06020D 100%);
+  border: 2.5px solid rgba(168, 85, 247, 0.75);
+  box-shadow: 0 0 50px rgba(168, 85, 247, 0.45), 0 25px 65px rgba(0, 0, 0, 0.85);
+  padding: 24px 22px 18px;
+  text-align: center;
+  color: #FFFFFF;
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.entry-popup-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 65px rgba(168, 85, 247, 0.6), 0 30px 75px rgba(0, 0, 0, 0.9);
+}
+
+/* Floating 3D Retro Gaming Stickers */
+.ep-sticker {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
+  font-size: 1.7rem;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7));
+}
+.ep-stk-1 {
+  top: 18px;
+  left: 18px;
+  animation: epFloat 3s ease-in-out infinite alternate;
+}
+.ep-stk-2 {
+  top: 26px;
+  right: 20px;
+  animation: epPulse 2.2s ease-in-out infinite;
+}
+.ep-stk-3 {
+  bottom: 80px;
+  left: 16px;
+  animation: epFloat 2.8s ease-in-out infinite alternate-reverse;
+}
+.ep-stk-4 {
+  bottom: 72px;
+  right: 18px;
+  animation: epFloat 3.4s ease-in-out infinite alternate;
+}
+@keyframes epFloat {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-8px) rotate(8deg); }
+}
+@keyframes epPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 12px rgba(0,0,0,0.7)); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 16px rgba(168,85,247,0.8)); }
+}
+
+/* Top Header Tag Row with Chevrons */
+.ep-header-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2.2px;
+  color: #E9D5FF;
+  margin-bottom: 2px;
+  position: relative;
+  z-index: 6;
+}
+.ep-chevrons {
+  color: #C084FC;
+  font-weight: 950;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.8);
+}
+.ep-badge-pill {
+  background: rgba(88, 28, 135, 0.55);
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  padding: 3px 14px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Big Headline */
+.ep-title {
+  font-size: 2.5rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  line-height: 1.05;
+  margin: 4px 0 6px;
+  color: #FFFFFF;
+  text-shadow: 0 4px 24px rgba(168, 85, 247, 0.9), 0 0 12px rgba(255, 255, 255, 0.9);
+  position: relative;
+  z-index: 6;
+}
+
+/* Highlight Ribbon */
+.ep-hl-wrap {
+  position: relative;
+  z-index: 6;
+  margin-bottom: 8px;
+}
+.ep-highlight-ribbon {
+  display: inline-block;
+  padding: 6px 20px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #9333EA 0%, #D946EF 45%, #F43F5E 100%);
+  color: #FFFFFF;
+  font-size: 0.92rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  box-shadow: 0 6px 22px rgba(217, 70, 239, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  animation: epRibbonGlow 2.5s infinite alternate;
+}
+@keyframes epRibbonGlow {
+  0% { filter: drop-shadow(0 0 4px rgba(217, 70, 239, 0.4)); }
+  100% { filter: drop-shadow(0 0 14px rgba(244, 63, 94, 0.85)); }
+}
+
+/* Laptop 3D Visual with Aura Glow */
+.ep-visual-wrap {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 14px;
+  z-index: 6;
+}
+.ep-spotlight {
+  position: absolute;
+  width: 240px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.55) 0%, rgba(59, 130, 246, 0.25) 50%, transparent 75%);
+  filter: blur(24px);
+  pointer-events: none;
+}
+.ep-img {
+  max-height: 100%;
+  max-width: 90%;
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.9));
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+.entry-popup-card:hover .ep-img {
+  transform: scale(1.05) translateY(-4px);
+}
+
+/* 3 Bottom Feature Pills */
+.ep-pills-row {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 6;
+}
+.ep-pill {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  border: 1.5px solid rgba(168, 85, 247, 0.35);
+}
+.ep-pill.ep-pill-hero {
+  background: #FFFFFF;
+  border: 2px solid #A855F7;
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.55);
+  transform: scale(1.05);
+}
+.ep-pill-text {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #581C87;
+  text-transform: uppercase;
+  line-height: 1.2;
+  text-align: center;
+}
+.ep-pill-hero-text {
+  font-size: 0.85rem;
+  color: #7E22CE;
+  font-weight: 950;
+}
+
+/* Bottom Emergency Ribbon */
+.ep-emergency-wrap {
+  position: relative;
+  z-index: 6;
+}
+.ep-emergency-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6B21A8 0%, #4C1D95 100%);
+  border: 1px solid rgba(192, 132, 252, 0.5);
+  color: #F3E8FF;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.ep-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34D399;
+  box-shadow: 0 0 8px #34D399;
+  animation: epDotPulse 1.2s infinite;
+}
+@keyframes epDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* Action Bar below card */
+.ep-actions-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 470px;
+  margin-top: 12px;
+}
+.ep-btn-primary {
+  width: 100%;
+  padding: 13px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #9333EA 0%, #E11D48 100%);
+  color: #FFFFFF;
+  font-weight: 900;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.ep-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(225, 29, 72, 0.6);
+}
+.ep-arrow {
+  font-size: 1.15rem;
+  transition: transform 0.15s ease;
+}
+.ep-btn-primary:hover .ep-arrow {
+  transform: translateX(4px);
+}
+.ep-btn-secondary {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  backdrop-filter: blur(10px);
+  transition: background 0.16s ease;
+}
+.ep-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+@media (max-width: 480px) {
+  .entry-popup-card { padding: 20px 14px 14px; }
+  .ep-title { font-size: 1.95rem; }
+  .ep-visual-wrap { height: 160px; }
+  .ep-pill-text { font-size: 0.65rem; }
+  .ep-pill-hero-text { font-size: 0.76rem; }
 }

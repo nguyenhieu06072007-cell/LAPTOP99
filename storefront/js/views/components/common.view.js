@@ -33,7 +33,8 @@ function modal(html, sm) {
   if (!m) return;
   m.className = 'open';
   const isPromo = typeof html === 'string' && html.includes('promo-popup');
-  m.innerHTML = `<div class="mb ${sm ? 'sm' : ''} ${isPromo ? 'mb-promo' : ''}" onclick="event.stopPropagation()">${html}</div>`;
+  const isEntryPopup = typeof html === 'string' && html.includes('entry-popup-container');
+  m.innerHTML = `<div class="mb ${sm ? 'sm' : ''} ${isPromo ? 'mb-promo' : ''} ${isEntryPopup ? 'mb-entry-popup' : ''}" onclick="event.stopPropagation()">${html}</div>`;
   m.onclick = closeModal;
   // Force reflow then add entrance animation class
   requestAnimationFrame(() => {

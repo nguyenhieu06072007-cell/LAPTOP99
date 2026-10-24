@@ -107,7 +107,9 @@ function modal(html, sm) {
   const m = $('#modal');
   if (!m) return;
   m.className = 'open';
-  m.innerHTML = `<div class="mb ${sm ? 'sm' : ''}" onclick="event.stopPropagation()">${html}</div>`;
+  const isPromo = typeof html === 'string' && html.includes('promo-popup');
+  const isEntryPopup = typeof html === 'string' && html.includes('entry-popup-container');
+  m.innerHTML = `<div class="mb ${sm ? 'sm' : ''} ${isPromo ? 'mb-promo' : ''} ${isEntryPopup ? 'mb-entry-popup' : ''}" onclick="event.stopPropagation()">${html}</div>`;
   m.onclick = closeModal;
 }
 

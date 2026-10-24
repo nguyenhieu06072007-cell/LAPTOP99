@@ -29,6 +29,7 @@ import {
 
 const POSITIONS = [
   { id: 'all', label: 'Tất cả vị trí', icon: HiOutlineSparkles, color: 'gray' },
+  { id: 'entry_popup', label: '🎯 Banner Popup Đầu Trang', icon: HiOutlineSparkles, color: 'purple' },
   { id: 'hero', label: 'Hero Slider Trang Chủ', icon: HiOutlineComputerDesktop, color: 'blue' },
   { id: 'flash_sale', label: 'Dải Flash Sale Giờ Vàng', icon: HiOutlineBolt, color: 'rose' },
   { id: 'brand_showcase', label: 'Chuyên Trang Thương Hiệu', icon: HiOutlineBuildingStorefront, color: 'indigo' },
@@ -171,6 +172,29 @@ export default function BannerManagementPage() {
     let defaultTitle = 'Chiến dịch Laptop chính hãng';
     let defaultBadge = '🚀 CHIẾN DỊCH NỔI BẬT';
     let defaultTheme = 'crimson';
+
+    if (pos === 'entry_popup') {
+      setForm({
+        ...EMPTY_FORM,
+        position: 'entry_popup',
+        brand: 'Lenovo',
+        title: 'LOQ 2026',
+        highlight_text: 'GIẢM TỚI 6 TRIỆU/MÁY',
+        badge_text: 'DEAL CỰC SỐC',
+        subtitle: 'SỐ LƯỢNG CÓ HẠN',
+        specs_json: 'Chip Core 5 / 7 ĐỜI MỚI, Giá từ 25 TRIỆU, 100% sRGB 165Hz',
+        custom_price: 24990000,
+        custom_old_price: 30990000,
+        bg_theme: 'purple',
+        cta_text: 'SĂN DEAL NGAY',
+        cta_link: '#/product/p60',
+        secondary_cta_text: 'Xem kho voucher',
+        secondary_cta_link: '#/promos',
+        sort_order: (banners?.filter((b) => b.position === 'entry_popup')?.length || 0) + 1,
+        is_active: 1,
+      });
+      return;
+    }
 
     if (pos === 'flash_sale') {
       defaultTitle = 'ĐẠI TIỆC LAPTOP CHÍNH HÃNG';
@@ -563,7 +587,9 @@ export default function BannerManagementPage() {
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
                 Vị trí:{' '}
-                {form.position === 'flash_sale'
+                {form.position === 'entry_popup'
+                  ? '🎯 Banner Popup Đầu Trang (Laptop88 Cyber Style)'
+                  : form.position === 'flash_sale'
                   ? '⚡ Dải Flash Sale Giờ Vàng'
                   : form.position === 'brand_showcase'
                   ? `🏢 Chuyên Trang ${form.brand || 'Apple'}`
@@ -572,6 +598,87 @@ export default function BannerManagementPage() {
                   : '🖥️ Hero Slider Trang Chủ'}
               </span>
             </div>
+
+            {/* PREVIEW VARIANT: ENTRY POPUP BANNER (LAPTOP88 CYBER GAMING STYLE) */}
+            {form.position === 'entry_popup' && (
+              <div className="relative rounded-3xl p-6 text-white shadow-2xl overflow-hidden border-2 border-purple-500/70 bg-gradient-to-b from-[#180C2E] via-[#0E061D] to-[#06020D] flex flex-col items-center text-center">
+                {/* Floating 3D Stickers */}
+                <span className="absolute top-4 left-4 text-2xl select-none animate-bounce" style={{ animationDuration: '3s' }}>🕹️</span>
+                <span className="absolute top-8 right-5 text-2xl select-none animate-pulse">👾</span>
+                <span className="absolute bottom-12 left-5 text-2xl select-none">🎮</span>
+                <span className="absolute bottom-6 right-5 text-xl select-none">✨</span>
+
+                {/* Close button mock */}
+                <div className="absolute top-3.5 right-3.5 w-7 h-7 rounded-full bg-white/20 border border-white/40 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                  ✕
+                </div>
+
+                {/* Top Header Row with Chevrons */}
+                <div className="flex items-center gap-2 mb-1 z-10">
+                  <span className="text-purple-400 font-black text-xs tracking-widest">«««</span>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-purple-200 bg-purple-900/60 border border-purple-400/40 px-3.5 py-0.5 rounded-full shadow-inner">
+                    {form.badge_text || 'DEAL CỰC SỐC'}
+                  </span>
+                  <span className="text-purple-400 font-black text-xs tracking-widest">»»»</span>
+                </div>
+
+                {/* Big Headline */}
+                <h3 className="text-3xl font-black text-white tracking-wider drop-shadow-[0_4px_16px_rgba(168,85,247,0.7)] uppercase z-10 my-0.5">
+                  {form.title || 'LOQ 2026'}
+                </h3>
+
+                {/* Highlight Ribbon */}
+                <div className="z-10 my-1">
+                  <span className="inline-block px-5 py-1 rounded-full text-xs font-black uppercase tracking-wide bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white shadow-lg shadow-purple-600/50 border border-pink-400/40">
+                    {form.highlight_text || 'GIẢM TỚI 6 TRIỆU/MÁY'}
+                  </span>
+                </div>
+
+                {/* Laptop Image with Radial Aura Glow */}
+                <div className="relative w-full h-44 my-2 flex items-center justify-center z-10">
+                  <div className="absolute inset-0 m-auto w-40 h-40 bg-purple-600/30 rounded-full blur-2xl pointer-events-none" />
+                  <img
+                    src={form.image_url ? (form.image_url.startsWith('http') ? form.image_url : `https://laptop99.vercel.app${form.image_url}`) : 'https://laptop99.vercel.app/uploads/products/laptop-gaming-lenovo-loq-15irx9-i5-13450hx-16gb-512gb-rtx-4050-1.jpg'}
+                    alt="Entry Popup Product"
+                    className="max-h-full max-w-[85%] object-contain drop-shadow-[0_12px_28px_rgba(0,0,0,0.85)]"
+                  />
+                </div>
+
+                {/* 3 Bottom Feature Pills */}
+                <div className="grid grid-cols-3 gap-2 w-full max-w-md z-10 my-1">
+                  {(() => {
+                    const specs = form.specs_json ? form.specs_json.split(',').map(s => s.trim()).filter(Boolean) : ['Chip Core 5/7 ĐỜI MỚI', 'Giá từ 25 TRIỆU', '100% sRGB 165Hz'];
+                    return (
+                      <>
+                        <div className="bg-white/95 rounded-xl py-1.5 px-2 text-center shadow-md">
+                          <span className="block text-[10px] font-black text-purple-900 leading-tight">
+                            {specs[0] || 'Chip Core 5/7'}
+                          </span>
+                        </div>
+                        <div className="bg-white rounded-xl py-1.5 px-2 text-center shadow-md ring-2 ring-purple-400 scale-105">
+                          <span className="block text-[11px] font-black text-purple-700 leading-tight">
+                            {specs[1] || (form.custom_price ? `Giá từ ${formatVND(form.custom_price)}` : 'Giá từ 25 TRIỆU')}
+                          </span>
+                        </div>
+                        <div className="bg-white/95 rounded-xl py-1.5 px-2 text-center shadow-md">
+                          <span className="block text-[10px] font-black text-purple-900 leading-tight">
+                            {specs[2] || '100% sRGB 165Hz'}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Bottom Emergency Ribbon */}
+                <div className="z-10 mt-2">
+                  <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-700 to-indigo-700 text-purple-100 border border-purple-400/50 shadow-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    {form.subtitle || 'SỐ LƯỢNG CÓ HẠN'}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* PREVIEW VARIANT A: FLASH SALE BANNER STRIP */}
             {form.position === 'flash_sale' && (
@@ -826,10 +933,11 @@ export default function BannerManagementPage() {
                     onChange={(e) => setForm({ ...form, position: e.target.value })}
                     className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-rose-500/30"
                   >
-                    <option value="hero">🖥️ 1. Hero Slider Đầu Trang (Carousel)</option>
-                    <option value="flash_sale">⚡ 2. Dải Banner Flash Sale Giờ Vàng (Đếm ngược)</option>
-                    <option value="brand_showcase">🏢 3. Chuyên Trang Thương Hiệu Theo Hãng (Apple, ASUS...)</option>
-                    <option value="hot_deal">🔥 4. Banner Deal Tâm Điểm Giảm Sâu</option>
+                    <option value="entry_popup">🎯 1. Banner Popup Đầu Vào Trang (Laptop88 Cyber Style)</option>
+                    <option value="hero">🖥️ 2. Hero Slider Đầu Trang (Carousel)</option>
+                    <option value="flash_sale">⚡ 3. Dải Banner Flash Sale Giờ Vàng (Đếm ngược)</option>
+                    <option value="brand_showcase">🏢 4. Chuyên Trang Thương Hiệu Theo Hãng (Apple, ASUS...)</option>
+                    <option value="hot_deal">🔥 5. Banner Deal Tâm Điểm Giảm Sâu</option>
                   </select>
                 </div>
 
@@ -1067,12 +1175,20 @@ export default function BannerManagementPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Thông Số Tóm Tắt (specs_json)</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    {form.position === 'entry_popup'
+                      ? '3 Thẻ Thông Số Đáy (cách nhau dấu phẩy)'
+                      : 'Thông Số Tóm Tắt (specs_json)'}
+                  </label>
                   <input
                     type="text"
                     value={form.specs_json}
                     onChange={(e) => setForm({ ...form, specs_json: e.target.value })}
-                    placeholder="VD: Apple M2,RAM 8GB,SSD 256GB,13.6 Retina"
+                    placeholder={
+                      form.position === 'entry_popup'
+                        ? 'VD: Chip Core 5 / 7 ĐỜI MỚI, Giá từ 25 TRIỆU, 100% sRGB 165Hz'
+                        : 'VD: Apple M2,RAM 8GB,SSD 256GB,13.6 Retina'
+                    }
                     className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl"
                   />
                 </div>

@@ -206,23 +206,124 @@ const HomeController = {
     location.hash = '#/products';
   },
 
-  openPromoPopup(force = false) {
+  openPromoPopup(force = false, viewMode = 'deal') {
     let promos = cache.promos || [];
     if (!promos.length) {
       promos = [
         { code: 'SUMMER2026', type: 'pct', value: 10, cap: 2000000, min: 20000000, exp: '2026-12-30', desc: 'Khuyến mãi Hè 2026 — Giảm 10% tối đa 2.000.000đ' },
         { code: 'GAMING500K', type: 'fixed', value: 500000, cap: 500000, min: 30000000, exp: '2026-12-30', desc: 'Giảm trực tiếp 500.000đ cho Laptop Gaming' },
-        { code: 'LAPTOP99', type: 'pct', value: 5, cap: 1000000, min: 10000000, exp: '2026-12-30', desc: 'Giảm 5% cho đơn từ 10 triệu đồng' }
+        { code: 'BACK2SCHOOL', type: 'pct', value: 8, cap: 1500000, min: 15000000, exp: '2026-11-29', desc: 'Mùa Tựu Trường - Đồng Hành Sinh Viên' },
+        { code: 'COMBO_OFFICE', type: 'fixed', value: 500000, cap: 500000, min: 22000000, exp: '2026-12-30', desc: 'Combo Doanh Nhân Văn Phòng Đỉnh Cao' }
       ];
     }
     sessionStorage.setItem('laptop99_promo_popup_seen', '1');
 
+    const entryBanner = (cache.banners || []).find(
+      (b) => (b.position === 'entry_popup' || b.position === 'popup_banner') && b.is_active
+    );
+
+    // Giao diện Banner Quảng Cáo Đầu Trang (Laptop88 Cyber Style)
+    if (entryBanner && viewMode !== 'vouchers') {
+      const bannerBadge = esc(entryBanner.badge_text || 'DEAL CỰC SỐC');
+      const bannerTitle = esc(entryBanner.title || 'LOQ 2026');
+      const bannerHl = esc(entryBanner.highlight_text || 'GIẢM TỚI 6 TRIỆU/MÁY');
+      const bannerSub = esc(entryBanner.subtitle || 'SỐ LƯỢNG CÓ HẠN');
+      const bannerImg = resolveAssetUrl(
+        entryBanner.image_url || '/uploads/products/laptop-gaming-lenovo-loq-15irx9-i5-13450hx-16gb-512gb-rtx-4050-1.jpg'
+      );
+      const bannerCta = esc(entryBanner.cta_text || 'SĂN DEAL NGAY');
+      const bannerLink = entryBanner.cta_link || (entryBanner.product_id ? `#/product/p${entryBanner.product_id}` : '#/products');
+
+      // Phân tích 3 Pills thông số đáy
+      let specs = ['Chip Core 5 / 7 ĐỜI MỚI', 'Giá từ 25 TRIỆU', '100% sRGB 165Hz'];
+      if (entryBanner.specs_json) {
+        const parsed = String(entryBanner.specs_json).split(',').map((s) => s.trim()).filter(Boolean);
+        if (parsed.length >= 2) specs = parsed;
+      } else if (entryBanner.custom_price) {
+        specs[1] = 'Giá từ ' + fmt(entryBanner.custom_price);
+      }
+
+      const entryHtml = `
+      <div class="entry-popup-container">
+        <!-- Nút đóng [X] nổi bật phía trên bên phải -->
+        <button type="button" class="ep-close-btn" onclick="closeModal()" title="Đóng quảng cáo" aria-label="Đóng popup">
+          ✕
+        </button>
+
+        <!-- Thẻ Banner Quảng Cáo Gaming Cao Cấp (Click vào để mở sản phẩm) -->
+        <a href="${bannerLink}" class="entry-popup-card" onclick="closeModal()" title="${bannerTitle} — ${bannerHl}">
+          <!-- Stickers 3D Gaming Chuyển Động -->
+          <span class="ep-sticker ep-stk-1">🕹️</span>
+          <span class="ep-sticker ep-stk-2">👾</span>
+          <span class="ep-sticker ep-stk-3">🎮</span>
+          <span class="ep-sticker ep-stk-4">✨</span>
+
+          <!-- Tag Dẫn Đầu Có Chevrons Neon -->
+          <div class="ep-header-tag">
+            <span class="ep-chevrons">«««</span>
+            <span class="ep-badge-pill">${bannerBadge}</span>
+            <span class="ep-chevrons">»»»</span>
+          </div>
+
+          <!-- Tiêu Đề Dòng Máy Cỡ Lớn -->
+          <h2 class="ep-title">${bannerTitle}</h2>
+
+          <!-- Ruy Băng Nhấn Mạnh Mức Giảm Sốc -->
+          <div class="ep-hl-wrap">
+            <span class="ep-highlight-ribbon">${bannerHl}</span>
+          </div>
+
+          <!-- Ảnh Laptop 3D Có Quầng Sáng Tím Neon -->
+          <div class="ep-visual-wrap">
+            <div class="ep-spotlight"></div>
+            <img src="${bannerImg}" alt="${bannerTitle}" class="ep-img" loading="eager">
+          </div>
+
+          <!-- 3 Thẻ Thông Số & Giá Nổi Bật Dưới Chân Máy -->
+          <div class="ep-pills-row">
+            <div class="ep-pill">
+              <span class="ep-pill-text">${esc(specs[0] || 'Chip Core i5/i7')}</span>
+            </div>
+            <div class="ep-pill ep-pill-hero">
+              <span class="ep-pill-text ep-pill-hero-text">${esc(specs[1] || 'Giá từ 25 TRIỆU')}</span>
+            </div>
+            <div class="ep-pill">
+              <span class="ep-pill-text">${esc(specs[2] || '100% sRGB 165Hz')}</span>
+            </div>
+          </div>
+
+          <!-- Dải Ruy Băng Khẩn Cấp Cuối Cùng -->
+          <div class="ep-emergency-wrap">
+            <span class="ep-emergency-ribbon">
+              <span class="ep-pulse-dot"></span>
+              ${bannerSub}
+            </span>
+          </div>
+        </a>
+
+        <!-- Hàng Nút Hành Động Phía Dưới -->
+        <div class="ep-actions-bar">
+          <a href="${bannerLink}" class="ep-btn-primary" onclick="closeModal()">
+            <span>${bannerCta}</span>
+            <span class="ep-arrow">→</span>
+          </a>
+          <button type="button" class="ep-btn-secondary" onclick="A.openPromoPopup(true, 'vouchers')">
+            <span>🎟️ Mở Kho Voucher Ưu Đãi (${promos.length} Mã Giảm Sốc)</span>
+          </button>
+        </div>
+      </div>`;
+
+      modal(entryHtml);
+      return;
+    }
+
+    // Giao diện Kho Voucher Khuyến Mãi (CellphoneS Style)
     const voucherCards = promos
       .map((p, i) => {
         const isPct = p.type === 'pct' || p.type === 'percent';
-        const rawVal = p.value != null ? p.value : (p.val != null ? p.val : (p.discount_value != null ? p.discount_value : 0));
-        const valTxt = isPct ? `-${rawVal}%` : `-${fmt(rawVal)}`;
-        const title = p.desc || p.title || `Voucher giảm ${valTxt}`;
+        const rawVal = Number(p.discount_value != null ? p.discount_value : (p.value != null ? p.value : p.val)) || 0;
+        const valTxt = isPct ? `-${rawVal}%` : (rawVal > 0 ? `-${fmt(rawVal)}` : 'QUÀ TẶNG');
+        const title = p.title || p.desc || `Voucher giảm ${valTxt}`;
         const minVal = p.min != null ? p.min : (p.min_order_value != null ? p.min_order_value : 0);
         const minTxt = minVal > 0 ? `Đơn từ ${fmt(minVal)}` : 'Mọi đơn hàng';
         const expTxt = p.exp ? p.exp.split('-').reverse().join('/') : (p.end_date ? p.end_date.split('-').reverse().join('/') : '30/12/2026');
@@ -262,6 +363,19 @@ const HomeController = {
     const premiumHtml = `
       <div class="promo-popup">
         <button type="button" class="promo-close-btn" onclick="closeModal()" aria-label="Đóng popup">✕</button>
+
+        ${
+          entryBanner
+            ? `
+        <div style="background:#0F172A;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #334155;color:#E2E8F0;font-size:0.75rem;font-weight:700;">
+          <span>🔥 Đang có Deal Cực Sốc: <b>${esc(entryBanner.title)}</b></span>
+          <button type="button" style="background:#8B5CF6;color:#FFFFFF;border:none;border-radius:999px;font-size:0.72rem;font-weight:800;padding:4px 12px;cursor:pointer;" onclick="A.openPromoPopup(true, 'deal')">
+            ← Xem Banner Deal
+          </button>
+        </div>`
+            : ''
+        }
+
         <div class="promo-popup-hero">
           <div class="promo-hero-particles"></div>
           <div class="promo-hero-badge">✨ ĐẶC QUYỀN KHÁCH HÀNG MỚI</div>
