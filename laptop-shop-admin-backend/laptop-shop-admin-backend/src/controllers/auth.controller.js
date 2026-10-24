@@ -53,11 +53,28 @@ const AuthController = {
     await UserModel.resetLoginSuccess(user.id);
     await writeAudit(pool, req, { userId: user.id, action: 'login', entity: 'user', entityId: user.id });
 
+    const rolePerms = ROLE_PERMISSIONS[user.role] || [];
+    let customPerms = [];
+    try {
+      customPerms = typeof user.custom_permissions === 'string' ? JSON.parse(user.custom_permissions) : (user.custom_permissions || []);
+    } catch {
+      customPerms = [];
+    }
+    const combinedPerms = [...new Set([...rolePerms, ...customPerms])];
+
     const token = jwt.sign({ sub: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN });
     res.json({
       data: {
         token,
-        user: { id: user.id, full_name: user.full_name, email: user.email, role: user.role },
+        user: {
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          role: user.role,
+          branch: user.branch,
+          data_visibility: user.data_visibility,
+          permissions: combinedPerms
+        },
       },
     });
   }),

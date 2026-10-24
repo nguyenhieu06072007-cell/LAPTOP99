@@ -6,28 +6,44 @@ import toast from 'react-hot-toast';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize synchronously from localStorage so F5 does NOT cause logout or flicker
+  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  // If we already have stored credentials, don't block the UI with loading=true
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const validateToken = useCallback(async () => {
     const storedToken = localStorage.getItem('token');
     if (!storedToken) {
-      setLoading(false);
+      setUser(null);
+      setToken(null);
       return;
     }
 
     try {
       const response = await api.get('/auth/me');
-      setUser(response.data.data);
+      const freshUser = response.data.data;
+      setUser(freshUser);
       setToken(storedToken);
+      localStorage.setItem('user', JSON.stringify(freshUser));
     } catch (error) {
-      console.error('Token validation failed', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-    } finally {
-      setLoading(false);
+      console.warn('Token validation warning:', error?.response?.status || error.message);
+      // ONLY log out if backend explicitly responds with 401 Unauthorized (token expired/invalid)
+      // Do NOT log out on network errors, timeouts, 500 errors, or cold start delays!
+      if (error?.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+      }
     }
   }, []);
 
@@ -38,14 +54,27 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, user } = response.data.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      setToken(token);
-      setUser(user);
-      
+      const { token: newToken, user: newUser } = response.data.data;
+
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(newUser));
+
+      setToken(newToken);
+      setUser(newUser);
+
+      // Silently refresh full permissions in background
+      try {
+        const meRes = await api.get('/auth/me', {
+          headers: { Authorization: `Bearer ${newToken}` }
+        });
+        if (meRes.data?.data) {
+          setUser(meRes.data.data);
+          localStorage.setItem('user', JSON.stringify(meRes.data.data));
+        }
+      } catch (e) {
+        console.warn('Could not fetch extra me data right after login:', e.message);
+      }
+
       toast.success('Đăng nhập thành công!');
       navigate('/');
       return true;
@@ -78,7 +107,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const can = (permission) => {
-    if (!user || !user.permissions) return false;
+    if (!user) return false;
+    // Super admin has full access to everything
+    if (user.role === 'super_admin') return true;
+    if (!user.permissions) return false;
     if (user.permissions.includes('*')) return true;
     return user.permissions.includes(permission);
   };
