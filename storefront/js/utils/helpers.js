@@ -18,9 +18,9 @@ function esc(s) {
 function resolveAssetUrl(rawUrl) {
   if (!rawUrl) return '';
   if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) return rawUrl;
-  const baseUrl = (typeof API !== 'undefined' && API.BASE_URL) ? API.BASE_URL : 'https://laptop99-ejug.onrender.com/api/client';
-  const host = baseUrl.replace(/\/api\/client\/?$/, '');
-  return host + (rawUrl.startsWith('/') ? rawUrl : '/' + rawUrl);
+  // Images are served from Vercel storefront (uploads/ is tracked in Git at repo root)
+  const STATIC_BASE = 'https://laptop99.vercel.app';
+  return STATIC_BASE + (rawUrl.startsWith('/') ? rawUrl : '/' + rawUrl);
 }
 
 const I = {
