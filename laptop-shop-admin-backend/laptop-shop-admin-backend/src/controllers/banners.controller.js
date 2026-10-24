@@ -10,16 +10,18 @@ const BannersController = {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    const rows = await BannersModel.getAll({ onlyActive: true });
+    const { position, brand } = req.query;
+    const rows = await BannersModel.getAll({ onlyActive: true, position, brand });
     res.json({ data: rows });
   }),
 
-  // Admin: Lấy toàn bộ danh sách banner
+  // Admin: Lấy toàn bộ danh sách banner (có thể lọc theo position/brand)
   listAdminBanners: asyncHandler(async (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    const rows = await BannersModel.getAll({ onlyActive: false });
+    const { position, brand } = req.query;
+    const rows = await BannersModel.getAll({ onlyActive: false, position, brand });
     res.json({ data: rows });
   }),
 
@@ -86,4 +88,3 @@ const BannersController = {
 };
 
 module.exports = BannersController;
-

@@ -37,9 +37,16 @@ async function viewHome() {
   const slideOfficeProd = officeProds[0] || all[2] || all[0];
   const slidePromoProd = hotDeals[0] || all[3] || all[0];
 
+  // Phân loại banner theo vị trí từ CSDL
+  const heroBanners = dbBanners.filter((b) => !b.position || b.position === 'hero');
+  const flashSaleBanner = dbBanners.find((b) => b.position === 'flash_sale');
+  const brandBanners = dbBanners.filter((b) => b.position === 'brand_showcase');
+  const hotDealBanner = dbBanners.find((b) => b.position === 'hot_deal');
+
   let heroCampaigns = [];
-  if (dbBanners.length > 0) {
-    heroCampaigns = dbBanners.map((b) => {
+  const bannersForHero = heroBanners.length > 0 ? heroBanners : (dbBanners.length > 0 ? dbBanners.slice(0, 4) : []);
+  if (bannersForHero.length > 0) {
+    heroCampaigns = bannersForHero.map((b) => {
       const linkedProd = b.product_id ? P('p' + b.product_id) || all[0] : all[0];
       const priceVal =
         Number(b.custom_price) ||
@@ -283,7 +290,45 @@ async function viewHome() {
     },
   };
 
-  const activeBrandKey = cache.activeBrandCampaign && BRAND_CAMPAIGNS[cache.activeBrandCampaign] ? cache.activeBrandCampaign : 'ASUS';
+  // Tích hợp dữ liệu Chuyên trang Thương hiệu từ Database (Admin CMS)
+  const BG_THEME_MAP = {
+    dark: 'linear-gradient(135deg, #0F172A 0%, #1E293B 55%, #334155 100%)',
+    crimson: 'linear-gradient(135deg, #18090C 0%, #2A0F17 50%, #BE123C 100%)',
+    indigo: 'linear-gradient(135deg, #171A21 0%, #25161C 50%, #BE123C 100%)',
+    blue: 'linear-gradient(135deg, #0C4A6E 0%, #0284C7 55%, #1E3A8A 100%)',
+    emerald: 'linear-gradient(135deg, #064E3B 0%, #059669 55%, #0F172A 100%)',
+    purple: 'linear-gradient(135deg, #2E1065 0%, #7C3AED 55%, #0F172A 100%)',
+    amber: 'linear-gradient(135deg, #451A03 0%, #B45309 55%, #1C1917 100%)',
+  };
+
+  brandBanners.forEach((dbB) => {
+    if (!dbB.brand) return;
+    const matchKey = Object.keys(BRAND_CAMPAIGNS).find(
+      (k) => k.toLowerCase() === dbB.brand.toLowerCase()
+    );
+    if (matchKey && BRAND_CAMPAIGNS[matchKey]) {
+      const c = BRAND_CAMPAIGNS[matchKey];
+      if (dbB.badge_text) c.badge = dbB.badge_text;
+      if (dbB.title) c.title = dbB.title;
+      if (dbB.subtitle) c.desc = dbB.subtitle;
+      if (dbB.image_url) c.realImg = resolveAssetUrl(dbB.image_url);
+      if (dbB.cta_link) c.ctaHref = dbB.cta_link;
+      if (dbB.cta_text) c.ctaText = dbB.cta_text;
+      if (dbB.secondary_cta_text) c.secondaryCtaText = dbB.secondary_cta_text;
+      if (dbB.secondary_cta_link) c.secondaryCtaLink = dbB.secondary_cta_link;
+      if (dbB.bg_theme && BG_THEME_MAP[dbB.bg_theme]) c.bg = BG_THEME_MAP[dbB.bg_theme];
+      if (dbB.product_id) c.linkedProd = P('p' + dbB.product_id) || all.find((p) => p.rawId === Number(dbB.product_id));
+      if (dbB.custom_price) c.customPrice = Number(dbB.custom_price);
+      if (dbB.perks_json) {
+        try {
+          const arr = typeof dbB.perks_json === 'string' ? JSON.parse(dbB.perks_json) : dbB.perks_json;
+          if (Array.isArray(arr) && arr.length) c.perks = arr;
+        } catch (e) {}
+      }
+    }
+  });
+
+  const activeBrandKey = cache.activeBrandCampaign && BRAND_CAMPAIGNS[cache.activeBrandCampaign] ? cache.activeBrandCampaign : 'Apple';
   const curCampaign = BRAND_CAMPAIGNS[activeBrandKey];
   const brandCampProds = all.filter((p) => p.brand.toLowerCase() === activeBrandKey.toLowerCase());
   const displayBrandProds = (brandCampProds.length ? brandCampProds : all).slice(0, 4);
@@ -511,20 +556,40 @@ async function viewHome() {
         </div>
       </div>
 
-      <!-- BANNER NGANG FLASH SALE KÈM ĐỒNG HỒ ĐẾM NGƯỢC (THIẾT KẾ CAO CẤP CHUẨN GAMING & E-COMMERCE) -->
+      <!-- BANNER NGANG FLASH SALE KÈM ĐỒNG HỒ ĐẾM NGƯỢC (ĐỒNG BỘ TỪ ADMIN CMS) -->
+      ${(() => {
+        const fsTitle = flashSaleBanner ? esc(flashSaleBanner.title) : 'ĐẠI TIỆC LAPTOP CHÍNH HÃNG';
+        const fsHl = flashSaleBanner && flashSaleBanner.highlight_text ? ('— ' + esc(flashSaleBanner.highlight_text)) : '— GIẢM ĐẾN 35% + TRẢ GÓP 0%';
+        const fsBadge = flashSaleBanner?.badge_text ? esc(flashSaleBanner.badge_text) : '⚡ FLASH SALE GIỜ VÀNG • ĐỘC QUYỀN HÔM NAY';
+        let fsSubHtml = '<span>Đặc quyền S-Student</span> • <span>Thu cũ trợ giá 3 Triệu</span> • <span>Bảo hành điện tử S/N 24 tháng</span>';
+        if (flashSaleBanner && flashSaleBanner.perks_json) {
+          try {
+            const p = typeof flashSaleBanner.perks_json === 'string' ? JSON.parse(flashSaleBanner.perks_json) : flashSaleBanner.perks_json;
+            if (Array.isArray(p) && p.length) {
+              fsSubHtml = p.map((x) => '<span>' + esc(x) + '</span>').join(' • ');
+            }
+          } catch(e) {}
+        } else if (flashSaleBanner && flashSaleBanner.subtitle) {
+          fsSubHtml = '<span>' + esc(flashSaleBanner.subtitle) + '</span>';
+        }
+        const fsImg = resolveAssetUrl(flashSaleBanner?.image_url || '/uploads/products/real-asus-rog.jpg');
+        const fsCtaText = flashSaleBanner?.cta_text || 'SĂN VOUCHER NGAY';
+        const fsCtaLink = flashSaleBanner?.cta_link || '#/promos';
+
+        return `
       <div class="festival-banner reveal-on-scroll">
         <div class="fb-left">
-          <span class="fb-badge-premium"><span class="fb-pulse-dot"></span> <i class="fs-lightning-anim">⚡</i> FLASH SALE GIỜ VÀNG · ĐỘC QUYỀN HÔM NAY</span>
+          <span class="fb-badge-premium"><span class="fb-pulse-dot"></span> <i class="fs-lightning-anim">⚡</i> ${fsBadge}</span>
           <div class="fb-text-content">
-            <div class="fb-title">ĐẠI TIỆC LAPTOP CHÍNH HÃNG <span class="fb-title-hl">— GIẢM ĐẾN 35% + TRẢ GÓP 0%</span></div>
+            <div class="fb-title">${fsTitle} <span class="fb-title-hl">${fsHl}</span></div>
             <div class="fb-sub">
-              <span>Đặc quyền S-Student</span> · <span>Thu cũ trợ giá 3 Triệu</span> · <span>Bảo hành điện tử S/N 24 tháng</span>
+              ${fsSubHtml}
             </div>
           </div>
         </div>
         <div class="fb-right">
           <div class="fb-visual-wrap">
-            <img src="${resolveAssetUrl('/uploads/products/real-asus-rog.jpg')}" alt="Laptop Flash Sale" class="fb-hero-img">
+            <img src="${fsImg}" alt="Laptop Flash Sale" class="fb-hero-img" loading="lazy">
             <div class="fb-hero-glow"></div>
           </div>
           <div class="fb-countdown-wrap" title="Thời gian còn lại của khung giờ Flash Sale">
@@ -537,11 +602,12 @@ async function viewHome() {
               <div class="fc-unit"><span class="fc-num" id="fc-s">08</span><span class="fc-lbl">Giây</span></div>
             </div>
           </div>
-          <button type="button" class="fb-cta-premium" onclick="A.openPromoPopup(true)">
-            <span>SĂN VOUCHER NGAY</span> ${ic('arrow', 14)}
-          </button>
+          <a href="${fsCtaLink}" class="fb-cta-premium" style="text-decoration:none">
+            <span>${esc(fsCtaText)}</span> ${ic('arrow', 14)}
+          </a>
         </div>
-      </div>
+      </div>`;
+      })()}
 
       <!-- SECTION 10: Dải 4 Cam Kết & Lợi Ích -->
       ${renderPolicyStrip()}
@@ -652,16 +718,15 @@ async function viewHome() {
           </div>
           <div class="bcb-visual">
             <div class="bcb-visual-img-wrap">
-              <img src="${esc(curCampaign.realImg || displayBrandProds[0]?.thumbnail || resolveAssetUrl('/uploads/products/real-macbook-pro.jpg'))}" alt="${esc(curCampaign.brand)}" class="bcb-real-img">
+              <img src="${esc(curCampaign.realImg || curCampaign.linkedProd?.thumbnail || displayBrandProds[0]?.thumbnail || resolveAssetUrl('/uploads/products/real-macbook-pro.jpg'))}" alt="${esc(curCampaign.brand)}" class="bcb-real-img" loading="lazy">
             </div>
             <div class="bcb-visual-info">
               <span class="bcb-visual-badge">Tâm điểm ${esc(curCampaign.brand)}</span>
-              <div class="bcb-visual-title">${esc(displayBrandProds[0]?.name || curCampaign.title)}</div>
-              <div class="bcb-visual-price">${vnd(displayBrandProds[0]?.price || 19990000)}</div>
-              <a href="#/product/${displayBrandProds[0]?.id || 'p1'}" class="bcb-visual-link">Khám phá cấu hình chi tiết →</a>
+              <div class="bcb-visual-title">${esc(curCampaign.linkedProd?.name || displayBrandProds[0]?.name || curCampaign.title)}</div>
+              <div class="bcb-visual-price">${vnd(curCampaign.customPrice || curCampaign.linkedProd?.price || displayBrandProds[0]?.price || 19990000)}</div>
+              <a href="#/product/${curCampaign.linkedProd?.id || displayBrandProds[0]?.id || 'p1'}" class="bcb-visual-link">Khám phá cấu hình chi tiết →</a>
             </div>
           </div>
-        </div>
 
         <!-- Lưới sản phẩm thuộc Chiến dịch của Hãng -->
         <div class="pg">
@@ -690,42 +755,53 @@ async function viewHome() {
         ${
           highlightDeal
             ? `
+        ${(() => {
+          const dealProd = (hotDealBanner && hotDealBanner.product_id ? P('p' + hotDealBanner.product_id) : null) || highlightDeal;
+          if (!dealProd) return '';
+          const dealBadge = hotDealBanner?.badge_text || ('🔥 Deal Tâm Điểm Giờ Vàng • Tiết kiệm ' + vnd((dealProd.old || 0) - (dealProd.price || 0)));
+          const dealPrice = Number(hotDealBanner?.custom_price) || dealProd.price;
+          const dealOldPrice = Number(hotDealBanner?.custom_old_price) || dealProd.old;
+          const dealTitle = hotDealBanner?.title || dealProd.name;
+          const dealImg = resolveAssetUrl(hotDealBanner?.image_url || dealProd.thumbnail);
+          const dealSpecs = hotDealBanner?.specs_json
+            ? hotDealBanner.specs_json.split(',').map((s) => s.trim()).filter(Boolean)
+            : [dealProd.cpu, 'RAM ' + dealProd.ram, dealProd.ssd, dealProd.gpu, dealProd.screen].filter(Boolean);
+          const dealCta = hotDealBanner?.cta_text || 'Mua ngay giá sốc';
+          const dealLink = hotDealBanner?.cta_link || ('#/product/' + dealProd.id);
+          const dealSecCta = hotDealBanner?.secondary_cta_text || 'Thêm vào giỏ';
+
+          return `
         <div class="highlight-deal-card">
-          <a href="#/product/${highlightDeal.id}" class="hdc-thumb-frame" title="${esc(highlightDeal.name)}">
-            ${pimg(highlightDeal, 'hdc-img')}
+          <a href="${dealLink}" class="hdc-thumb-frame" title="${esc(dealTitle)}">
+            <img src="${dealImg}" alt="${esc(dealTitle)}" class="hdc-img" loading="lazy">
           </a>
           <div>
             <div class="row" style="gap:8px;align-items:center;margin-bottom:6px">
-              <span class="hdc-badge-fire">🔥 Deal Tâm Điểm Giờ Vàng · Tiết kiệm ${vnd(highlightDeal.old - highlightDeal.price)}</span>
+              <span class="hdc-badge-fire">${dealBadge}</span>
             </div>
             <div class="hdc-price-row">
-              <div class="hdc-price">${vnd(highlightDeal.price)}</div>
-              ${highlightDeal.old > highlightDeal.price ? `<div class="hdc-old">${vnd(highlightDeal.old)}</div>` : ''}
-              ${highlightDeal.old > highlightDeal.price ? `<span class="hdc-discount-tag">-${Math.round((1 - highlightDeal.price / highlightDeal.old) * 100)}%</span>` : ''}
+              <div class="hdc-price">${vnd(dealPrice)}</div>
+              ${dealOldPrice > dealPrice ? '<div class="hdc-old">' + vnd(dealOldPrice) + '</div>' : ''}
+              ${dealOldPrice > dealPrice ? '<span class="hdc-discount-tag">-' + Math.round((1 - dealPrice / dealOldPrice) * 100) + '%</span>' : ''}
             </div>
             <div class="hdc-progress-bar-wrap" title="Tỷ lệ xuất kho khung giờ vàng">
               <div class="hdc-progress-fill" style="width: 82%"></div>
             </div>
-            <a href="#/product/${highlightDeal.id}" class="hdc-title-link">${esc(highlightDeal.name)}</a>
+            <a href="${dealLink}" class="hdc-title-link">${esc(dealTitle)}</a>
             <div class="hdc-specs-chips">
-              <span class="hdc-spec-chip">⚡ ${esc(highlightDeal.cpu)}</span>
-              <span class="hdc-spec-chip">💾 RAM ${esc(highlightDeal.ram)}</span>
-              <span class="hdc-spec-chip">🚀 ${esc(highlightDeal.ssd)}</span>
-              <span class="hdc-spec-chip">🎮 ${esc(highlightDeal.gpu)}</span>
-              <span class="hdc-spec-chip">🖥 ${esc(highlightDeal.screen)}</span>
+              ${dealSpecs.map((sp) => '<span class="hdc-spec-chip">' + esc(sp) + '</span>').join('')}
             </div>
           </div>
           <div class="gap" style="gap:10px;min-width:185px">
-            <a class="btn a lg" href="#/product/${highlightDeal.id}" style="box-shadow:0 4px 18px rgba(225,29,72,0.45);font-weight:800">
-              Mua ngay giá sốc ${ic('arrow', 15)}
+            <a class="btn a lg" href="${dealLink}" style="box-shadow:0 4px 18px rgba(225,29,72,0.45);font-weight:800;text-decoration:none">
+              ${esc(dealCta)} ${ic('arrow', 15)}
             </a>
-            <button type="button" class="btn lg" style="background:rgba(255,255,255,0.12);color:#FFFFFF;border-color:rgba(255,255,255,0.25);backdrop-filter:blur(8px)" onclick="A.add('${highlightDeal.id}')">
-              ${ic('cart', 15)} Thêm vào giỏ
+            <button type="button" class="btn lg" style="background:rgba(255,255,255,0.12);color:#FFFFFF;border-color:rgba(255,255,255,0.25);backdrop-filter:blur(8px)" onclick="A.add('${dealProd.id}')">
+              ${ic('cart', 15)} ${esc(dealSecCta)}
             </button>
           </div>
-        </div>`
-            : ''
-        }
+        </div>`;
+        })()}
 
         <div class="pg">${hotDeals.slice(0, 4).map(pcard).join('')}</div>
       </div>
