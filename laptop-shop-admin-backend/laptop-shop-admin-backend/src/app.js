@@ -28,10 +28,13 @@ if (env.NODE_ENV !== 'test') app.use(morgan(env.NODE_ENV === 'production' ? 'com
 app.use('/uploads', express.static(uploadRoot, { maxAge: '7d', index: false }));
 
 app.get('/', (req, res) => {
-  if (req.accepts('html')) {
-    return res.redirect('http://localhost:5173/');
-  }
-  res.json({ message: 'Laptop Shop API Server', health: '/health', frontend: 'http://localhost:5173' });
+  res.json({
+    name: 'Laptop Shop Backend API Server',
+    status: 'online',
+    health: '/health',
+    client_api: '/api/client/products',
+    admin_api: '/api/admin'
+  });
 });
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
