@@ -74,7 +74,7 @@ export default function BannerManagementPage() {
     try {
       const [bRes, pRes] = await Promise.all([
         api.get('/banners'),
-        fetch('http://localhost:4000/api/client/products?limit=50').then((r) => r.json()),
+        fetch('https://laptop99-ejug.onrender.com/api/client/products?limit=50').then((r) => r.json()),
       ]);
       const list = bRes.data?.data || [];
       setBanners(list);
@@ -514,7 +514,7 @@ export default function BannerManagementPage() {
   const resolveImg = (u) => {
     if (!u) return '';
     if (u.startsWith('http')) return u;
-    return `http://localhost:4000${u.startsWith('/') ? u : '/' + u}`;
+    return `https://laptop99-ejug.onrender.com${u.startsWith('/') ? u : '/' + u}`;
   };
 
   const vnd = (n) => new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + ' ₫';

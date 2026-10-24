@@ -18,7 +18,7 @@ function esc(s) {
 function resolveAssetUrl(rawUrl) {
   if (!rawUrl) return '';
   if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) return rawUrl;
-  const baseUrl = (typeof API !== 'undefined' && API.BASE_URL) ? API.BASE_URL : '[https://laptop99-backend.onrender.com](https://laptop99-backend.onrender.com)';
+  const baseUrl = (typeof API !== 'undefined' && API.BASE_URL) ? API.BASE_URL : 'https://laptop99-ejug.onrender.com/api/client';
   const host = baseUrl.replace(/\/api\/client\/?$/, '');
   return host + (rawUrl.startsWith('/') ? rawUrl : '/' + rawUrl);
 }

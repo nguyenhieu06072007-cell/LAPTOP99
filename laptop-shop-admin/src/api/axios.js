@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api/admin',
+  baseURL: 'https://laptop99-ejug.onrender.com/api/admin',
 });
 
 api.interceptors.request.use(

@@ -2,7 +2,7 @@
    SERVICE LAYER (MVC): API Service communicating with Backend REST API
    ========================================================================== */
 const API = {
-  BASE_URL: localStorage.getItem('LAPTOP99_API_URL') || 'http://localhost:4000/api/client',
+  BASE_URL: localStorage.getItem('LAPTOP99_API_URL') || 'https://laptop99-ejug.onrender.com/api/client',
   TOKEN_KEY: 'laptop99_client_token',
 
   getToken() {
