@@ -356,21 +356,63 @@ function storeShell(inner, r) {
   const cm = (db.compare || []).length;
   const cw = (db.wishlist || []).length;
   const u = me();
-  const cur = r.parts[0] || '';
+  const isHome = (r.parts[0] || '') === '';
 
+  // 1. Mobile Drawer (luôn sẵn sàng cho cả Home và Subpages)
+  const mobileDrawerHtml = `
+  <div class="mobile-drawer-backdrop" id="m-drawer" onclick="A.toggleMenu()">
+    <div class="mobile-drawer" onclick="event.stopPropagation()">
+      <div class="row between" style="padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:12px">
+        <a href="#/" class="logo" onclick="A.toggleMenu()">${brandLogo('full')}</a>
+        <button class="ib" onclick="A.toggleMenu()">${ic('x', 16)}</button>
+      </div>
+      <div class="gap" style="gap:6px">
+        <p class="xs muted" style="font-weight:700;text-transform:uppercase">Điều hướng nhanh</p>
+        <a href="#/" class="cat-pop-item" onclick="A.toggleMenu()">Trang chủ AURA × LAPTOP99</a>
+        <a href="#/products" class="cat-pop-item" onclick="A.toggleMenu()">Tất cả Laptop</a>
+        <a href="#/products?brand=Apple" class="cat-pop-item" onclick="A.toggleMenu()">MacBook Chính Hãng</a>
+        <a href="#/products?cat=2" class="cat-pop-item" onclick="A.toggleMenu()">Laptop Gaming</a>
+        <a href="#/products?cat=1" class="cat-pop-item" onclick="A.toggleMenu()">Laptop Văn Phòng</a>
+        <a href="#/products?cat=5" class="cat-pop-item" onclick="A.toggleMenu()">Laptop Sinh Viên</a>
+        <a href="#/tradein" class="cat-pop-item" onclick="A.toggleMenu()">Thu cũ đổi mới</a>
+        <a href="#/promos" class="cat-pop-item" onclick="A.toggleMenu()">Khuyến mãi &amp; Voucher</a>
+        <a href="#/warranty" class="cat-pop-item" onclick="A.toggleMenu()">Tra cứu bảo hành S/N</a>
+        <a href="#/news" class="cat-pop-item" onclick="A.toggleMenu()">Tin công nghệ</a>
+        <a href="#/wishlist" class="cat-pop-item" onclick="A.toggleMenu()">Sản phẩm yêu thích (${cw})</a>
+        <a href="#/compare" class="cat-pop-item" onclick="A.toggleMenu()">So sánh sản phẩm (${cm})</a>
+        <p class="xs muted" style="font-weight:700;text-transform:uppercase;margin-top:10px">Danh mục 9 ngành hàng</p>
+        ${(cache.cats || [])
+          .map(
+            (c) =>
+              `<a href="#/products?cat=${c.id}" class="cat-pop-item" onclick="A.toggleMenu()"><span>${esc(c.name)}</span><span class="cat-pop-cnt">${c.count || ''}</span></a>`,
+          )
+          .join('')}
+      </div>
+    </div>
+  </div>`;
+
+  if (isHome) {
+    // TRANG CHỦ: Khởi đầu bằng Màn hình 100vh AURA X Hero Viewport hoàn hảo tỷ lệ 1:1
+    return `
+    ${mobileDrawerHtml}
+    <main id="main-content" class="main-content main-aura-home">${inner}</main>
+    ${renderContactWidget()}
+    <button type="button" id="back-to-top" class="back-to-top" onclick="A.backToTop()" aria-label="Lên đầu trang" title="Lên đầu trang">
+      ${ic('chevL', 18)}
+    </button>
+    ${renderFooter()}`;
+  }
+
+  // TRANG CON (CATALOG, CART, CHECKOUT, ACCOUNT...): Render Header Tiêu Chuẩn
   return `
-  <!-- Section 3: Top Info Bar Dark Theme -->
   ${renderTopInfoBar()}
 
-  <!-- Section 4: Sticky Main Header Dark Theme -->
   <header class="nav nav-dark" id="nav">
     <div class="wrap nv">
-      <!-- 1. Logo Web Laptop99 -->
       <a href="#/" class="logo" title="Trang chủ Laptop99">
         ${brandLogo('header')}
       </a>
 
-      <!-- 2. Thanh tìm kiếm sản phẩm trung tâm (Rounded Pill + Red Circle Button) -->
       <div class="search-box-wrap" id="sb-wrap">
         <form class="ns modern-search-form" onsubmit="return A.nsearch(event)">
           <input id="nq" autocomplete="off" placeholder="Bạn muốn tìm laptop gì hôm nay? (VD: MacBook M3, ASUS, ...)" value="${esc(r.q.q || '')}"
@@ -381,7 +423,6 @@ function storeShell(inner, r) {
         <div id="search-sug" class="sug-dropdown" style="display:none"></div>
       </div>
 
-      <!-- 3. Nút So sánh, Yêu thích, Giỏ hàng, Tài khoản theo chuẩn thiết kế tham chiếu -->
       <div class="nr nr-modern">
         <a class="nav-act" href="#/compare" title="So sánh sản phẩm">
           <span class="nav-act-ico">${ic('scale', 18)}</span> <span class="lbl">So sánh</span>
@@ -405,7 +446,6 @@ function storeShell(inner, r) {
     </div>
   </header>
 
-  <!-- Thanh Sub-navigation theo phân khúc (Có nút Danh mục sản phẩm màu đỏ bên trái) -->
   <div class="subnav-bar subnav-bar-dark">
     <div class="wrap subnav-in">
       <div class="subnav-cat-btn-wrap">
@@ -447,49 +487,16 @@ function storeShell(inner, r) {
     </div>
   </div>
 
-  <!-- Mobile Navigation Drawer -->
-  <div class="mobile-drawer-backdrop" id="m-drawer" onclick="A.toggleMenu()">
-    <div class="mobile-drawer" onclick="event.stopPropagation()">
-      <div class="row between" style="padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:12px">
-        <a href="#/" class="logo" onclick="A.toggleMenu()">${brandLogo('full')}</a>
-        <button class="ib" onclick="A.toggleMenu()">${ic('x', 16)}</button>
-      </div>
-      <div class="gap" style="gap:6px">
-        <p class="xs muted" style="font-weight:700;text-transform:uppercase">Điều hướng nhanh</p>
-        <a href="#/" class="cat-pop-item" onclick="A.toggleMenu()">Trang chủ</a>
-        <a href="#/products" class="cat-pop-item" onclick="A.toggleMenu()">Tất cả Laptop</a>
-        <a href="#/products?brand=Apple" class="cat-pop-item" onclick="A.toggleMenu()">MacBook Chính Hãng</a>
-        <a href="#/products?cat=2" class="cat-pop-item" onclick="A.toggleMenu()">Laptop Gaming</a>
-        <a href="#/products?cat=1" class="cat-pop-item" onclick="A.toggleMenu()">Laptop Văn Phòng</a>
-        <a href="#/products?cat=5" class="cat-pop-item" onclick="A.toggleMenu()">Laptop Sinh Viên</a>
-        <a href="#/tradein" class="cat-pop-item" onclick="A.toggleMenu()">Thu cũ đổi mới</a>
-        <a href="#/promos" class="cat-pop-item" onclick="A.toggleMenu()">Khuyến mãi &amp; Voucher</a>
-        <a href="#/warranty" class="cat-pop-item" onclick="A.toggleMenu()">Tra cứu bảo hành S/N</a>
-        <a href="#/news" class="cat-pop-item" onclick="A.toggleMenu()">Tin công nghệ</a>
-        <a href="#/wishlist" class="cat-pop-item" onclick="A.toggleMenu()">Sản phẩm yêu thích (${cw})</a>
-        <a href="#/compare" class="cat-pop-item" onclick="A.toggleMenu()">So sánh sản phẩm (${cm})</a>
-        <p class="xs muted" style="font-weight:700;text-transform:uppercase;margin-top:10px">Danh mục sản phẩm</p>
-        ${(cache.cats || [])
-          .map(
-            (c) =>
-              `<a href="#/products?cat=${c.id}" class="cat-pop-item" onclick="A.toggleMenu()"><span>${esc(c.name)}</span><span class="cat-pop-cnt">${c.count || ''}</span></a>`,
-          )
-          .join('')}
-      </div>
-    </div>
-  </div>
+  ${mobileDrawerHtml}
 
   <main id="main-content" class="main-content">${inner}</main>
 
-  <!-- Floating Contact Widget -->
   ${renderContactWidget()}
 
-  <!-- Floating Back-to-Top Button -->
   <button type="button" id="back-to-top" class="back-to-top" onclick="A.backToTop()" aria-label="Lên đầu trang" title="Lên đầu trang">
     ${ic('chevL', 18)}
   </button>
 
-  <!-- Section 12: Footer -->
   ${renderFooter()}`;
 }
 

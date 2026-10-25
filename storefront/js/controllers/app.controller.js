@@ -173,7 +173,7 @@ async function render() {
       setTimeout(() => {
         const cfg = cache.hero3dConfig || {};
         A.initHero3D('hero-3d-canvas', {
-          defaultColor: cfg.bg_theme || 'space_gray',
+          defaultColor: cfg.bg_theme || 'titanium',
           screenImageUrl: cfg.image_url || null,
         });
       }, 50);

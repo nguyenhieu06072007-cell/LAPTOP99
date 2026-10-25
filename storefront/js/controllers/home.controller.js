@@ -506,11 +506,88 @@ const HomeController = {
   setHero3DView(viewMode) {
     if (typeof Hero3DService !== 'undefined' && Hero3DService.setView) {
       Hero3DService.setView(viewMode);
-      document.querySelectorAll('.sh-view-btn').forEach((btn) => {
+      document.querySelectorAll('.sh-view-btn, .aura-3d-view-btn').forEach((btn) => {
         if (btn.dataset.view === viewMode) btn.classList.add('active');
         else btn.classList.remove('active');
       });
     }
+  },
+
+  setAuraView(viewMode) {
+    this.setHero3DView(viewMode);
+  },
+
+  openPreOrderModal() {
+    modal(`
+      <div class="aura-preorder-modal" style="background:#04060D;background-image:radial-gradient(circle at 50% 0%,#0B1328 0%,#04060D 80%);color:#fff;padding:32px 28px;border-radius:20px;border:1px solid rgba(108,232,255,0.35);box-shadow:0 30px 80px rgba(0,0,0,0.9),0 0 20px rgba(108,232,255,0.2);max-width:540px;position:relative;margin:0 auto">
+        <button class="ib" onclick="closeModal()" style="position:absolute;top:18px;right:18px;color:#fff">${ic('x', 18)}</button>
+        <div style="font-size:0.75rem;letter-spacing:3px;color:#6CE8FF;font-weight:700;margin-bottom:8px">LIMITED TITANIUM FLAGSHIP • 99 UNITS</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:400;margin:0 0 10px;background:linear-gradient(180deg,#FFFDF9,#D2BA96);-webkit-background-clip:text;-webkit-text-fill-color:transparent">AURA X TITANIUM PRE-ORDER</h2>
+        <p style="font-size:0.88rem;color:#A0AEC0;line-height:1.6;margin-bottom:20px">Đặt trước siêu phẩm công nghệ AURA X nguyên khối Anodized Titanium. Trang bị vi xử lý Intel Core Ultra 9 285H, GPU NVIDIA RTX 5090 16GB GDDR7, 32GB RAM LPDDR5X, 2TB SSD NVMe Gen5 và màn hình 240Hz 3.2K OLED.</p>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:16px;border-radius:12px;margin-bottom:22px;font-size:0.82rem">
+          <div><span style="color:#6CE8FF;font-weight:700">CPU:</span> Intel Ultra 9 285H</div>
+          <div><span style="color:#6CE8FF;font-weight:700">GPU:</span> RTX 5090 16GB GDDR7</div>
+          <div><span style="color:#6CE8FF;font-weight:700">RAM:</span> 32GB LPDDR5X 7500</div>
+          <div><span style="color:#6CE8FF;font-weight:700">Ổ cứng:</span> 2TB PCIe 5.0 SSD</div>
+          <div><span style="color:#6CE8FF;font-weight:700">Màn hình:</span> 16" 3.2K OLED 240Hz</div>
+          <div><span style="color:#6CE8FF;font-weight:700">Chất liệu:</span> Titanium CNC Grade 5</div>
+        </div>
+
+        <div style="margin-bottom:18px">
+          <label style="display:block;font-size:0.8rem;color:#E2E8F0;margin-bottom:8px;font-weight:600">Số điện thoại hoặc Email nhận vé ưu tiên:</label>
+          <input type="text" id="aura-preorder-contact" placeholder="Nhập SĐT hoặc Email của Quý khách..." style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(108,232,255,0.3);padding:14px 16px;border-radius:12px;color:#fff;font-size:0.95rem;outline:none">
+        </div>
+
+        <div style="display:flex;gap:12px">
+          <button type="button" class="btn a" style="flex:1;background:linear-gradient(135deg,#E11D48,#BE123C);border:none;padding:14px;font-weight:700;border-radius:12px;font-size:0.95rem;box-shadow:0 6px 20px rgba(225,29,72,0.4)" onclick="A.submitPreOrder()">
+            Xác nhận Đặt trước (Đợt 1)
+          </button>
+          <button type="button" class="btn" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:14px 20px;border-radius:12px" onclick="closeModal()">Đóng</button>
+        </div>
+      </div>
+    `);
+  },
+
+  submitPreOrder() {
+    const val = $('#aura-preorder-contact')?.value?.trim();
+    if (!val) {
+      toast('Vui lòng nhập số điện thoại hoặc email liên hệ');
+      return;
+    }
+    closeModal();
+    toast('✨ Đã ghi nhận thông tin đặt trước AURA X! Chuyên viên VIP Laptop99 sẽ liên hệ trong 15 phút.');
+  },
+
+  toggleCategoryDrawer() {
+    const d = $('#m-drawer');
+    if (d) d.classList.toggle('open');
+  },
+
+  openQuickSearchModal() {
+    modal(`
+      <div class="aura-quick-search-modal" style="background:#04060D;background-image:radial-gradient(circle at 50% 0%,#0B1328 0%,#04060D 80%);color:#fff;padding:28px 24px;border-radius:20px;border:1px solid rgba(108,232,255,0.35);box-shadow:0 30px 80px rgba(0,0,0,0.9);max-width:580px;position:relative;margin:0 auto">
+        <button class="ib" onclick="closeModal()" style="position:absolute;top:18px;right:18px;color:#fff">${ic('x', 18)}</button>
+        <div style="font-size:0.75rem;letter-spacing:2px;color:#6CE8FF;font-weight:700;margin-bottom:8px">SEARCH CATALOG</div>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;margin:0 0 16px;color:#FFFDF9">Tìm kiếm siêu tốc</h3>
+        <form onsubmit="event.preventDefault();const q=$('#aura-quick-q').value;closeModal();location.hash='#/products?q='+encodeURIComponent(q);">
+          <div style="display:flex;gap:10px;margin-bottom:16px">
+            <input type="text" id="aura-quick-q" placeholder="Nhập tên máy, CPU, GPU (VD: RTX 4060, M3, Dell XPS)..." style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(108,232,255,0.3);padding:14px 16px;border-radius:12px;color:#fff;font-size:0.95rem;outline:none" autofocus>
+            <button type="submit" class="btn a" style="background:linear-gradient(135deg,#E11D48,#BE123C);border:none;padding:0 22px;border-radius:12px;font-weight:700">Tìm</button>
+          </div>
+        </form>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span style="font-size:0.75rem;color:#94a3b8;align-self:center">Gợi ý nhanh:</span>
+          <a href="#/products?brand=Apple" onclick="closeModal()" style="font-size:0.78rem;background:rgba(255,255,255,0.08);padding:5px 12px;border-radius:20px;color:#E2E8F0">MacBook M3</a>
+          <a href="#/products?cat=2" onclick="closeModal()" style="font-size:0.78rem;background:rgba(255,255,255,0.08);padding:5px 12px;border-radius:20px;color:#E2E8F0">Laptop Gaming RTX</a>
+          <a href="#/products?cat=1" onclick="closeModal()" style="font-size:0.78rem;background:rgba(255,255,255,0.08);padding:5px 12px;border-radius:20px;color:#E2E8F0">Dell XPS / ThinkPad</a>
+          <a href="#/products?price=u15" onclick="closeModal()" style="font-size:0.78rem;background:rgba(255,255,255,0.08);padding:5px 12px;border-radius:20px;color:#E2E8F0">Dưới 15 Triệu</a>
+        </div>
+      </div>
+    `);
+    setTimeout(() => {
+      $('#aura-quick-q')?.focus();
+    }, 100);
   },
 
   setHero3DScreenImage(urlOrFile) {

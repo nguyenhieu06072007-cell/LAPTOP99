@@ -7101,3 +7101,1502 @@ p { margin: 0; }
     gap: 6px;
   }
 }
+
+
+/* ==========================================================================
+   AURA × LAPTOP99: ULTRA LUXURY TECH EXPERIENCE STYLES
+   - Theme: Deep Obsidian Space (#04060D -> #0B1328)
+   - UI Material: VisionOS Optical Glass (backdrop-filter: blur(28px) saturate(190%))
+   - Typography: Cormorant Garamond Serif & Plus Jakarta Sans
+   - Hero 100vh Viewport Layout (1:1 Ratio to AURA X Artwork)
+   - Bento Dark Luxury Storefront Grid
+   ========================================================================== */
+
+/* Main wrapper for AURA flagship */
+.aura-master-wrap {
+  background: #04060D;
+  color: #F8FAFC;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 100vh Hero Viewport */
+.aura-hero-viewport {
+  height: 100vh;
+  min-height: 680px;
+  max-height: 1080px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #04060D;
+  background-image: radial-gradient(ellipse at 50% 35%, #0B1328 0%, #04060D 75%);
+}
+
+.aura-space-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 100px 150px, rgba(108, 232, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 220px 80px, rgba(255, 207, 120, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 380px 240px, rgba(255, 255, 255, 0.35), transparent);
+  background-size: 450px 450px;
+  opacity: 0.65;
+  z-index: 0;
+}
+
+.aura-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  opacity: 0.35;
+  z-index: 1;
+}
+
+.aura-glow-cyan {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, #6CE8FF 0%, rgba(108, 232, 255, 0) 70%);
+  top: 15%;
+  left: 30%;
+}
+
+.aura-glow-champagne {
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, #FFCF78 0%, rgba(255, 207, 120, 0) 70%);
+  bottom: 10%;
+  right: 20%;
+}
+
+/* Top Utility Strip (Mỏng, tinh tế) */
+.aura-top-utility-strip {
+  height: 36px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  color: #94A3B8;
+  position: relative;
+  z-index: 10;
+  background: rgba(4, 6, 13, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.aura-utility-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aura-util-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.aura-util-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #CBD5E1;
+  font-weight: 500;
+}
+
+.aura-util-item svg {
+  color: #E11D48;
+}
+
+.aura-util-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.aura-util-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #CBD5E1;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  transition: color 0.18s ease;
+}
+
+.aura-util-link:hover {
+  color: #FFFFFF;
+}
+
+.aura-util-hotline b {
+  color: #E11D48;
+  margin-left: 2px;
+}
+
+.aura-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #E11D48;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.aura-util-btn-login {
+  background: #E11D48;
+  color: #FFFFFF;
+  border: none;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.aura-util-btn-login:hover {
+  background: #BE123C;
+  transform: translateY(-1px);
+}
+
+/* Floating VisionOS Optical Glass Pill Navbar */
+.aura-glass-navbar-wrap {
+  max-width: 1440px;
+  margin: 10px auto 4px;
+  width: calc(100% - 48px);
+  position: relative;
+  z-index: 20;
+}
+
+.aura-glass-navbar {
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aura-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.aura-brand-serif {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, #FFFDF9 0%, #D2BA96 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.aura-brand-sep {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 14px;
+}
+
+.aura-brand-badge {
+  background: rgba(225, 29, 72, 0.18);
+  border: 1px solid rgba(225, 29, 72, 0.45);
+  color: #FB7185;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+}
+
+.aura-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.aura-nav-link {
+  color: #CBD5E1;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+  padding: 8px 0;
+  transition: color 0.18s ease;
+}
+
+.aura-nav-link:hover,
+.aura-nav-link.active {
+  color: #FFFFFF;
+}
+
+.aura-nav-glow-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #FFFFFF;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8), 0 0 20px 4px rgba(108, 232, 255, 0.4);
+  border-radius: 2px;
+}
+
+.aura-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aura-pill-drawer-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.aura-pill-drawer-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.aura-nav-ico-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.aura-nav-ico-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #6CE8FF;
+}
+
+.aura-nav-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 16px;
+  height: 16px;
+  background: #E11D48;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hero Main Grid (3 Columns) */
+.aura-hero-grid {
+  flex: 1;
+  min-height: 0;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px 20px;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: center;
+  position: relative;
+  z-index: 5;
+}
+
+/* CỘT TRÁI (HERO TYPOGRAPHY & SPEC CARD) */
+.aura-hero-col-left {
+  display: flex;
+  position: relative;
+  height: 100%;
+  align-items: center;
+}
+
+.aura-scrolling-indicator {
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+
+.aura-scrolling-indicator:hover {
+  opacity: 1;
+}
+
+.aura-scroll-track {
+  width: 2px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.aura-scroll-glow {
+  width: 100%;
+  height: 24px;
+  background: #6CE8FF;
+  box-shadow: 0 0 10px #6CE8FF;
+  position: absolute;
+  top: -24px;
+  animation: auraScrollPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes auraScrollPulse {
+  0% { top: -24px; opacity: 0; }
+  30% { opacity: 1; }
+  100% { top: 60px; opacity: 0; }
+}
+
+.aura-scroll-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.aura-left-content {
+  padding-left: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.aura-sub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #6CE8FF;
+  background: rgba(108, 232, 255, 0.08);
+  border: 1px solid rgba(108, 232, 255, 0.25);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.aura-sub-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6CE8FF;
+  box-shadow: 0 0 8px #6CE8FF;
+}
+
+.aura-hero-title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  line-height: 0.95;
+}
+
+.aura-title-line {
+  background: linear-gradient(180deg, #FFFDF9 0%, #D2BA96 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.aura-title-line.line-1 {
+  font-size: clamp(2rem, 3.8vw, 3.4rem);
+  letter-spacing: 2px;
+}
+
+.aura-title-line.line-2 {
+  font-size: clamp(3rem, 5.8vw, 5.2rem);
+  font-weight: 400;
+  letter-spacing: 4px;
+}
+
+.aura-title-line.line-3 {
+  font-size: clamp(2.8rem, 5.2vw, 4.6rem);
+  font-weight: 400;
+  letter-spacing: 6px;
+}
+
+.aura-cta-row {
+  margin-top: 4px;
+}
+
+.aura-btn-explore {
+  background: rgba(210, 186, 150, 0.08);
+  border: 1px solid #D2BA96;
+  color: #FFFDF9;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(210, 186, 150, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.22s ease;
+}
+
+.aura-btn-explore:hover {
+  background: rgba(210, 186, 150, 0.22);
+  box-shadow: 0 12px 32px rgba(210, 186, 150, 0.35);
+  transform: translateY(-2px);
+}
+
+.aura-flare-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: skewX(-20deg);
+  animation: auraShimmer 3.5s infinite;
+}
+
+@keyframes auraShimmer {
+  0% { left: -100%; }
+  40% { left: 200%; }
+  100% { left: 200%; }
+}
+
+/* VisionOS Optical Glass Spec Cards */
+.aura-glass-card {
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border-radius: 18px;
+  padding: 18px 20px;
+  position: relative;
+}
+
+/* Optical Corner Flares */
+.aura-spec-flare-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.aura-spec-flare-dot.tl {
+  top: -4px;
+  left: 20px;
+}
+
+.aura-spec-flare-dot.tr {
+  top: -4px;
+  right: 20px;
+}
+
+.aura-spec-flare-dot.cyan {
+  background: #6CE8FF;
+  box-shadow: 0 0 12px 3px #6CE8FF, 0 0 24px 6px rgba(108, 232, 255, 0.5);
+}
+
+.aura-spec-flare-dot.gold {
+  background: #FFCF78;
+  box-shadow: 0 0 12px 3px #FFCF78, 0 0 24px 6px rgba(255, 207, 120, 0.5);
+}
+
+.aura-spec-lead {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  background: linear-gradient(180deg, #FFFDF9 0%, #D2BA96 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+}
+
+.aura-spec-accent {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #6CE8FF;
+  margin: 4px 0 2px;
+}
+
+.aura-spec-detail {
+  font-size: 11px;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+.aura-spec-text {
+  font-size: 12px;
+  color: #94A3B8;
+  line-height: 1.5;
+  margin: 8px 0 14px;
+}
+
+/* TRUNG TÂM (SÂN KHẤU 3D THREE.JS) */
+.aura-hero-col-center {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.aura-canvas-stage {
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  cursor: grab;
+  position: relative;
+}
+
+.aura-canvas-stage:active {
+  cursor: grabbing;
+}
+
+.aura-3d-controls-pill {
+  position: absolute;
+  bottom: 34px;
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  background: rgba(4, 6, 13, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  border-radius: 9999px;
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+
+.aura-3d-view-btn {
+  background: transparent;
+  border: none;
+  color: #CBD5E1;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.18s ease;
+}
+
+.aura-3d-view-btn .aura-btn-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.aura-3d-view-btn.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.aura-3d-view-btn.active .aura-btn-dot {
+  background: #6CE8FF;
+  box-shadow: 0 0 6px #6CE8FF;
+}
+
+.aura-orbit-hint {
+  position: absolute;
+  bottom: 8px;
+  font-size: 11px;
+  color: #64748B;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* CỘT PHẢI (FLOATING SPEC CARDS & EMBLEM) */
+.aura-hero-col-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+}
+
+.aura-spec-top-right {
+  border-color: rgba(108, 232, 255, 0.25);
+}
+
+.aura-spec-middle {
+  border-color: rgba(255, 207, 120, 0.25);
+}
+
+.aura-pill-btn-cyan {
+  background: rgba(108, 232, 255, 0.08);
+  border: 1px solid rgba(108, 232, 255, 0.5);
+  color: #6CE8FF;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  transition: all 0.18s ease;
+}
+
+.aura-pill-btn-cyan:hover {
+  background: rgba(108, 232, 255, 0.2);
+  border-color: #6CE8FF;
+  box-shadow: 0 0 16px rgba(108, 232, 255, 0.4);
+}
+
+/* Huy hiệu khung vòng cung kép (Double-Arc Emblem) */
+.aura-double-arc-emblem {
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 16px 20px;
+  position: relative;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.aura-emblem-star {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  color: #FFCF78;
+  font-size: 16px;
+  text-shadow: 0 0 10px #FFCF78;
+}
+
+.aura-emblem-badge {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #94A3B8;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.aura-emblem-quote {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 20px;
+  font-style: italic;
+  font-weight: 400;
+  background: linear-gradient(180deg, #FFFDF9 0%, #D2BA96 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+
+.aura-emblem-bars {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.aura-emblem-bars .aura-bar {
+  height: 2px;
+  border-radius: 2px;
+}
+
+.aura-emblem-bars .aura-bar.gold {
+  width: 28px;
+  background: #FFCF78;
+  box-shadow: 0 0 8px rgba(255, 207, 120, 0.6);
+}
+
+.aura-emblem-bars .aura-bar.gray {
+  width: 14px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   2. BENTO DARK LUXURY STOREFRONT SECTION (BELOW HERO)
+   ========================================================================== */
+.storefront-bento-sec {
+  background: #04060D;
+  background-image: linear-gradient(180deg, #04060D 0%, #080C1A 50%, #04060D 100%);
+  padding: 32px 0 60px;
+  position: relative;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.storefront-hero-grid {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Cột Trái Sidebar 9 danh mục */
+.cat-sidebar-dark {
+  background: #0B0E14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cat-side-row {
+  border-radius: 10px;
+  transition: all 0.18s ease;
+  position: relative;
+}
+
+.cat-side-row:hover,
+.cat-side-row.active-row {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cat-side-row.active-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  background: #E11D2E;
+  border-radius: 0 3px 3px 0;
+}
+
+.cat-side-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  text-decoration: none;
+  color: #E2E8F0;
+}
+
+.cat-side-l {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cat-side-ic {
+  color: #E11D2E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cat-side-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cat-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  white-space: nowrap;
+}
+
+.cat-sub {
+  font-size: 11px;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cat-side-r {
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+/* Cột Giữa Banner MSI Best Seller */
+.hero-banner-center {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-banner-card {
+  background: radial-gradient(circle at 60% 40%, #151025 0%, #0A0D16 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.hbc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hbc-brand-badge {
+  display: inline-flex;
+  align-items: center;
+}
+
+.hbc-bestseller-tag {
+  background: #E11D2E;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+
+.hbc-body {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 20px;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.hbc-title {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #FFFFFF;
+  margin: 0 0 6px;
+  line-height: 1.1;
+}
+
+.hbc-desc {
+  font-size: 14px;
+  color: #94A3B8;
+  margin: 0 0 18px;
+}
+
+.hbc-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.hbc-spec-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.hbc-spec-val {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.hbc-spec-lbl {
+  font-size: 10px;
+  color: #94A3B8;
+  margin-top: 2px;
+}
+
+.hbc-cta-btn {
+  background: #E11D2E;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  box-shadow: 0 4px 16px rgba(225, 29, 46, 0.4);
+  transition: all 0.18s ease;
+}
+
+.hbc-cta-btn:hover {
+  background: #BE123C;
+  transform: translateY(-2px);
+}
+
+.hbc-img-col {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hbc-img-glow {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(225, 29, 46, 0.35) 0%, transparent 70%);
+  filter: blur(40px);
+}
+
+.hbc-laptop-img {
+  max-width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.7));
+}
+
+.hbc-bottom-features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 14px;
+}
+
+.hbc-feat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #CBD5E1;
+  font-weight: 500;
+}
+
+/* Cột Phải Tài khoản & Ưu đãi */
+.hero-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hrc-login-card {
+  background: #0B0E14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.hrc-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.hrc-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #E11D2E;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hrc-user-txt {
+  display: flex;
+  flex-direction: column;
+}
+
+.hrc-user-txt b {
+  font-size: 13px;
+  color: #fff;
+}
+
+.hrc-user-txt span {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+.hrc-login-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.hrc-btn-primary {
+  flex: 1;
+  background: #E11D2E;
+  color: #fff;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.hrc-btn-secondary {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hrc-promos-box {
+  background: #0B0E14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hrc-promo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  color: inherit;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hrc-promo-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.hrc-p-icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.hrc-p-txt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.hrc-p-txt b {
+  font-size: 12px;
+  color: #FFFFFF;
+}
+
+.hrc-p-txt span {
+  font-size: 10.5px;
+  color: #94A3B8;
+}
+
+.hrc-p-arrow {
+  font-size: 11px;
+  color: #E11D2E;
+  font-weight: 600;
+}
+
+.hrc-tradein-card {
+  background: #0B0E14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+}
+
+.hrc-tradein-l {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hrc-tradein-l b {
+  font-size: 12px;
+  color: #fff;
+  display: block;
+}
+
+.hrc-tradein-l span {
+  font-size: 10.5px;
+  color: #94A3B8;
+}
+
+.hrc-tradein-arr {
+  font-size: 11px;
+  color: #E11D2E;
+  font-weight: 600;
+}
+
+.hrc-accessory-card {
+  background: #0B0E14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+}
+
+.hrc-acc-badge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #E11D2E;
+}
+
+.hrc-acc-sub {
+  font-size: 10.5px;
+  color: #94A3B8;
+  margin: 2px 0 4px;
+}
+
+.hrc-acc-btn {
+  font-size: 11px;
+  color: #E11D2E;
+  font-weight: 700;
+}
+
+.hrc-acc-img-wrap {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hrc-acc-thumb {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Dải Thương Hiệu Nổi Bật */
+.storefront-brands-strip {
+  margin-top: 24px;
+  background: #0B0E14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sbs-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #CBD5E1;
+}
+
+.sbs-list {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+.sbs-item {
+  color: #94A3B8;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 800;
+  transition: color 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sbs-item:hover {
+  color: #FFFFFF;
+}
+
+/* Khu vực Sản Phẩm Bán Chạy */
+.storefront-bestsellers-sec {
+  margin-top: 28px;
+}
+
+.sbs-sec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sbs-heading {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.sbs-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sbs-tab-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #CBD5E1;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.sbs-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sbs-tab-btn.active {
+  background: #E11D2E;
+  border-color: #E11D2E;
+  color: #FFFFFF;
+}
+
+.sbs-slider-arrows {
+  display: flex;
+  gap: 6px;
+}
+
+.sbs-arrow-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* 5 Cột Sản Phẩm Grid */
+.pg.pg-5cols {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+/* Banner Phụ: MacBook Pro 16" */
+.storefront-bottom-banner {
+  margin-top: 28px;
+  background: radial-gradient(circle at 30% 50%, #171B26 0%, #0B0E14 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 20px 28px;
+}
+
+.sbb-inner {
+  display: grid;
+  grid-template-columns: 200px 1fr 340px;
+  gap: 24px;
+  align-items: center;
+}
+
+.sbb-left-img img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.sbb-apple-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.sbb-subtitle {
+  font-size: 12.5px;
+  color: #94A3B8;
+  margin: 4px 0 12px;
+}
+
+.sbb-specs-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sbb-spec-tag {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #CBD5E1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.sbb-cta-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  text-decoration: none;
+  margin-left: 6px;
+}
+
+.sbb-right-badges {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.sbb-badge-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: #94A3B8;
+}
+
+.sbb-b-icon {
+  font-size: 18px;
+}
+
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS (DESKTOP >= 1280px, TABLET 768-1279px, MOBILE < 768px)
+   ========================================================================== */
+@media (max-width: 1280px) {
+  .aura-hero-grid {
+    grid-template-columns: 320px minmax(0, 1fr) 300px;
+    gap: 14px;
+  }
+  .storefront-hero-grid {
+    grid-template-columns: 220px minmax(0, 1fr) 280px;
+  }
+  .pg.pg-5cols {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .sbb-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .aura-hero-viewport {
+    height: auto;
+    min-height: 100vh;
+  }
+  .aura-hero-grid {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+  .aura-scrolling-indicator {
+    display: none;
+  }
+  .aura-canvas-stage {
+    min-height: 380px;
+  }
+  .storefront-hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .pg.pg-5cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .sbs-list {
+    gap: 18px;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .aura-util-left {
+    display: none;
+  }
+  .aura-nav-links {
+    display: none;
+  }
+  .aura-hero-title .aura-title-line.line-1 {
+    font-size: 2rem;
+  }
+  .aura-hero-title .aura-title-line.line-2 {
+    font-size: 2.8rem;
+  }
+  .aura-hero-title .aura-title-line.line-3 {
+    font-size: 2.5rem;
+  }
+  .pg.pg-5cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hbc-body {
+    grid-template-columns: 1fr;
+  }
+  .hbc-specs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hbc-bottom-features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
