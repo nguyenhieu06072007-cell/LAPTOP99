@@ -29,7 +29,6 @@ import {
 
 const POSITIONS = [
   { id: 'all', label: 'Tất cả vị trí', icon: HiOutlineSparkles, color: 'gray' },
-  { id: 'hero_3d', label: '✨ 3D Showroom & Trang Chủ', icon: HiOutlineComputerDesktop, color: 'emerald' },
   { id: 'entry_popup', label: '🎯 Banner Popup Đầu Trang', icon: HiOutlineSparkles, color: 'purple' },
   { id: 'hero', label: 'Hero Slider Trang Chủ', icon: HiOutlineComputerDesktop, color: 'blue' },
   { id: 'flash_sale', label: 'Dải Flash Sale Giờ Vàng', icon: HiOutlineBolt, color: 'rose' },
@@ -173,23 +172,6 @@ export default function BannerManagementPage() {
     let defaultTitle = 'Chiến dịch Laptop chính hãng';
     let defaultBadge = '🚀 CHIẾN DỊCH NỔI BẬT';
     let defaultTheme = 'crimson';
-
-    if (pos === 'hero_3d') {
-      setForm({
-        ...EMPTY_FORM,
-        position: 'hero_3d',
-        title: 'Trải Nghiệm Laptop Tương Tác',
-        highlight_text: 'Thế Hệ Mới',
-        subtitle: 'Xoay góc nhìn 360°, chạm đổi màu kim loại và tùy chọn cấu hình trực quan trong không gian showroom ảo trước khi mua sắm.',
-        badge_text: '✨ SHOWROOM CÔNG NGHỆ 3D • LAPTOP99',
-        cta_text: 'Khám phá sản phẩm',
-        cta_link: '#/products',
-        bg_theme: 'space_gray',
-        is_active: 1,
-        sort_order: 1,
-      });
-      return;
-    }
 
     if (pos === 'entry_popup') {
       setForm({
@@ -605,9 +587,7 @@ export default function BannerManagementPage() {
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
                 Vị trí:{' '}
-                {form.position === 'hero_3d'
-                  ? '✨ 3D Showroom & Trang Chủ'
-                  : form.position === 'entry_popup'
+                {form.position === 'entry_popup'
                   ? '🎯 Banner Popup Đầu Trang (Laptop88 Cyber Style)'
                   : form.position === 'flash_sale'
                   ? '⚡ Dải Flash Sale Giờ Vàng'
@@ -618,40 +598,6 @@ export default function BannerManagementPage() {
                   : '🖥️ Hero Slider Trang Chủ'}
               </span>
             </div>
-
-            {/* PREVIEW VARIANT: HERO 3D SHOWROOM */}
-            {form.position === 'hero_3d' && (
-              <div className="bg-[#F5F5F0] border border-[#DCE3D9] rounded-2xl p-6 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                  <div>
-                    <div className="inline-flex items-center gap-2 bg-[#EDF0E9] text-[#152F38] border border-[#DCE3D9] px-3 py-1 rounded-full text-xs font-bold mb-3">
-                      <span className="w-2 h-2 rounded-full bg-[#688376]"></span>
-                      <span>{form.badge_text || '✨ SHOWROOM CÔNG NGHỆ 3D • LAPTOP99'}</span>
-                    </div>
-                    <h2 className="text-2xl font-black text-[#152F38] leading-tight mb-2">
-                      {form.title || 'Trải Nghiệm Laptop Tương Tác'}{' '}
-                      <span className="text-[#DB563D]">{form.highlight_text || 'Thế Hệ Mới'}</span>
-                    </h2>
-                    <p className="text-sm text-[#667871] leading-relaxed mb-4">
-                      {form.subtitle || 'Xoay góc nhìn 360°, chạm đổi màu kim loại và tùy chọn cấu hình trực quan trong không gian showroom ảo.'}
-                    </p>
-                    <div className="flex gap-3">
-                      <span className="px-5 py-2.5 rounded-full bg-[#DB563D] text-white text-xs font-bold shadow-md">
-                        {form.cta_text || 'Khám phá sản phẩm'} &rarr;
-                      </span>
-                      <span className="px-4 py-2.5 rounded-full bg-white border border-[#DCE3D9] text-[#152F38] text-xs font-bold">
-                        🎯 Gợi ý chọn máy
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-44 bg-gradient-to-br from-[#F0F4EC] to-[#E3E9DF] border border-[#DCE3D9] rounded-xl flex flex-col items-center justify-center p-4 text-center">
-                    <span className="text-3xl mb-1">💻</span>
-                    <span className="text-xs font-bold text-[#152F38]">Mô hình 3D Laptop Tương Tác</span>
-                    <span className="text-[11px] text-[#667871]">Màu mặc định: {form.bg_theme || 'Space Gray'}</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* PREVIEW VARIANT: ENTRY POPUP BANNER (LAPTOP88 CYBER GAMING STYLE) */}
             {form.position === 'entry_popup' && (
@@ -987,12 +933,11 @@ export default function BannerManagementPage() {
                     onChange={(e) => setForm({ ...form, position: e.target.value })}
                     className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-rose-500/30"
                   >
-                    <option value="hero_3d">✨ 1. Hero 3D Showroom Công Nghệ Tương Tác (Mới)</option>
-                    <option value="entry_popup">🎯 2. Banner Popup Đầu Vào Trang (Laptop88 Cyber Style)</option>
-                    <option value="hero">🖥️ 3. Hero Slider Đầu Trang (Carousel)</option>
-                    <option value="flash_sale">⚡ 4. Dải Banner Flash Sale Giờ Vàng (Đếm ngược)</option>
-                    <option value="brand_showcase">🏢 5. Chuyên Trang Thương Hiệu Theo Hãng (Apple, ASUS...)</option>
-                    <option value="hot_deal">🔥 6. Banner Deal Tâm Điểm Giảm Sâu</option>
+                    <option value="entry_popup">🎯 1. Banner Popup Đầu Vào Trang (Laptop88 Cyber Style)</option>
+                    <option value="hero">🖥️ 2. Hero Slider Đầu Trang (Carousel)</option>
+                    <option value="flash_sale">⚡ 3. Dải Banner Flash Sale Giờ Vàng (Đếm ngược)</option>
+                    <option value="brand_showcase">🏢 4. Chuyên Trang Thương Hiệu Theo Hãng (Apple, ASUS...)</option>
+                    <option value="hot_deal">🔥 5. Banner Deal Tâm Điểm Giảm Sâu</option>
                   </select>
                 </div>
 
@@ -1012,24 +957,6 @@ export default function BannerManagementPage() {
                           {br}
                         </option>
                       ))}
-                    </select>
-                  </div>
-                )}
-
-                {form.position === 'hero_3d' && (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
-                      Màu Vật Liệu Kim Loại 3D Mặc Định
-                    </label>
-                    <select
-                      value={form.bg_theme}
-                      onChange={(e) => setForm({ ...form, bg_theme: e.target.value })}
-                      className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl bg-white font-bold text-gray-800"
-                    >
-                      <option value="space_gray">Space Gray (Xám Không Gian)</option>
-                      <option value="silver">Silver Metallic (Bạc Ánh Kim)</option>
-                      <option value="midnight">Midnight Pine (Xanh Đen)</option>
-                      <option value="rose_gold">Rose Gold (Vàng Hồng)</option>
                     </select>
                   </div>
                 )}
