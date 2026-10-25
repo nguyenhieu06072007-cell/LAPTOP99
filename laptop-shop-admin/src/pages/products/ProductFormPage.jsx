@@ -15,6 +15,7 @@ import {
   HiStar,
   HiOutlineStar,
 } from 'react-icons/hi2';
+import { resolveAdminImageUrl, handleImageError } from '../../utils/imageHelper';
 
 export default function ProductFormPage() {
   const { id } = useParams();
@@ -556,10 +557,10 @@ export default function ProductFormPage() {
                     >
                       <div className="relative w-full h-24 bg-gray-50 rounded flex items-center justify-center overflow-hidden">
                         <img
-                          src={img.url}
+                          src={resolveAdminImageUrl(img.url)}
                           alt="product"
                           className="max-h-full max-w-full object-contain"
-                          onError={(e) => { e.currentTarget.src = '/laptop-placeholder.svg'; }}
+                          onError={handleImageError}
                         />
                         {img.is_thumbnail === 1 && (
                           <span className="absolute top-1 left-1 bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow flex items-center gap-0.5">

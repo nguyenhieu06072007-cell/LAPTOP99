@@ -20,8 +20,13 @@ function resolveAssetUrl(rawUrl) {
   if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://') || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) return rawUrl;
   const clean = rawUrl.startsWith('/') ? rawUrl.slice(1) : rawUrl;
   
-  // Dynamic uploads (banners, uploads by admin) are stored on Render backend
-  if (clean.startsWith('uploads/banners/') || clean.startsWith('uploads/temp/')) {
+  // Dynamic uploads (products or banners uploaded by admin to Render)
+  if (
+    clean.startsWith('uploads/banners/') ||
+    clean.startsWith('uploads/temp/') ||
+    clean.includes('product-') ||
+    clean.includes('banner-')
+  ) {
     return 'https://laptop99-ejug.onrender.com/' + clean;
   }
   

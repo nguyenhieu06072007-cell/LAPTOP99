@@ -1,4 +1,8 @@
 {
-  "rewrites": []
+  "rewrites": [
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://laptop99-ejug.onrender.com/uploads/:path*"
+    }
+  ]
 }
-

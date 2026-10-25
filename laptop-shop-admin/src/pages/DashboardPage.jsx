@@ -22,6 +22,7 @@ import {
   HiOutlineSparkles,
 } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
+import { resolveAdminImageUrl, handleImageError } from '../utils/imageHelper';
 
 const formatVND = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
 
@@ -195,10 +196,10 @@ export default function DashboardPage() {
                     >
                       {p.image_url || p.thumbnail ? (
                         <img
-                          src={p.image_url || p.thumbnail}
+                          src={resolveAdminImageUrl(p.image_url || p.thumbnail)}
                           alt={p.name}
                           className="w-10 h-10 object-cover rounded border border-gray-200 flex-shrink-0"
-                          onError={(e) => { e.target.src = '/laptop-placeholder.svg'; }}
+                          onError={handleImageError}
                         />
                       ) : (
                         <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center font-bold text-sm flex-shrink-0">💻</div>

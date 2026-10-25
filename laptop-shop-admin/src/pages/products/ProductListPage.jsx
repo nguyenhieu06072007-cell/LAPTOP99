@@ -16,6 +16,7 @@ import {
   HiOutlineTicket,
   HiOutlineEllipsisHorizontal
 } from 'react-icons/hi2';
+import { resolveAdminImageUrl, handleImageError } from '../../utils/imageHelper';
 
 const formatVND = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
 
@@ -311,10 +312,10 @@ export default function ProductListPage() {
                         <div className="flex items-center space-x-3">
                           <div className="w-12 h-12 rounded bg-slate-50 border border-gray-200 p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
                             <img
-                              src={p.thumbnail || '/laptop-placeholder.svg'}
+                              src={resolveAdminImageUrl(p.thumbnail)}
                               alt={p.name}
                               className="w-full h-full object-contain"
-                              onError={(e) => { e.currentTarget.src = '/laptop-placeholder.svg'; }}
+                              onError={handleImageError}
                             />
                           </div>
                           <div className="min-w-0 max-w-sm">

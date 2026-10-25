@@ -26,7 +26,7 @@ function pimg(p, cls = '') {
   </svg>`;
 
   if (p.thumbnail) {
-    return `<img src="${esc(p.thumbnail)}" alt="${esc(p.name)}" class="prod-real-img ${cls}" loading="lazy" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block'">
+    return `<img src="${esc(p.thumbnail)}" alt="${esc(p.name)}" class="prod-real-img ${cls}" loading="lazy" onerror="if(!this.dataset.retried&&this.src.indexOf('onrender.com')!==-1){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+this.src.replace(/^https?:\\/\\/[^\\/]+\\//,'');}else if(!this.dataset.retried&&this.src.indexOf('onrender.com')===-1){this.dataset.retried='1';this.src='https://laptop99-ejug.onrender.com/'+this.getAttribute('src').replace(/^\\//,'');}else{this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block';}">
             <div style="display:none;width:100%;height:100%">${svgFallback}</div>`;
   }
   return svgFallback;

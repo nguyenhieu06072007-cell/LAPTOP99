@@ -10,6 +10,7 @@ import {
   HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowLeft,
   HiOutlinePhoto, HiOutlineStar, HiStar
 } from 'react-icons/hi2';
+import { resolveAdminImageUrl, handleImageError } from '../../utils/imageHelper';
 
 const formatVND = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
 const formatDate = (dateString) => new Date(dateString).toLocaleDateString('vi-VN', {
@@ -231,10 +232,10 @@ export default function ProductDetailPage() {
                   {images.map(img => (
                     <div key={img.id} className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-2xs">
                       <img
-                        src={img.url}
+                        src={resolveAdminImageUrl(img.url)}
                         alt="Product"
                         className="w-full h-32 object-contain bg-slate-50 p-2"
-                        onError={(e) => { e.currentTarget.src = '/laptop-placeholder.svg'; }}
+                        onError={handleImageError}
                       />
                       <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2">
                         <button

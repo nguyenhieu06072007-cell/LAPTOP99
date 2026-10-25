@@ -60,7 +60,8 @@ function looksLikeImage(filePath) {
     const png = buf.slice(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
     const webp = buf.slice(0, 4).toString() === 'RIFF' && buf.slice(8, 12).toString() === 'WEBP';
     const gif = buf.slice(0, 3).toString() === 'GIF';
-    return Boolean(jpeg || png || webp || gif);
+    const svg = buf.toString().trim().startsWith('<svg') || buf.toString().trim().startsWith('<?xml');
+    return Boolean(jpeg || png || webp || gif || svg);
   } catch (err) {
     if (fd !== undefined) {
       try { fs.closeSync(fd); } catch (e) {}
