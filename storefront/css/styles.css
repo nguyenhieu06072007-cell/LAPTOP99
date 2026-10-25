@@ -155,15 +155,16 @@ input[type=checkbox], input[type=radio] { width: auto; accent-color: var(--acc);
 h1, h2, h3, h4 { margin: 0; font-weight: 700; color: var(--fg); line-height: 1.28; }
 p { margin: 0; }
 
-/* Standard compact e-commerce container (1340px) */
+/* Standard e-commerce container (1440px) */
 .wrap {
-  max-width: 1340px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 14px;
+  max-width: 1440px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  box-sizing: border-box !important;
 }
 @media (min-width: 1440px) {
-  .wrap { max-width: 1360px; padding: 0 16px; }
+  .wrap { max-width: 1440px !important; padding: 0 24px !important; }
 }
 
 .muted { color: var(--mut); }
@@ -4987,21 +4988,42 @@ p { margin: 0; }
 
 /* ==========================================================================
    THIẾT KẾ GIAO DIỆN HIỆN ĐẠI MỚI CHUẨN THAM CHIẾU (LAPTOP99 FLAGSHIP)
-   - Top Bar tối giản nền đen đỏ tinh tế
-   - Header & Subnav Dark Gaming
-   - Sidebar 9 Danh mục theme tối
-   - Banner Hero Game MSI Raider GE78HX
-   - Cột phải 4 widget tiện ích
-   - Dải logo Thương hiệu nổi bật
-   - Lưới 5 Cột Sản phẩm Bán chạy
-   - Banner ngang MacBook Pro 16 M3 Pro
+   - Khung chung container 1440px, padding 24px, gap 16px, bo góc 12-16px
+   - Top Bar 5 mục nền đen với icon đỏ, chữ 12-13px, hotline 1800 6888 bên phải
+   - Header Dark Gaming, Logo LAPTOP99, Ô tìm kiếm bo tròn pill 640px với nút đỏ tròn
+   - Subnav phân khúc, nút "Danh mục sản phẩm" đỏ rộng 240px khớp sidebar
+   - Hero 3 Cột: Sidebar (240px) | Banner (360px) + Thương hiệu (55px) | Tiện ích (300px)
+   - Sản phẩm bán chạy: lưới 5 cột chuẩn
+   - Banner ngang MacBook Pro 16" M3 Pro cao ~120px
+   - Nút nổi cố định góc dưới phải
    ========================================================================== */
 
-/* 1. TOP BAR DARK */
+:root {
+  --brand-red: #E11D2E;
+  --brand-red-hover: #BE123C;
+  --bg-dark: #0A0B10;
+  --card-dark: #191B24;
+  --border-dark: rgba(255, 255, 255, 0.08);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --gap-block: 16px;
+}
+
+/* 1. KHUNG CHUNG CONTAINER */
+.modern-home-wrap {
+  max-width: 1440px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  box-sizing: border-box !important;
+}
+
+/* 2. TOP BAR DARK */
 .top-info-bar-dark {
   background: #0E1017;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.76rem;
+  font-size: 12.5px;
   color: #AEB4BF;
   padding: 6px 0;
 }
@@ -5013,54 +5035,66 @@ p { margin: 0; }
 .tib-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
   flex-wrap: wrap;
 }
 .tib-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #CBD5E1;
+  color: #CBD5E1 !important;
+  font-size: 12.5px !important;
   font-weight: 500;
 }
 .tib-icon {
-  color: #E11D48;
+  color: var(--brand-red, #E11D2E) !important;
   display: inline-flex;
+  align-items: center;
 }
 .tib-hotline {
-  color: #F8FAFC;
+  color: #F8FAFC !important;
   text-decoration: none;
+  font-size: 12.5px !important;
   font-weight: 600;
 }
 .tib-hotline b {
-  color: #E11D48;
+  color: var(--brand-red, #E11D2E) !important;
 }
 
-/* 2. HEADER DARK & SEARCH */
+/* 3. HEADER DARK & SEARCH PILL 640PX */
 .nav-dark {
   background: #161822 !important;
   border-bottom: 1px solid #232736 !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
 }
+.search-box-wrap {
+  max-width: 640px !important;
+  width: 100% !important;
+  margin: 0 20px !important;
+  flex: 1 1 640px !important;
+}
 .modern-search-form {
+  width: 100% !important;
+  max-width: 640px !important;
   background: #FFFFFF !important;
   border-radius: 9999px !important;
   padding: 3px 4px 3px 18px !important;
   display: flex !important;
   align-items: center !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+  box-sizing: border-box !important;
   border: 1.5px solid transparent !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .modern-search-form:focus-within {
-  border-color: #E11D48 !important;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25) !important;
+  border-color: var(--brand-red, #E11D2E) !important;
+  box-shadow: 0 0 0 3px rgba(225, 29, 46, 0.25) !important;
 }
 .modern-search-form input {
   background: transparent !important;
   border: none !important;
   color: #1E293B !important;
-  font-size: 0.84rem !important;
+  font-size: 13.5px !important;
   font-weight: 500 !important;
   flex: 1 !important;
   outline: none !important;
@@ -5070,66 +5104,80 @@ p { margin: 0; }
   color: #94A3B8 !important;
 }
 .ns-btn-round {
-  width: 32px !important;
-  height: 32px !important;
+  width: 34px !important;
+  height: 34px !important;
   border-radius: 50% !important;
-  background: #E11D48 !important;
+  background: var(--brand-red, #E11D2E) !important;
   color: #FFFFFF !important;
   border: none !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  cursor: pointer !important;
-  transition: transform 0.15s ease, background 0.15s ease !important;
   flex-shrink: 0 !important;
+  cursor: pointer !important;
+  transition: background 0.16s ease, transform 0.15s ease !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 46, 0.4) !important;
 }
 .ns-btn-round:hover {
-  background: #BE123C !important;
+  background: var(--brand-red-hover, #BE123C) !important;
   transform: scale(1.05) !important;
 }
+.nr-modern {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
 .nr-modern .nav-act {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
   color: #F8FAFC !important;
-  font-size: 0.78rem !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
+  text-decoration: none !important;
+  position: relative !important;
+  padding: 6px 8px !important;
+  border-radius: 8px !important;
+  transition: color 0.15s ease, background 0.15s ease !important;
 }
 .nr-modern .nav-act:hover {
-  color: #E11D48 !important;
-}
-.nr-modern .nav-act-ico {
-  color: #F8FAFC;
-  display: inline-flex;
+  color: var(--brand-red, #E11D2E) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 .nr-modern .nav-badge {
-  background: #E11D48 !important;
+  background: var(--brand-red, #E11D2E) !important;
   color: #FFFFFF !important;
-  font-size: 0.62rem !important;
+  font-size: 10px !important;
   font-weight: 800 !important;
-  padding: 1px 5px !important;
+  padding: 1px 6px !important;
   border-radius: 999px !important;
   line-height: 1.2 !important;
+  position: absolute !important;
+  top: -2px !important;
+  right: -2px !important;
 }
 .nav-btn-login {
-  background: #E11D48;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 9999px;
-  padding: 7px 18px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.18s ease, transform 0.15s ease;
-  box-shadow: 0 3px 12px rgba(225, 29, 72, 0.4);
-  text-decoration: none;
+  background: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  padding: 8px 20px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: background 0.18s ease, transform 0.15s ease !important;
+  box-shadow: 0 3px 12px rgba(225, 29, 46, 0.4) !important;
+  text-decoration: none !important;
 }
 .nav-btn-login:hover {
-  background: #BE123C;
-  transform: translateY(-1px);
+  background: var(--brand-red-hover, #BE123C) !important;
+  transform: translateY(-1px) !important;
 }
 
-/* 3. SUBNAV BAR DARK */
+/* 4. SUBNAV BAR DARK & NÚT DANH MỤC 240PX */
 .subnav-bar-dark {
   background: #12141C !important;
   border-bottom: 1px solid #1E2230 !important;
@@ -5139,556 +5187,655 @@ p { margin: 0; }
   align-items: center !important;
   gap: 16px !important;
 }
+.subnav-cat-btn-wrap {
+  width: 240px !important;
+  flex: 0 0 240px !important;
+  box-sizing: border-box !important;
+}
 .cat-pill-red-btn {
-  background: #E11D48 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: var(--brand-red, #E11D2E) !important;
   color: #FFFFFF !important;
   border: none !important;
   border-radius: 8px !important;
-  padding: 8px 16px !important;
-  font-size: 0.82rem !important;
+  padding: 9px 14px !important;
+  font-size: 14px !important;
   font-weight: 800 !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  justify-content: space-between !important;
   transition: background 0.16s ease !important;
   white-space: nowrap !important;
 }
 .cat-pill-red-btn:hover {
-  background: #BE123C !important;
+  background: var(--brand-red-hover, #BE123C) !important;
 }
-.subnav-bar-dark .subnav-links a {
-  color: #AEB4BF !important;
-  font-weight: 600 !important;
-  font-size: 0.82rem !important;
+.subnav-links {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex: 1 !important;
+  gap: 16px !important;
 }
-.subnav-bar-dark .subnav-links a:hover,
-.subnav-bar-dark .subnav-links a.on {
+.subnav-links a {
   color: #FFFFFF !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+  white-space: nowrap !important;
+}
+.subnav-links a:hover,
+.subnav-links a.on {
+  color: var(--brand-red, #E11D2E) !important;
 }
 
-/* 4. CATEGORY SIDEBAR DARK */
+/* 5. HERO 3-COLUMN LAYOUT GRID */
+.modern-hero-sec {
+  padding: 16px 0 0 !important;
+}
+.modern-hero-grid {
+  display: grid !important;
+  grid-template-columns: 240px minmax(0, 1fr) 300px !important;
+  gap: 16px !important;
+  align-items: stretch !important;
+}
+
+/* CỘT TRÁI - SIDEBAR DANH MỤC (240px) */
 .cat-sidebar-dark {
+  width: 240px !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
   background: #191B24 !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 14px !important;
   overflow: hidden !important;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2) !important;
+  box-sizing: border-box !important;
+}
+.cat-sidebar-dark .cat-side-row {
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
 }
 .cat-sidebar-dark .cat-side-item {
   color: #FFFFFF !important;
-  padding: 10px 14px !important;
+  padding: 8px 12px !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
   transition: background 0.15s ease !important;
 }
 .cat-sidebar-dark .cat-side-item:hover,
 .cat-sidebar-dark .cat-side-row.active-row .cat-side-item {
-  background: rgba(225, 29, 72, 0.1) !important;
+  background: rgba(225, 29, 46, 0.08) !important;
 }
 .cat-sidebar-dark .cat-side-row.active-row {
-  border-left: 3.5px solid #E11D48 !important;
+  border-left: 3.5px solid var(--brand-red, #E11D2E) !important;
 }
+/* Icon 22-24px nằm trực tiếp trên nền (KHÔNG ĐẶT TRONG Ô VUÔNG TRẮNG) */
 .cat-sidebar-dark .cat-side-ic {
-  color: #E11D48 !important;
-}
-.cat-sidebar-dark .cat-title {
-  color: #F8FAFC !important;
-  font-weight: 700 !important;
-  font-size: 0.82rem !important;
-}
-.cat-sidebar-dark .cat-sub {
-  color: #94A3B8 !important;
-  font-size: 0.68rem !important;
-}
-.cat-sidebar-dark .cat-side-r {
-  color: #64748B !important;
-}
-
-/* 4.5. MODERN HERO LAYOUT GRID */
-.modern-home-wrap {
-  max-width: 1340px !important;
-  width: 100% !important;
-  margin: 0 auto !important;
-}
-
-.modern-hero-sec {
-  padding: 14px 0 8px !important;
-}
-
-.modern-hero-grid {
-  display: grid !important;
-  grid-template-columns: 205px minmax(0, 1fr) 250px !important;
-  gap: 14px !important;
-  align-items: stretch !important;
-}
-
-/* 5. MODERN HERO BANNER (MSI RAIDER GAMING) */
-.modern-hero-banner .mhb-card {
-  background: radial-gradient(circle at 75% 45%, #2A0F1D 0%, #151824 50%, #0D0E15 100%);
-  border: 1px solid rgba(225, 29, 72, 0.25);
-  border-radius: 14px;
-  position: relative;
-  overflow: hidden;
-  padding: 22px 26px 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 380px;
-}
-.mhb-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.mhb-bestseller-badge {
-  background: #E11D48;
-  color: #FFFFFF;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  padding: 4px 12px;
-  border-radius: 9999px;
-  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.5);
-}
-.mhb-content-wrap {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  align-items: center;
-  gap: 20px;
-}
-.mhb-main-title {
-  font-size: 1.85rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: #FFFFFF;
-  margin: 0 0 6px 0;
-  line-height: 1.15;
-  text-transform: uppercase;
-}
-.mhb-sub-title {
-  font-size: 0.88rem;
-  color: #94A3B8;
-  margin: 0 0 16px 0;
-  font-weight: 500;
-}
-.mhb-specs-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.mhb-spec-box {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 6px 4px;
-  text-align: center;
-}
-.mhb-sb-val {
-  display: block;
-  font-size: 0.74rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  line-height: 1.2;
-}
-.mhb-sb-lbl {
-  display: block;
-  font-size: 0.62rem;
-  color: #94A3B8;
-  margin-top: 2px;
-}
-.mhb-cta-btn {
-  background: #E11D48;
-  color: #FFFFFF;
-  padding: 10px 24px;
-  border-radius: 9999px;
-  font-weight: 800;
-  font-size: 0.84rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  box-shadow: 0 4px 16px rgba(225, 29, 72, 0.45);
-  transition: transform 0.16s ease, background 0.16s ease;
-}
-.mhb-cta-btn:hover {
-  background: #BE123C;
-  transform: translateY(-2px);
-}
-.mhb-visual-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  width: 24px !important;
+  height: 24px !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  border-radius: 0 !important;
+  color: var(--brand-red, #E11D2E) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  margin-right: 8px !important;
 }
-.mhb-laptop-img {
-  width: 100%;
-  max-height: 240px;
-  object-fit: contain;
-  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.75));
-  transition: transform 0.3s ease;
+.cat-sidebar-dark .cat-title {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  line-height: 1.25 !important;
 }
-.mhb-card:hover .mhb-laptop-img {
-  transform: scale(1.04);
+.cat-sidebar-dark .cat-sub {
+  color: #94A3B8 !important;
+  font-size: 11px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.2 !important;
+  margin-top: 1px !important;
 }
-.mhb-nav-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(15, 16, 23, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 5;
-  transition: background 0.15s ease;
-}
-.mhb-nav-arrow:hover {
-  background: #E11D48;
-}
-.mhb-nav-arrow.prev { left: 10px; }
-.mhb-nav-arrow.next { right: 10px; }
-.mhb-bottom-features {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 14px;
-  margin-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.mhb-bf-item {
-  font-size: 0.76rem;
-  color: #CBD5E1;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.cat-sidebar-dark .cat-side-r {
+  color: #64748B !important;
+  font-size: 12px !important;
 }
 
-/* 6. RIGHT COLUMN WIDGETS */
-.modern-right-col {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* CỘT GIỮA: BANNER (360px) + DẢI THƯƠNG HIỆU (55px) */
+.modern-hero-center-col {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  justify-content: space-between !important;
+  min-width: 0 !important;
 }
+
+/* Banner game MSI RAIDER GE78HX 13VH (cao 360px) */
+.mhb-card {
+  height: 360px !important;
+  min-height: 360px !important;
+  box-sizing: border-box !important;
+  background: radial-gradient(circle at 78% 42%, #380C16 0%, #1A0D15 35%, #10121A 70%, #0A0B10 100%) !important;
+  border: 1px solid rgba(225, 29, 46, 0.25) !important;
+  border-radius: 14px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  padding: 20px 24px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+.mhb-bestseller-ribbon {
+  position: absolute !important;
+  top: 14px !important;
+  right: 18px !important;
+  background: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  padding: 4px 14px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 10px rgba(225, 29, 46, 0.5) !important;
+  z-index: 3 !important;
+}
+
+.mhb-main-body {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex: 1 !important;
+  position: relative !important;
+  min-height: 0 !important;
+}
+
+.mhb-left-content {
+  width: 45% !important;
+  z-index: 2 !important;
+}
+
+.mhb-main-title {
+  font-size: 38px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  color: #FFFFFF !important;
+  margin: 6px 0 4px 0 !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
+.mhb-sub-title {
+  font-size: 15px !important;
+  color: #94A3B8 !important;
+  margin: 0 0 10px 0 !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+}
+
+/* Hàng thông số 4 mục trong 1 khung bo tròn chung */
+.mhb-specs-pill-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  padding: 5px 12px !important;
+  gap: 10px !important;
+}
+
+.mhb-sp-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.mhb-sp-ico {
+  color: var(--brand-red, #E11D2E) !important;
+  display: inline-flex !important;
+}
+
+.mhb-sp-val {
+  display: block !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  line-height: 1.15 !important;
+}
+
+.mhb-sp-lbl {
+  display: block !important;
+  font-size: 9.5px !important;
+  color: #94A3B8 !important;
+}
+
+.mhb-sp-sep {
+  width: 1px !important;
+  height: 22px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.mhb-cta-btn {
+  background: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
+  padding: 8px 22px !important;
+  border-radius: 9999px !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  text-decoration: none !important;
+  box-shadow: 0 4px 14px rgba(225, 29, 46, 0.45) !important;
+  transition: transform 0.16s ease, background 0.16s ease !important;
+}
+
+.mhb-cta-btn:hover {
+  background: var(--brand-red-hover, #BE123C) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Cột phải banner: Ảnh laptop LỚN chiếm ~55% */
+.mhb-laptop-col {
+  width: 55% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  position: relative !important;
+}
+
+.mhb-hero-laptop-img {
+  width: 100% !important;
+  max-height: 245px !important;
+  object-fit: contain !important;
+  transform: scale(1.05) !important;
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.85)) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.mhb-card:hover .mhb-hero-laptop-img {
+  transform: scale(1.09) !important;
+}
+
+/* Đáy banner: 4 tính năng chia đều 4 cột */
+.mhb-bottom-features {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.mhb-bf-item {
+  font-size: 11.5px !important;
+  color: #CBD5E1 !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.mhb-nav-arrow {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: rgba(15, 16, 23, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  z-index: 5 !important;
+  transition: background 0.15s ease !important;
+}
+
+.mhb-nav-arrow:hover {
+  background: var(--brand-red, #E11D2E) !important;
+}
+.mhb-nav-arrow.prev { left: 10px !important; }
+.mhb-nav-arrow.next { right: 10px !important; }
+
+/* Dải THƯƠNG HIỆU NỔI BẬT (55px) */
+.brand-logos-card {
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  height: 55px !important;
+  min-height: 55px !important;
+  box-sizing: border-box !important;
+  padding: 0 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  margin: 0 !important;
+}
+
+.blc-title {
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.04em !important;
+  color: #0F172A !important;
+  white-space: nowrap !important;
+}
+
+.blc-logos-track {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex: 1 !important;
+  gap: 12px !important;
+}
+
+.blc-item img {
+  height: 22px !important;
+  max-width: 75px !important;
+  object-fit: contain !important;
+  transition: transform 0.2s ease !important;
+}
+
+.blc-item:hover img {
+  transform: scale(1.12) !important;
+}
+
+/* CỘT PHẢI (300px) */
+.modern-right-col {
+  width: 300px !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  box-sizing: border-box !important;
+}
+
 .mrc-user-card {
-  background: #191B24;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  background: #191B24 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
 }
 .mrc-user-top {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .mrc-avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #E11D48;
-  color: #FFFFFF;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  background: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+  box-shadow: 0 2px 8px rgba(225, 29, 46, 0.4) !important;
 }
 .mrc-user-greeting {
-  font-weight: 800;
-  font-size: 0.84rem;
-  color: #FFFFFF;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  color: #FFFFFF !important;
 }
 .mrc-user-sub {
-  font-size: 0.7rem;
-  color: #94A3B8;
-  margin-top: 1px;
+  font-size: 11px !important;
+  color: #94A3B8 !important;
+  margin-top: 1px !important;
 }
 .mrc-btn-row {
-  display: flex;
-  gap: 8px;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
 }
 .mrc-btn-login {
-  background: #E11D48;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  flex: 1;
-  text-align: center;
-  cursor: pointer;
-  transition: background 0.15s ease;
+  background: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 6px 0 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
 }
 .mrc-btn-login:hover {
-  background: #BE123C;
+  background: var(--brand-red-hover, #BE123C) !important;
 }
 .mrc-btn-reg {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  flex: 1;
-  text-align: center;
-  cursor: pointer;
-  transition: background 0.15s ease;
+  background: #232734 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+  border-radius: 6px !important;
+  padding: 6px 0 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
 }
 .mrc-btn-reg:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12) !important;
 }
+
 .mrc-promo-card,
 .mrc-tradein-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 10px 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
 }
 .mrc-promo-row,
 .mrc-tradein-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #F1F5F9;
-  text-decoration: none;
-  color: inherit;
-  transition: transform 0.14s ease;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 6px 0 !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: transform 0.14s ease !important;
 }
 .mrc-promo-row:last-child {
-  border-bottom: none;
+  border-bottom: none !important;
 }
 .mrc-promo-row:hover,
 .mrc-tradein-row:hover {
-  transform: translateX(3px);
+  transform: translateX(3px) !important;
 }
 .mrc-pr-icon-red {
-  font-size: 1.15rem;
-  color: #E11D48;
-  flex-shrink: 0;
+  width: 22px !important;
+  height: 22px !important;
+  color: var(--brand-red, #E11D2E) !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 .mrc-pr-text {
-  flex: 1;
-  min-width: 0;
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 .mrc-pr-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #1E293B;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: #1E293B !important;
+  white-space: normal !important;
+  line-height: 1.3 !important;
 }
 .mrc-pr-desc {
-  font-size: 0.68rem;
-  color: #64748B;
-  margin-top: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 11px !important;
+  color: #64748B !important;
+  margin-top: 1px !important;
+  white-space: normal !important;
+  line-height: 1.25 !important;
 }
 .mrc-pr-arrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #E11D48;
-  white-space: nowrap;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: var(--brand-red, #E11D2E) !important;
+  white-space: nowrap !important;
 }
+
 .mrc-mini-banner {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
 }
 .mrc-mb-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  text-decoration: none;
-  color: inherit;
-  gap: 10px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 8px 12px !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  gap: 8px !important;
 }
 .mrc-mb-badge {
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: #E11D48;
-  text-transform: uppercase;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: var(--brand-red, #E11D2E) !important;
+  text-transform: uppercase !important;
 }
 .mrc-mb-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #1E293B;
-  margin: 2px 0 4px;
-  line-height: 1.25;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #1E293B !important;
+  margin: 1px 0 2px !important;
+  white-space: normal !important;
+  line-height: 1.3 !important;
 }
 .mrc-mb-cta {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #E11D48;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: var(--brand-red, #E11D2E) !important;
 }
 .mrc-mb-thumb {
-  width: 58px;
-  height: 58px;
-  flex-shrink: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #F8FAFC;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 58px !important;
+  height: 52px !important;
+  flex-shrink: 0 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
 }
 .mrc-mb-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 
-/* 7. BRAND LOGOS STRIP */
-.brand-logos-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 14px;
-  padding: 14px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-  margin-top: 14px;
-  gap: 24px;
-}
-.blc-title {
-  font-weight: 900;
-  font-size: 0.88rem;
-  letter-spacing: 0.05em;
-  color: #0F172A;
-  white-space: nowrap;
-}
-.blc-logos-track {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex: 1;
-  gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-.blc-item {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.16s ease;
-}
-.blc-item img {
-  max-height: 22px;
-  max-width: 80px;
-  object-fit: contain;
-  transition: transform 0.2s ease, filter 0.2s ease;
-}
-.blc-item:hover img {
-  transform: scale(1.1);
-}
-
-/* 8. BEST SELLERS 5 COLUMNS & TABS */
+/* SECTION SẢN PHẨM BÁN CHẠY (5 CỘT) */
 .best-sellers-sec {
-  margin-top: 24px;
+  margin: 16px 0 !important;
 }
 .bss-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  gap: 16px;
-  flex-wrap: wrap;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 12px !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
 }
 .bss-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
 }
 .bss-title {
-  font-size: 1.15rem;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: #0F172A;
-  margin: 0;
-  text-transform: uppercase;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.01em !important;
+  color: #0F172A !important;
+  margin: 0 !important;
+  text-transform: uppercase !important;
 }
 .bss-tabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
 }
 .bss-tab {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  color: #475569;
-  border-radius: 9999px;
-  padding: 6px 14px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.16s ease;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #475569 !important;
+  border-radius: 9999px !important;
+  padding: 6px 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.16s ease !important;
 }
 .bss-tab:hover {
-  border-color: #E11D48;
-  color: #E11D48;
+  border-color: var(--brand-red, #E11D2E) !important;
+  color: var(--brand-red, #E11D2E) !important;
 }
 .bss-tab.active {
-  background: #E11D48;
-  border-color: #E11D48;
-  color: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+  background: var(--brand-red, #E11D2E) !important;
+  border-color: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 46, 0.4) !important;
 }
 .bss-nav-arrows {
-  display: flex;
-  gap: 6px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 .bss-arrow {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  color: #475569;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #475569 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
 }
 .bss-arrow:hover {
-  background: #E11D48;
-  border-color: #E11D48;
-  color: #FFFFFF;
+  background: var(--brand-red, #E11D2E) !important;
+  border-color: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
 }
+
 .pg-5cols {
   display: grid !important;
   grid-template-columns: repeat(5, 1fr) !important;
   gap: 14px !important;
 }
 
-/* 9. MODERN PRODUCT CARD */
 .pc-modern-card {
   background: #FFFFFF !important;
   border: 1px solid #E2E8F0 !important;
@@ -5707,303 +5854,344 @@ p { margin: 0; }
   border-color: #FDA4AF !important;
 }
 .pc-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 6px;
-  z-index: 2;
-  text-transform: capitalize;
+  position: absolute !important;
+  top: 8px !important;
+  left: 8px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  z-index: 2 !important;
+  text-transform: capitalize !important;
 }
-.pc-badge-sale {
-  background: #E11D48;
-  color: #FFFFFF;
-}
+.pc-badge-sale,
 .pc-badge-bestseller,
 .pc-badge-hot {
-  background: #E11D48;
-  color: #FFFFFF;
+  background: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
 }
 .pc-badge-new {
-  background: #2563EB;
-  color: #FFFFFF;
+  background: #2563EB !important;
+  color: #FFFFFF !important;
 }
 .pc-modern-card .pc-img-box {
-  width: 100%;
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 8px;
+  width: 100% !important;
+  height: 140px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  margin-bottom: 8px !important;
 }
 .pc-modern-card .pc-img-link {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 .pc-modern-card .pc-img-link img {
-  max-width: 100%;
-  max-height: 130px;
-  object-fit: contain;
-  transition: transform 0.2s ease;
+  max-width: 100% !important;
+  max-height: 130px !important;
+  object-fit: contain !important;
+  transition: transform 0.2s ease !important;
 }
 .pc-modern-card:hover .pc-img-link img {
-  transform: scale(1.05);
+  transform: scale(1.05) !important;
 }
 .pc-actions-floating {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  position: absolute !important;
+  top: 6px !important;
+  right: 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  opacity: 0 !important;
+  transition: opacity 0.2s ease !important;
 }
 .pc-modern-card:hover .pc-actions-floating {
-  opacity: 1;
+  opacity: 1 !important;
 }
 .pc-modern-card .pc-title {
-  font-size: 0.84rem;
-  font-weight: 800;
-  color: #0F172A;
-  margin: 0 0 4px 0;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-decoration: none;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  margin: 0 0 4px 0 !important;
+  line-height: 1.35 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-decoration: none !important;
 }
 .pc-modern-card .pc-title:hover {
-  color: #E11D48;
+  color: var(--brand-red, #E11D2E) !important;
 }
 .pc-spec-summary {
-  font-size: 0.7rem;
-  color: #64748B;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 8px;
-  font-weight: 500;
+  font-size: 11px !important;
+  color: #64748B !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin-bottom: 6px !important;
+  font-weight: 500 !important;
 }
 .pc-price-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 6px;
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+  margin-bottom: 6px !important;
 }
 .pc-modern-card .pc-price {
-  font-size: 0.96rem;
-  font-weight: 900;
-  color: #E11D48;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  color: var(--brand-red, #E11D2E) !important;
 }
 .pc-modern-card .pc-old {
-  font-size: 0.74rem;
-  color: #94A3B8;
-  text-decoration: line-through;
+  font-size: 12px !important;
+  color: #94A3B8 !important;
+  text-decoration: line-through !important;
 }
 .pc-footer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px solid #F1F5F9;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-top: 8px !important;
+  border-top: 1px solid #F1F5F9 !important;
 }
 .pc-rating-wrap {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  color: #F59E0B;
-  font-size: 0.74rem;
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  color: #F59E0B !important;
+  font-size: 12px !important;
 }
 .pc-rev-count {
-  font-size: 0.68rem;
-  color: #94A3B8;
-  margin-left: 2px;
+  font-size: 11px !important;
+  color: #94A3B8 !important;
+  margin-left: 2px !important;
 }
 .pc-cart-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: #E11D48;
-  color: #FFFFFF;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.16s ease, transform 0.15s ease;
-  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.4);
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background: var(--brand-red, #E11D2E) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background 0.16s ease, transform 0.15s ease !important;
+  box-shadow: 0 2px 6px rgba(225, 29, 46, 0.4) !important;
 }
 .pc-cart-btn:hover {
-  background: #BE123C;
-  transform: scale(1.08);
+  background: var(--brand-red-hover, #BE123C) !important;
+  transform: scale(1.08) !important;
 }
 
-/* 10. MACBOOK PRO WIDESCREEN BANNER */
+/* 7. BANNER NGANG MACBOOK PRO 16" M3 PRO (~120px) */
+.macbook-banner-sec {
+  margin: 16px 0 !important;
+}
 .macbook-showcase-banner {
-  background: radial-gradient(circle at 18% 50%, #2E0E1B 0%, #151824 55%, #0B0D14 100%);
-  border: 1px solid rgba(225, 29, 72, 0.25);
-  border-radius: 14px;
-  padding: 24px 36px;
-  display: grid;
-  grid-template-columns: 240px 1.4fr 1.1fr;
-  gap: 28px;
-  align-items: center;
-  margin-top: 24px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  position: relative;
-  overflow: hidden;
+  background: radial-gradient(circle at 18% 50%, #201018 0%, #10121A 65%, #0A0B10 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 14px 24px !important;
+  display: grid !important;
+  grid-template-columns: 200px 1.35fr 1fr !important;
+  gap: 20px !important;
+  align-items: center !important;
+  min-height: 120px !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 .msb-left {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 .msb-img {
-  max-height: 160px;
-  width: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6));
+  max-height: 100px !important;
+  width: 100% !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.6)) !important;
 }
 .msb-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 2px !important;
 }
 .msb-apple-logo {
-  font-size: 1.25rem;
+  font-size: 1.25rem !important;
 }
 .msb-title {
-  font-size: 1.35rem;
-  font-weight: 900;
-  color: #FFFFFF;
-  margin: 0;
+  font-size: 1.3rem !important;
+  font-weight: 900 !important;
+  color: #FFFFFF !important;
+  margin: 0 !important;
 }
 .msb-sub {
-  font-size: 0.84rem;
-  color: #94A3B8;
-  margin: 0 0 16px 0;
+  font-size: 12.5px !important;
+  color: #94A3B8 !important;
+  margin: 0 0 10px 0 !important;
 }
 .msb-specs-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
+  display: flex !important;
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+  flex-wrap: wrap !important;
 }
 .msb-spec-chip {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 4px 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
 }
 .msb-sc-ico {
-  font-size: 1rem;
+  font-size: 13px !important;
 }
 .msb-sc-v {
-  font-size: 0.76rem;
-  font-weight: 800;
-  color: #FFFFFF;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
 }
 .msb-sc-l {
-  font-size: 0.62rem;
-  color: #94A3B8;
+  font-size: 10px !important;
+  color: #94A3B8 !important;
 }
 .msb-cta-btn {
-  background: #1E2230;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
-  padding: 8px 20px;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  transition: all 0.16s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  padding: 6px 18px !important;
+  border-radius: 9999px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  text-decoration: none !important;
+  transition: all 0.16s ease !important;
 }
 .msb-cta-btn:hover {
-  background: #E11D48;
-  border-color: #E11D48;
+  background: var(--brand-red, #E11D2E) !important;
+  border-color: var(--brand-red, #E11D2E) !important;
 }
 .msb-right {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
 }
 .msb-feature-col {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #CBD5E1;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #CBD5E1 !important;
 }
 .msb-feat-ico {
-  font-size: 1.15rem;
+  font-size: 1rem !important;
 }
 
-/* RESPONSIVE CHO THIẾT KẾ MỚI */
-@media (max-width: 1200px) {
-  .pg-5cols {
-    grid-template-columns: repeat(4, 1fr) !important;
-  }
-  .macbook-showcase-banner {
-    grid-template-columns: 180px 1.2fr 1fr;
-    padding: 20px;
+/* 8. NÚT NỔI CỐ ĐỊNH GÓC DƯỚI PHẢI */
+.fab-contact-wrap,
+.quick-cmp-bar {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  z-index: 90 !important;
+}
+
+/* 9. RESPONSIVE CHUẨN THIẾT KẾ */
+@media (min-width: 1280px) {
+  .modern-hero-grid {
+    grid-template-columns: 240px minmax(0, 1fr) 300px !important;
+    gap: 16px !important;
   }
 }
 
-@media (max-width: 992px) {
+@media (min-width: 768px) and (max-width: 1279px) {
+  .modern-hero-grid {
+    grid-template-columns: 240px 1fr !important;
+    gap: 16px !important;
+  }
+  .modern-right-col {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    height: auto !important;
+  }
   .pg-5cols {
     grid-template-columns: repeat(3, 1fr) !important;
   }
   .macbook-showcase-banner {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-  .msb-title-row,
-  .msb-specs-row {
-    justify-content: center;
-  }
-  .msb-right {
-    margin-top: 14px;
+    grid-template-columns: 160px 1.2fr 1fr !important;
+    padding: 16px !important;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+  .modern-hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .cat-sidebar-dark {
+    display: none !important;
+  }
+  .modern-right-col {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    height: auto !important;
+  }
   .pg-5cols {
     grid-template-columns: repeat(2, 1fr) !important;
   }
-  .tib-inner {
-    flex-direction: column;
-    gap: 4px;
-    text-align: center;
+  .search-box-wrap {
+    max-width: 100% !important;
+    margin: 10px 0 !important;
   }
-  .tib-left {
-    justify-content: center;
-    gap: 10px;
+  .wrap,
+  .modern-home-wrap {
+    padding: 0 14px !important;
   }
-  .mhb-content-wrap {
-    grid-template-columns: 1fr;
-    text-align: center;
+  .macbook-showcase-banner {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
   }
-  .mhb-specs-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .msb-title-row,
+  .msb-specs-row {
+    justify-content: center !important;
   }
-  .brand-logos-card {
-    flex-direction: column;
-    align-items: flex-start;
+  .msb-right {
+    margin-top: 14px !important;
+  }
+  .mhb-main-body {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+  .mhb-left-content {
+    width: 100% !important;
+  }
+  .mhb-laptop-col {
+    width: 100% !important;
+    margin-top: 10px !important;
+  }
+  .mhb-specs-pill-wrap {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
   }
 }
+

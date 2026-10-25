@@ -42,7 +42,7 @@ function renderCategorySidebar(cats = [], allProducts = []) {
   const SIDEBAR_ITEMS = [
     {
       name: 'Laptop Gaming',
-      sub: 'RTX 4060, 4070, 4080, 4090...',
+      sub: 'RTX 4050, 4060, 4070...',
       href: '#/products?cat=2',
       icon: 'cpu',
       brands: ['ASUS', 'MSI', 'Acer', 'Lenovo', 'Dell'],
@@ -51,7 +51,7 @@ function renderCategorySidebar(cats = [], allProducts = []) {
     },
     {
       name: 'MacBook',
-      sub: 'MacBook Air, Pro, M1, M2, M3...',
+      sub: 'Air, Pro, M1, M2, M3...',
       href: '#/products?brand=Apple',
       icon: 'spark',
       brands: ['Apple'],
@@ -67,7 +67,7 @@ function renderCategorySidebar(cats = [], allProducts = []) {
     },
     {
       name: 'Laptop Sinh Viên',
-      sub: 'Giá tốt, cấu hình ổn định...',
+      sub: 'Giá tốt, cấu hình ổn định',
       href: '#/products?cat=5',
       icon: 'tag',
       brands: ['Acer', 'ASUS', 'HP', 'Lenovo'],
@@ -75,7 +75,7 @@ function renderCategorySidebar(cats = [], allProducts = []) {
     },
     {
       name: 'Đồ Họa - Kỹ Thuật',
-      sub: 'Render, AutoCAD, Photoshop...',
+      sub: 'Render, AutoCAD, Photoshop',
       href: '#/products?cat=4',
       icon: 'box',
       brands: ['Dell', 'Apple', 'ASUS', 'Lenovo'],
@@ -83,7 +83,7 @@ function renderCategorySidebar(cats = [], allProducts = []) {
     },
     {
       name: 'Màn Hình - PC',
-      sub: 'Màn hình 2K/4K, PC Gaming...',
+      sub: 'Màn hình 2K/4K, PC Gaming',
       href: '#/products?q=man+hinh',
       icon: 'scale',
       brands: ['LG', 'Dell', 'ASUS', 'Samsung'],
@@ -99,7 +99,7 @@ function renderCategorySidebar(cats = [], allProducts = []) {
     },
     {
       name: 'Laptop Cũ',
-      sub: 'Chất lượng, bảo hành uy tín...',
+      sub: 'Chất lượng, bảo hành uy tín',
       href: '#/products?q=cu',
       icon: 'refresh',
       brands: ['Apple', 'Dell', 'Lenovo', 'HP'],
@@ -107,7 +107,7 @@ function renderCategorySidebar(cats = [], allProducts = []) {
     },
     {
       name: 'Dịch Vụ',
-      sub: 'Nâng cấp, sửa chữa, vệ sinh...',
+      sub: 'Nâng cấp, sửa chữa, vệ sinh',
       href: '#/services',
       icon: 'book',
       brands: ['Vệ sinh Laptop', 'Cài đặt Windows', 'Nâng cấp RAM/SSD'],
@@ -129,14 +129,14 @@ function renderCategorySidebar(cats = [], allProducts = []) {
           return `<div class="cat-side-row ${item.active ? 'active-row' : ''}">
             <a href="${item.href}" class="cat-side-item">
               <div class="cat-side-l">
-                <span class="cat-side-ic">${ic(item.icon, 16)}</span>
+                <span class="cat-side-ic">${ic(item.icon, 22)}</span>
                 <div class="cat-side-txt">
                   <span class="cat-title">${esc(item.name)}</span>
                   <small class="cat-sub">${esc(item.sub)}</small>
                 </div>
               </div>
               <div class="cat-side-r">
-                ${ic('chevR', 13)}
+                ${ic('chevR', 14)}
               </div>
             </a>
             <div class="cat-mega-flyout">
