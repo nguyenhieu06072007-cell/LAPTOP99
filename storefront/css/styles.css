@@ -5290,12 +5290,18 @@ p { margin: 0; }
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  color: var(--brand-red, #E11D2E) !important;
+  color: #CBD5E1 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
   margin-right: 8px !important;
+  transition: color 0.2s ease !important;
+}
+
+.cat-sidebar-dark .cat-side-row.active-row .cat-side-ic,
+.cat-sidebar-dark .cat-side-row:hover .cat-side-ic {
+  color: var(--brand-red, #E11D2E) !important;
 }
 .cat-sidebar-dark .cat-title {
   color: #FFFFFF !important;
@@ -5992,6 +5998,32 @@ p { margin: 0; }
 }
 
 /* 7. BANNER NGANG MACBOOK PRO 16" M3 PRO (~120px) */
+.macbook-showcase-card {
+  display: block !important;
+  width: 100% !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #0A0B10 !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease !important;
+  text-decoration: none !important;
+  margin: 10px 0 !important;
+}
+
+.macbook-showcase-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 14px 40px rgba(225, 29, 46, 0.25) !important;
+  border-color: rgba(225, 29, 46, 0.4) !important;
+}
+
+.msb-banner-full-img {
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  object-fit: cover !important;
+}
+
 .macbook-banner-sec {
   margin: 16px 0 !important;
 }

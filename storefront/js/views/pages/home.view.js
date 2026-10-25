@@ -581,66 +581,14 @@ async function viewHome() {
       </div>
     </section>
 
-    <!-- BANNER NGANG TOÀN KHUNG: MACBOOK PRO 16" M3 PRO SANG TRỌNG -->
+    <!-- BANNER NGANG TOÀN KHUNG: MACBOOK PRO 16" M3 PRO SANG TRỌNG CHUẨN THIẾT KẾ THAM CHIẾU -->
     <section class="sec reveal-on-scroll">
-      <div class="macbook-showcase-banner">
-        <div class="msb-left">
-          <img src="${resolveAssetUrl('/uploads/banner_macbook_laptop_seamless.png')}" alt="MacBook Pro 16 M3 Pro" class="msb-img">
-        </div>
-        <div class="msb-center">
-          <div class="msb-title-row">
-            <span class="msb-apple-logo">🍎</span>
-            <h3 class="msb-title">MacBook Pro 16" M3 Pro</h3>
-          </div>
-          <p class="msb-sub">Hiệu năng vượt trội - Sáng tạo không giới hạn</p>
-          
-          <div class="msb-specs-row">
-            <div class="msb-spec-chip">
-              <span class="msb-sc-ico">⚡</span>
-              <div>
-                <div class="msb-sc-v">M3 Pro</div>
-                <div class="msb-sc-l">Chip Apple</div>
-              </div>
-            </div>
-            <div class="msb-spec-chip">
-              <span class="msb-sc-ico">🧠</span>
-              <div>
-                <div class="msb-sc-v">18GB</div>
-                <div class="msb-sc-l">Unified Memory</div>
-              </div>
-            </div>
-            <div class="msb-spec-chip">
-              <span class="msb-sc-ico">💾</span>
-              <div>
-                <div class="msb-sc-v">512GB</div>
-                <div class="msb-sc-l">SSD</div>
-              </div>
-            </div>
-          </div>
-
-          <a href="#/products?brand=Apple" class="msb-cta-btn">
-            <span>Khám phá ngay</span> &rarr;
-          </a>
-        </div>
-        <div class="msb-right">
-          <div class="msb-feature-col">
-            <div class="msb-feat-ico">⚡</div>
-            <div class="msb-feat-txt">Hiệu suất mạnh mẽ</div>
-          </div>
-          <div class="msb-feature-col">
-            <div class="msb-feat-ico">🖥️</div>
-            <div class="msb-feat-txt">Màn hình Liquid Retina XDR</div>
-          </div>
-          <div class="msb-feature-col">
-            <div class="msb-feat-ico">🔋</div>
-            <div class="msb-feat-txt">Pin bền bỉ cả ngày</div>
-          </div>
-          <div class="msb-feature-col">
-            <div class="msb-feat-ico">💎</div>
-            <div class="msb-feat-txt">Thiết kế tinh tế</div>
-          </div>
-        </div>
-      </div>
+      <a href="#/products?brand=Apple" class="macbook-showcase-card" title="Khám phá MacBook Pro 16 M3 Pro">
+        <img src="${resolveAssetUrl('/uploads/banner_macbook_pro_showcase_hd.png?v=20261025_03')}"
+             alt="MacBook Pro 16 inch M3 Pro - Hiệu năng vượt trội, Sáng tạo không giới hạn"
+             class="msb-banner-full-img"
+             loading="lazy">
+      </a>
     </section>
 
     <!-- BANNER NGANG FLASH SALE KÈM ĐỒNG HỒ ĐẾM NGƯỢC (ĐỒNG BỘ TỪ ADMIN CMS) -->
