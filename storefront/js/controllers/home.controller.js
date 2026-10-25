@@ -483,5 +483,162 @@ const HomeController = {
       sEl.textContent = String(diff % 60).padStart(2, '0');
     }, 1000);
   },
+
+  /* ========================================================================
+     SHOWROOM 3D CONTROLS & INTERACTION
+     ======================================================================== */
+  initHero3D(canvasId = 'hero-3d-canvas', options = {}) {
+    if (typeof Hero3DService !== 'undefined' && Hero3DService.init) {
+      Hero3DService.init(canvasId, options);
+    }
+  },
+
+  setHero3DColor(colorName) {
+    if (typeof Hero3DService !== 'undefined' && Hero3DService.setColor) {
+      Hero3DService.setColor(colorName);
+      document.querySelectorAll('.sh-color-btn').forEach((btn) => {
+        if (btn.dataset.color === colorName) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
+  },
+
+  setHero3DView(viewMode) {
+    if (typeof Hero3DService !== 'undefined' && Hero3DService.setView) {
+      Hero3DService.setView(viewMode);
+      document.querySelectorAll('.sh-view-btn').forEach((btn) => {
+        if (btn.dataset.view === viewMode) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
+  },
+
+  /* ========================================================================
+     RULE-BASED LAPTOP FINDER ("Gợi ý chọn laptop")
+     ======================================================================== */
+  finderState: {
+    demand: 'all',
+    budget: 'all',
+    brand: 'all',
+  },
+
+  setFinderOpt(type, val) {
+    this.finderState = this.finderState || { demand: 'all', budget: 'all', brand: 'all' };
+    this.finderState[type] = val;
+
+    // Update active class on buttons
+    document.querySelectorAll(`.sh-opt-btn[data-type="${type}"]`).forEach((b) => {
+      b.classList.toggle('active', b.dataset.val === val);
+    });
+
+    this.renderFinderResults();
+  },
+
+  renderFinderResults() {
+    const box = document.getElementById('sh-finder-results-grid');
+    if (!box) return;
+
+    const all = cache.products || [];
+    const { demand, budget, brand } = this.finderState || { demand: 'all', budget: 'all', brand: 'all' };
+
+    // Score and filter real DB products
+    const scored = all.map((p) => {
+      let score = 70;
+      const reasons = [];
+
+      // Budget check
+      if (budget === 'under15') {
+        if (p.price < 15000000) { score += 20; reasons.push('Dưới 15 Triệu'); }
+        else { score -= 30; }
+      } else if (budget === '15to25') {
+        if (p.price >= 15000000 && p.price <= 25000000) { score += 20; reasons.push('15 - 25 Triệu'); }
+        else { score -= 20; }
+      } else if (budget === '25to35') {
+        if (p.price > 25000000 && p.price <= 35000000) { score += 20; reasons.push('25 - 35 Triệu'); }
+        else { score -= 20; }
+      } else if (budget === 'over35') {
+        if (p.price > 35000000) { score += 20; reasons.push('Phân khúc cao cấp'); }
+        else { score -= 20; }
+      }
+
+      // Brand check
+      if (brand && brand !== 'all') {
+        if (p.brand && p.brand.toLowerCase() === brand.toLowerCase()) {
+          score += 15;
+          reasons.push('Đúng thương hiệu ' + p.brand);
+        } else {
+          score -= 40;
+        }
+      }
+
+      // Demand check
+      if (demand === 'office') {
+        if (p.cat === '1' || p.cat === '6' || p.brand === 'HP' || p.brand === 'Dell') {
+          score += 20;
+          reasons.push('Văn phòng, mỏng nhẹ, pin tốt');
+        }
+      } else if (demand === 'gaming') {
+        if (p.cat === '2' || (p.gpu && p.gpu.includes('RTX'))) {
+          score += 20;
+          reasons.push('Đồ họa RTX gaming');
+        } else {
+          score -= 30;
+        }
+      } else if (demand === 'student') {
+        if (p.cat === '5' || p.price <= 20000000) {
+          score += 20;
+          reasons.push('Giá tốt cho sinh viên');
+        }
+      } else if (demand === 'creator') {
+        if (p.cat === '4' || p.brand === 'Apple' || (p.ram && parseInt(p.ram) >= 16)) {
+          score += 20;
+          reasons.push('Màn hình đẹp, RAM lớn');
+        }
+      } else if (demand === 'slim') {
+        if (p.cat === '3' || p.brand === 'Apple') {
+          score += 20;
+          reasons.push('Mỏng nhẹ cao cấp');
+        }
+      }
+
+      const finalScore = Math.min(99, Math.max(65, score));
+      return { product: p, score: finalScore, reasons };
+    });
+
+    scored.sort((a, b) => b.score - a.score || b.product.soldCount - a.product.soldCount);
+    const top4 = scored.slice(0, 4);
+
+    if (top4.length === 0) {
+      box.innerHTML = `<div class="card center" style="padding:24px;grid-column:1/-1">Chưa tìm thấy máy phù hợp tiêu chí này. Hãy thử nới lỏng mức ngân sách hoặc chọn Tất cả thương hiệu.</div>`;
+      return;
+    }
+
+    box.innerHTML = top4
+      .map(({ product: p, score, reasons }) => {
+        return `<div class="sh-match-card-wrap" style="position:relative">
+          <div style="position:absolute;top:10px;left:10px;z-index:3">
+            <span class="sh-match-badge">🎯 ${score}% Phù hợp</span>
+          </div>
+          ${pcard(p)}
+          ${reasons.length ? `<div style="font-size:0.72rem;color:var(--text-sub);padding:4px 8px;background:var(--bg-sub);border-radius:6px;margin-top:6px;text-align:center">💡 ${esc(reasons.join(' · '))}</div>` : ''}
+        </div>`;
+      })
+      .join('');
+  },
+
+  /* ========================================================================
+     VOUCHER 1-CLICK COPY
+     ======================================================================== */
+  copyVoucher(code) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(() => {
+        toast(`Đã lưu mã giảm giá: ${code}! Mã sẽ áp dụng tại bước Giỏ hàng.`);
+      }).catch(() => {
+        toast(`Mã giảm giá: ${code}`);
+      });
+    } else {
+      toast(`Mã giảm giá: ${code}`);
+    }
+  },
 };
 

@@ -1,50 +1,55 @@
 :root {
-  /* Nền và bề mặt chuẩn CellphoneS */
-  --bg-main: #F4F4F5;
-  --bg-sub: #E5E7EB;
+  /* Showroom Công Nghệ Hiện Đại Design Tokens */
+  --bg-main: #F5F5F0;
+  --bg-sub: #EDF0E9;
   --bg-card: #FFFFFF;
-  --header-bg: #D70018;
-  --footer-bg: #111318;
-  --topbar-bg: #B80014;
-  --border-default: #D1D5DB;
-  --border-dark: #343943;
+  --header-bg: #152F38;
+  --footer-bg: #0F232A;
+  --topbar-bg: #10242B;
+  --border-default: #DCE3D9;
+  --border-dark: #223F49;
   --border-hover: #CBD5E1;
+  --border-main: #DCE3D9;
 
   /* Tương thích biến hệ thống */
-  --bg: #F4F4F5;
+  --bg: #F5F5F0;
   --card: #FFFFFF;
-  --card2: #F9FAFB;
-  --line: #D1D5DB;
-  --line2: #E5E7EB;
-  --line-dark: #343943;
+  --card2: #F0F3EC;
+  --line: #DCE3D9;
+  --line2: #E3E8DE;
+  --line-dark: #223F49;
 
   /* Màu chữ */
-  --text-title: #171A21;
-  --text-body: #374151;
-  --text-sub: #6B7280;
-  --text-dark: #F9FAFB;
-  --text-dark-sub: #AEB4BF;
+  --text-title: #152F38;
+  --text-body: #152F38;
+  --text-sub: #667871;
+  --text-dark: #F5F5F0;
+  --text-dark-sub: #9FB2A9;
 
   /* Tương thích biến chữ */
-  --fg: #171A21;
-  --mut: #6B7280;
-  --dim: #9CA3AF;
+  --fg: #152F38;
+  --mut: #667871;
+  --dim: #8FA29A;
 
-  /* Màu thương hiệu Laptop99 / CellphoneS Red */
-  --brand-red: #D70018;
-  --brand-red-hover: #BE123C;
-  --brand-red-light: #FFF1F2;
-  --brand-red-border: #FDA4AF;
+  /* Màu thương hiệu & Điểm nhấn Showroom */
+  --brand-red: #DB563D;
+  --brand-red-hover: #C4462E;
+  --brand-red-light: #FDF2F0;
+  --brand-red-border: #F7D0C8;
+  --accent-sage: #688376;
+  --accent-sage-light: #EBF1ED;
+  --accent-sage-dark: #4F685C;
+  --font-main: 'Manrope', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* Tương thích biến thương hiệu */
-  --acc: #D70018;
-  --acc2: #BE123C;
-  --acc-light: #FFF1F2;
-  --acc-border: #FDA4AF;
-  --promo: #D70018;
-  --promo-bg: #FFF1F2;
-  --student-bg: #FFF1F2;
-  --student-fg: #BE123C;
+  --acc: #DB563D;
+  --acc2: #C4462E;
+  --acc-light: #FDF2F0;
+  --acc-border: #F7D0C8;
+  --promo: #DB563D;
+  --promo-bg: #FDF2F0;
+  --student-bg: #EBF1ED;
+  --student-fg: #688376;
 
   /* Màu trạng thái (Section 2) */
   --ok: #15803D;
@@ -115,7 +120,7 @@ html {
 }
 body {
   margin: 0;
-  font-family: 'Inter', 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-main);
   background: var(--bg-main);
   color: var(--text-body);
   overflow-x: hidden;
@@ -6228,3 +6233,871 @@ p { margin: 0; }
   }
 }
 
+
+
+/* ==========================================================================
+   LAPTOP99 SHOWROOM 3D & MODERN TECHNOLOGY EXPERIENCE STYLES
+   - Palette: #F5F5F0 (ivory), #EDF0E9 (sub), #152F38 (navy), #667871 (slate),
+              #688376 (sage), #DB563D (terracotta red), #DCE3D9 (border)
+   - 3D Hero Studio: Three.js interactive canvas, color switcher, angles
+   - Rule-based interactive Laptop Finder ("Gợi ý chọn laptop")
+   - Customer Collections, 5-col Best Sellers, Vouchers, Trust Policies
+   ========================================================================== */
+
+/* 1. HERO 3D SHOWROOM SECTION */
+.showroom-hero-sec {
+  padding: 32px 0 24px;
+}
+
+.showroom-hero-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 20px;
+  padding: 36px 40px;
+  box-shadow: 0 12px 36px rgba(21, 47, 56, 0.05);
+  display: grid;
+  grid-template-columns: 1.05fr 1.15fr;
+  gap: 36px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.sh-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-sub);
+  color: var(--text-title);
+  border: 1px solid var(--border-main);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+
+.sh-hero-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-sage);
+  display: inline-block;
+  box-shadow: 0 0 0 3px rgba(104, 131, 118, 0.2);
+}
+
+.sh-hero-title {
+  font-size: 2.35rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text-title);
+  margin-bottom: 14px;
+  letter-spacing: -0.02em;
+}
+
+.sh-hero-title span {
+  color: var(--brand-red);
+}
+
+.sh-hero-desc {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--text-sub);
+  margin-bottom: 22px;
+  max-width: 520px;
+}
+
+.sh-hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.sh-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FAFAFA;
+  border: 1px solid var(--border-main);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-title);
+}
+
+.sh-tag-pill span.icon {
+  color: var(--accent-sage);
+}
+
+.sh-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.sh-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--brand-red);
+  color: #FFFFFF !important;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 13px 26px;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(219, 86, 61, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  text-decoration: none;
+}
+
+.sh-btn-primary:hover {
+  background: var(--brand-red-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(219, 86, 61, 0.36);
+}
+
+.sh-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  color: var(--text-title) !important;
+  border: 1.5px solid var(--border-main);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 12px 22px;
+  border-radius: 999px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  text-decoration: none;
+}
+
+.sh-btn-secondary:hover {
+  background: var(--bg-sub);
+  border-color: var(--accent-sage);
+}
+
+/* 3D Material Color Switcher */
+.sh-controls-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-main);
+}
+
+.sh-control-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sh-control-lbl {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  min-width: 90px;
+}
+
+.sh-color-options {
+  display: flex;
+  gap: 8px;
+}
+
+.sh-color-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-sub);
+  border: 1.5px solid transparent;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-title);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sh-color-btn:hover {
+  border-color: var(--accent-sage);
+}
+
+.sh-color-btn.active {
+  border-color: var(--brand-red);
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.sh-color-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+.sh-view-options {
+  display: flex;
+  gap: 6px;
+}
+
+.sh-view-btn {
+  background: var(--bg-sub);
+  border: 1px solid var(--border-main);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.sh-view-btn:hover {
+  color: var(--text-title);
+  border-color: var(--accent-sage);
+}
+
+.sh-view-btn.active {
+  background: var(--text-title);
+  color: #FFFFFF;
+  border-color: var(--text-title);
+}
+
+/* 3D Canvas Container */
+.sh-hero-canvas-col {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.sh-canvas-wrap {
+  width: 100%;
+  height: 480px;
+  background: radial-gradient(circle at center, #F0F4EC 0%, #E3E9DF 100%);
+  border: 1px solid var(--border-main);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
+  touch-action: pan-y;
+}
+
+.sh-canvas-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  outline: none;
+  cursor: grab;
+}
+
+.sh-canvas-wrap canvas:active {
+  cursor: grabbing;
+}
+
+/* Floating Spec Chips around 3D Laptop */
+.sh-chip {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(220, 227, 217, 0.9);
+  padding: 8px 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 6px 16px rgba(21, 47, 56, 0.08);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-title);
+  pointer-events: none;
+  z-index: 2;
+  transition: transform 0.25s ease;
+}
+
+.sh-chip-icon {
+  font-size: 1.05rem;
+}
+
+.sh-chip.top-left { top: 16px; left: 16px; }
+.sh-chip.top-right { top: 16px; right: 16px; }
+.sh-chip.bot-left { bottom: 44px; left: 16px; }
+.sh-chip.bot-right { bottom: 44px; right: 16px; }
+
+.sh-orbit-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(21, 47, 56, 0.75);
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+  z-index: 2;
+}
+
+/* 2. BRANDS SECTION */
+.showroom-brands-sec {
+  padding: 16px 0;
+}
+
+.sh-brands-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 14px;
+}
+
+.sh-brand-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 12px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.sh-brand-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-sage);
+  box-shadow: 0 6px 16px rgba(21, 47, 56, 0.06);
+}
+
+.sh-brand-logo-img {
+  height: 24px;
+  max-width: 80px;
+  object-fit: contain;
+}
+
+.sh-brand-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.sh-brand-sub {
+  font-size: 0.68rem;
+  color: var(--text-sub);
+  text-align: center;
+}
+
+/* 3. CATEGORIES SECTION */
+.showroom-cats-sec {
+  padding: 20px 0;
+}
+
+.sh-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.sh-sec-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-title);
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.sh-sec-sub {
+  font-size: 0.88rem;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+.sh-cats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+}
+
+.sh-cat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-decoration: none;
+  transition: all 0.22s ease;
+}
+
+.sh-cat-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--brand-red);
+  box-shadow: 0 8px 20px rgba(219, 86, 61, 0.12);
+}
+
+.sh-cat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--bg-sub);
+  color: var(--accent-sage);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.sh-cat-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-title);
+}
+
+.sh-cat-desc {
+  font-size: 0.74rem;
+  color: var(--text-sub);
+  line-height: 1.4;
+}
+
+/* 4. BEST SELLERS 5 COLS GRID */
+.showroom-bestsellers-sec {
+  padding: 24px 0;
+}
+
+.sh-filter-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sh-filter-tab {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-title);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.sh-filter-tab:hover {
+  border-color: var(--accent-sage);
+}
+
+.sh-filter-tab.active {
+  background: var(--brand-red);
+  color: #FFFFFF;
+  border-color: var(--brand-red);
+}
+
+/* 5. INTERACTIVE LAPTOP FINDER ("Gợi ý chọn laptop") */
+.showroom-finder-sec {
+  padding: 28px 0;
+}
+
+.sh-finder-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 20px;
+  padding: 32px 36px;
+  box-shadow: 0 10px 30px rgba(21, 47, 56, 0.05);
+}
+
+.sh-finder-wizard {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  margin: 24px 0 28px;
+}
+
+.sh-finder-step {
+  background: var(--bg-sub);
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.sh-step-num {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--accent-sage);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.sh-step-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-title);
+  margin-bottom: 14px;
+}
+
+.sh-opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sh-opt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-main);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-title);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+}
+
+.sh-opt-btn:hover {
+  border-color: var(--accent-sage);
+}
+
+.sh-opt-btn.active {
+  border-color: var(--brand-red);
+  background: var(--brand-red-light);
+  color: var(--brand-red);
+}
+
+.sh-finder-results {
+  background: #FAFAF8;
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.sh-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sh-results-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-title);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sh-match-badge {
+  background: var(--accent-sage-light);
+  color: var(--accent-sage);
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(104, 131, 118, 0.3);
+}
+
+/* 6. CUSTOMER COLLECTIONS SECTION */
+.showroom-collections-sec {
+  padding: 24px 0;
+}
+
+.sh-collections-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.sh-col-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 16px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-decoration: none;
+  transition: all 0.22s ease;
+}
+
+.sh-col-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-sage);
+  box-shadow: 0 10px 24px rgba(21, 47, 56, 0.08);
+}
+
+.sh-col-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--bg-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.sh-col-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-title);
+}
+
+.sh-col-desc {
+  font-size: 0.82rem;
+  color: var(--text-sub);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.sh-col-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--brand-red);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 7. VOUCHERS SECTION */
+.showroom-vouchers-sec {
+  padding: 20px 0;
+}
+
+.sh-vouchers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.sh-voucher-card {
+  background: var(--bg-card);
+  border: 1px dashed var(--brand-red-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background-image: radial-gradient(circle at -4px center, transparent 8px, #FFFFFF 9px),
+                    radial-gradient(circle at 100% center, transparent 8px, #FFFFFF 9px);
+}
+
+.sh-vc-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sh-vc-code {
+  font-family: monospace;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--brand-red);
+}
+
+.sh-vc-desc {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+
+.sh-vc-btn {
+  background: var(--brand-red-light);
+  color: var(--brand-red);
+  border: 1px solid var(--brand-red-border);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+}
+
+.sh-vc-btn:hover {
+  background: var(--brand-red);
+  color: #FFFFFF;
+}
+
+/* 8. TRUST POLICIES */
+.showroom-trust-sec {
+  padding: 24px 0;
+}
+
+.sh-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.sh-trust-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  padding: 20px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.sh-trust-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--accent-sage-light);
+  color: var(--accent-sage);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.sh-trust-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-title);
+  margin-bottom: 4px;
+}
+
+.sh-trust-desc {
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  line-height: 1.45;
+}
+
+/* 9. TECH NEWS */
+.showroom-news-sec {
+  padding: 24px 0 36px;
+}
+
+.sh-news-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.sh-news-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.22s ease;
+}
+
+.sh-news-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(21, 47, 56, 0.08);
+}
+
+.sh-news-thumb {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background: var(--bg-sub);
+}
+
+.sh-news-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.sh-news-title {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--text-title);
+  line-height: 1.4;
+}
+
+.sh-news-date {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+}
+
+.sh-news-summary {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* RESPONSIVE BREAKPOINTS FOR SHOWROOM */
+@media (max-width: 1100px) {
+  .showroom-hero-card {
+    grid-template-columns: 1fr;
+    padding: 28px 24px;
+  }
+  .sh-canvas-wrap {
+    height: 400px;
+  }
+  .sh-brands-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .sh-cats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .sh-finder-wizard {
+    grid-template-columns: 1fr;
+  }
+  .sh-collections-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sh-trust-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sh-news-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .sh-hero-title {
+    font-size: 1.75rem;
+  }
+  .sh-canvas-wrap {
+    height: 320px;
+  }
+  .sh-brands-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sh-cats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sh-collections-grid {
+    grid-template-columns: 1fr;
+  }
+  .sh-vouchers-grid {
+    grid-template-columns: 1fr;
+  }
+  .sh-trust-grid {
+    grid-template-columns: 1fr;
+  }
+  .sh-controls-panel {
+    align-items: flex-start;
+  }
+  .sh-control-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

@@ -106,6 +106,9 @@ async function render() {
   // Cleanup active timers before re-render
   A.pauseHero();
   A.pauseTrust();
+  if (typeof Hero3DService !== 'undefined' && Hero3DService.destroy) {
+    Hero3DService.destroy();
+  }
 
   if (isNewPage) {
     startRouteProgress();
@@ -166,6 +169,14 @@ async function render() {
   if ((r.parts[0] || '') === '') {
     A.resumeHero();
     A.resumeTrust();
+    if (document.getElementById('hero-3d-canvas')) {
+      setTimeout(() => {
+        A.initHero3D('hero-3d-canvas');
+      }, 50);
+    }
+    if (document.getElementById('sh-finder-results-grid')) {
+      A.renderFinderResults();
+    }
     if (r.q && r.q.nopopup) sessionStorage.setItem('laptop99_promo_popup_seen', '1');
     if (!sessionStorage.getItem('laptop99_promo_popup_seen')) {
       setTimeout(() => {
