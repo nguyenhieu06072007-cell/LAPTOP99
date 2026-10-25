@@ -145,7 +145,7 @@ async function viewHome() {
           <!-- Cột Phải: Không gian Canvas 3D tương tác & Thẻ thông số nổi -->
           <div class="sh-hero-canvas-col">
             <div class="sh-canvas-wrap">
-              <canvas id="hero-3d-canvas" aria-label="Mô hình laptop 3D tương tác Laptop99"></canvas>
+              <div id="hero-3d-canvas" class="hero-3d-stage" style="width:100%;height:100%;position:relative" aria-label="Mô hình laptop 3D tương tác Laptop99"></div>
 
               <!-- Thẻ thông tin nổi 4 góc -->
               <div class="sh-chip top-left">

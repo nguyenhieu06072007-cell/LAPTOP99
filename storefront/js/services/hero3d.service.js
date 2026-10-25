@@ -135,6 +135,7 @@ const Hero3DService = (function () {
     ctx.fill();
 
     const tex = new THREE.CanvasTexture(canvas);
+    tex.flipY = false;
     tex.anisotropy = 4;
     return tex;
   }
@@ -362,16 +363,29 @@ const Hero3DService = (function () {
     camera.lookAt(0, 0.1, 0);
 
     // 3. Renderer with antialiasing & tone mapping
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    const isDirectCanvas = containerEl.tagName && containerEl.tagName.toLowerCase() === 'canvas';
+    if (isDirectCanvas) {
+      renderer = new THREE.WebGLRenderer({
+        canvas: containerEl,
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+      });
+    } else {
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+      });
+      containerEl.innerHTML = '';
+      containerEl.appendChild(renderer.domElement);
+    }
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    containerEl.innerHTML = '';
-    containerEl.appendChild(renderer.domElement);
 
     // 4. Studio Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
@@ -544,6 +558,7 @@ const Hero3DService = (function () {
     loader.load(
       resolvedUrl,
       (texture) => {
+        texture.flipY = false;
         texture.anisotropy = 4;
         texture.generateMipmaps = true;
         screenMesh.material.map = texture;
@@ -551,7 +566,7 @@ const Hero3DService = (function () {
       },
       undefined,
       (err) => {
-        console.warn('Could not load screen texture:', err);
+        console.warn('Could not load screen texture, keeping default wallpaper:', err);
       }
     );
   }
