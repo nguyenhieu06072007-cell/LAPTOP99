@@ -5330,7 +5330,7 @@ p { margin: 0; }
 
 /* Banner game MSI RAIDER GE78HX 13VH (cao 360px) */
 .mhb-card {
-  height: 360px !important;
+  flex: 1 1 auto !important;
   min-height: 360px !important;
   box-sizing: border-box !important;
   background: radial-gradient(circle at 78% 42%, #380C16 0%, #1A0D15 35%, #10121A 70%, #0A0B10 100%) !important;
@@ -5375,13 +5375,14 @@ p { margin: 0; }
 }
 
 .mhb-main-title {
-  font-size: 38px !important;
+  font-size: clamp(22px, 2.1vw, 29px) !important;
   font-weight: 900 !important;
-  letter-spacing: -0.02em !important;
+  letter-spacing: -0.01em !important;
   color: #FFFFFF !important;
   margin: 6px 0 4px 0 !important;
-  line-height: 1.1 !important;
+  line-height: 1.15 !important;
   text-transform: uppercase !important;
+  white-space: nowrap !important;
 }
 
 .mhb-sub-title {
