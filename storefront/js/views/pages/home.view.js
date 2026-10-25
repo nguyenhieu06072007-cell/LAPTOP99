@@ -446,7 +446,7 @@ async function viewHome() {
               </div>
 
               <div class="mhb-laptop-col">
-                <img src="${resolveAssetUrl('/uploads/msi_raider_laptop_seamless.png')}" alt="MSI Raider GE78HX" class="mhb-hero-laptop-img">
+                <img src="${resolveAssetUrl('/uploads/msi_raider_laptop_seamless.png?v=20261025_02')}" alt="MSI Raider GE78HX" class="mhb-hero-laptop-img">
               </div>
             </div>
 
