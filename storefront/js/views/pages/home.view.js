@@ -1,11 +1,5 @@
 /* ==========================================================================
-   HOME VIEW (MVC): "AURA × LAPTOP99" FLAGSHIP STOREFRONT & 3D WEBGL STUDIO
-   - Visual Direction: Deep Obsidian Space (#04060D -> #0B1328)
-   - UI Material: VisionOS Optical Glass (backdrop-filter: blur(28px) saturate(190%))
-   - Headings: Cormorant Garamond Serif (Champagne gold gradient #FFFDF9 -> #D2BA96)
-   - Technical Specs: Plus Jakarta Sans / Inter
-   - Hero 100vh Viewport (1:1 Ratio to AURA X Specification)
-   - Bento Dark Luxury Storefront (100% Authentic Laptop99 DB Data Preserved)
+   HOME VIEW (MVC): CellphoneS-Inspired Homepage (Sections 5, 6, 7, 8, 9, 10, 11)
    ========================================================================== */
 
 async function viewHome() {
@@ -26,790 +20,1020 @@ async function viewHome() {
   const dbBanners = bannersRes.data || [];
   cache.banners = dbBanners;
 
-  // Real DB Product Categorization
+  // Phân nhóm sản phẩm thực tế từ CSDL MySQL
   const macbooks = all.filter((p) => p.brand === 'Apple');
-  const gamingProds = all.filter((p) => p.cat === '2' || (p.gpu && p.gpu.includes('RTX')));
+  const slimProds = all.filter((p) => p.cat === '3' || p.brand === 'Apple');
+  const gamingProds = all.filter((p) => p.cat === '2');
   const officeProds = all.filter((p) => p.cat === '1' || p.cat === '6');
-  const studentProds = all.filter((p) => p.cat === '5' || p.price <= 20000000);
-  const creatorProds = all.filter((p) => p.cat === '4' || p.brand === 'Apple' || (p.ram && parseInt(p.ram) >= 16));
-  const bestSellers = [...all].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+  const studentProds = all.filter((p) => p.cat === '5');
+  const creatorProds = all.filter((p) => p.cat === '4');
+  const hotDeals = all.filter((p) => p.old > p.price).slice(0, 8);
+  const bestSellers = [...all].sort((a, b) => b.soldCount - a.soldCount).slice(0, 8);
+  const newArrivals = [...all].sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0) || b.rawId - a.rawId).slice(0, 4);
 
-  // Dynamic Best Seller Filter Tab
-  const activeBssTab = cache.bssTab || 'all';
-  let bssProducts = bestSellers;
-  if (activeBssTab === 'gaming') bssProducts = gamingProds.length ? gamingProds : bestSellers;
-  else if (activeBssTab === 'macbook') bssProducts = macbooks.length ? macbooks : bestSellers;
-  else if (activeBssTab === 'office') bssProducts = officeProds.length ? officeProds : bestSellers;
-  else if (activeBssTab === 'student') bssProducts = studentProds.length ? studentProds : bestSellers;
-  else if (activeBssTab === 'creator') bssProducts = creatorProds.length ? creatorProds : bestSellers;
-  if (!bssProducts.length) bssProducts = all.slice(0, 5);
+  // Sản phẩm đại diện mặc định nếu CSDL banners trống
+  const slideMacProd = macbooks[0] || slimProds[0] || all[0];
+  const slideGameProd = gamingProds[0] || all[1] || all[0];
+  const slideOfficeProd = officeProds[0] || all[2] || all[0];
+  const slidePromoProd = hotDeals[0] || all[3] || all[0];
 
-  const cartCount = db.cart.reduce((s, i) => s + i.qty, 0);
-  const wishCount = (db.wishlist || []).length || 3;
-  const cmpCount = (db.compare || []).length;
+  // Phân loại banner theo vị trí từ CSDL
+  const heroBanners = dbBanners.filter((b) => !b.position || b.position === 'hero');
+  const flashSaleBanner = dbBanners.find((b) => b.position === 'flash_sale');
+  const brandBanners = dbBanners.filter((b) => b.position === 'brand_showcase');
+  const hotDealBanner = dbBanners.find((b) => b.position === 'hot_deal');
+
+  let heroCampaigns = [];
+  const bannersForHero = heroBanners.length > 0 ? heroBanners : (dbBanners.length > 0 ? dbBanners.slice(0, 4) : []);
+  if (bannersForHero.length > 0) {
+    heroCampaigns = bannersForHero.map((b) => {
+      const linkedProd = b.product_id ? P('p' + b.product_id) || all[0] : all[0];
+      const priceVal =
+        Number(b.custom_price) ||
+        Number(b.product_sale_price) ||
+        Number(b.product_base_price) ||
+        Number(b.price) ||
+        (linkedProd ? linkedProd.price : 22990000);
+      const oldVal =
+        Number(b.custom_old_price) ||
+        Number(b.product_base_price) ||
+        Number(b.old_price) ||
+        (linkedProd ? linkedProd.old : 0);
+      const imgUrl = resolveAssetUrl(b.image_url || b.product_thumb || (linkedProd ? linkedProd.thumbnail : ''));
+      const specList = String(b.specs_json || b.specs || '')
+        .split(/[|,]/)
+        .map((x) => x.trim())
+        .filter(Boolean);
+      const finalSpecs = specList.length
+        ? specList
+        : linkedProd
+        ? [linkedProd.cpu, 'RAM ' + linkedProd.ram, linkedProd.ssd]
+        : ['Chính hãng VN/A', 'Bảo hành S/N', 'Giao nhanh 2H'];
+
+      const badgeCls = b.badge_style === 'blue' ? '' : b.badge_style || '';
+      const prodIdVal = b.product_id || (linkedProd ? linkedProd.id : null);
+      const targetUrl = prodIdVal ? `#/product/${prodIdVal}` : (b.cta_link || '#/products');
+
+      return {
+        id: b.id,
+        badge: b.badge_text || b.badge || '⚡ Chiến dịch nổi bật',
+        badgeCls,
+        theme: b.bg_theme || 'blue',
+        titleHtml: `${esc(b.title || '')} ${b.highlight_text ? `<span>${esc(b.highlight_text)}</span>` : ''}`,
+        desc: b.subtitle || '',
+        ctaText: b.cta_text || 'Khám phá ngay',
+        ctaHref: targetUrl,
+        targetUrl,
+        tabTitle: b.tab_title || b.title || 'Chiến dịch',
+        tabSub: b.tab_sub || b.highlight_text || 'Ưu đãi hấp dẫn',
+        specs: finalSpecs,
+        price: priceVal,
+        old: oldVal,
+        imgUrl,
+        prodId: prodIdVal || 'p1',
+        prodName: b.product_name || (linkedProd ? linkedProd.name : b.title),
+        prodBrand: b.product_brand || (linkedProd ? linkedProd.brand : 'Laptop'),
+        prod: linkedProd,
+        autoplayMs: Number(b.autoplay_ms) || 3000,
+        imageMode: b.image_mode || 'background',
+        contentPosition: b.content_position || 'left',
+        imagePosition: b.image_position || 'center center',
+        overlayStyle: b.overlay_style || 'gradient_dark',
+      };
+    });
+  } else {
+    heroCampaigns = [
+      {
+        badge: 'CHÍNH HÃNG APPLE VN/A',
+        badgeCls: '',
+        theme: 'blue',
+        titleHtml: 'MacBook Chính Hãng – <span>Hiệu Năng Vượt Trội</span>',
+        desc: 'Thiết kế nhôm mỏng nhẹ, chip Apple M3 siêu mượt, đặc quyền HSSV giảm thêm 1.000.000₫.',
+        ctaText: 'Xem chi tiết',
+        ctaHref: '#/products?brand=Apple',
+        targetUrl: '#/products?brand=Apple',
+        tabTitle: 'MACBOOK AIR M2',
+        tabSub: 'Mỏng nhẹ, mạnh mẽ',
+        specs: ['Apple M3 Chip', 'RAM 16GB Unified', 'SSD 512GB Siêu Tốc'],
+        price: 27990000,
+        old: 31990000,
+        imgUrl: resolveAssetUrl('/uploads/products/real-macbook-pro.jpg'),
+        prodId: 'p16',
+        prodName: 'MacBook Air M3 Chính Hãng',
+        prodBrand: 'Apple',
+        prod: slideMacProd,
+        autoplayMs: 5000,
+      },
+      {
+        badge: 'GEFORCE RTX 40-SERIES',
+        badgeCls: 'red',
+        theme: 'indigo',
+        titleHtml: 'Chiến Game Đỉnh Cao – <span>Bứt Phá Mọi Trận Đấu</span>',
+        desc: 'Hiệu năng đồ họa NVIDIA RTX 4060, màn hình 165Hz+, trả góp 0% tặng Balo & Gear Gaming.',
+        ctaText: 'Xem chi tiết',
+        ctaHref: '#/products?cat=2',
+        targetUrl: '#/products?cat=2',
+        tabTitle: 'GAMING ROG RTX',
+        tabSub: 'Màn hình 165Hz+',
+        specs: ['Core i7-14650HX', 'GeForce RTX 4060', 'RAM 16GB DDR5', 'SSD 1TB Gen4'],
+        price: 26990000,
+        old: 30990000,
+        imgUrl: resolveAssetUrl('/uploads/products/real-asus-rog.jpg'),
+        prodId: 'p83',
+        prodName: 'Laptop Gaming ASUS ROG RTX 4060',
+        prodBrand: 'Gaming',
+        prod: slideGameProd,
+        autoplayMs: 5000,
+      },
+      {
+        badge: 'CHUẨN DOANH NHÂN',
+        badgeCls: 'green',
+        theme: 'emerald',
+        titleHtml: 'Laptop Doanh Nhân – <span>Bền Bỉ Mỗi Ngày</span>',
+        desc: 'Mỏng nhẹ cao cấp, màn OLED 3K, bảo hành ProSupport tận nơi 24/7.',
+        ctaText: 'Xem chi tiết',
+        ctaHref: '#/products?cat=1',
+        targetUrl: '#/products?cat=1',
+        tabTitle: 'DELL XPS OLED',
+        tabSub: 'Chuẩn doanh nhân',
+        specs: ['Intel Core Ultra 7', 'OLED 3K Chuẩn Màu', 'RAM 32GB', 'SSD 1TB NVMe'],
+        price: 34990000,
+        old: 38990000,
+        imgUrl: resolveAssetUrl('/uploads/products/real-dell-xps.jpg'),
+        prodId: 'p24',
+        prodName: 'Dell XPS 13 OLED Core Ultra 7',
+        prodBrand: 'Dell',
+        prod: slideOfficeProd,
+        autoplayMs: 5000,
+      },
+      {
+        badge: 'NEXT-GEN AI PC',
+        badgeCls: 'amber',
+        theme: 'rose',
+        titleHtml: 'Đại Tiệc Laptop AI – <span>Giảm Sâu Đến 35%</span>',
+        desc: 'Trải nghiệm NPU AI thông minh hỗ trợ sáng tạo, màn hình OLED 2.8K siêu mượt.',
+        ctaText: 'Xem chi tiết',
+        ctaHref: '#/promos',
+        targetUrl: '#/promos',
+        tabTitle: 'ASUS ZENBOOK AI',
+        tabSub: 'OLED 2.8K siêu mượt',
+        specs: ['NPU AI Boost', 'Màn OLED 2.8K', 'RAM 32GB', 'Trọng lượng 1.2kg'],
+        price: 24990000,
+        old: 28990000,
+        imgUrl: resolveAssetUrl('/uploads/products/real-asus-zenbook.jpg'),
+        prodId: 'p16',
+        prodName: 'ASUS Zenbook OLED AI Ultrabook',
+        prodBrand: 'ASUS',
+        prod: slidePromoProd,
+        autoplayMs: 5000,
+      },
+    ];
+  }
+
+  cache.heroAutoplayMs = heroCampaigns[0]?.autoplayMs || 3000;
+  const curHero = Math.min(cache.heroIdx || 0, Math.max(0, heroCampaigns.length - 1));
+  const highlightDeal = hotDeals[0] || all[0];
   const u = me();
 
+  const brandLogos = [
+    { name: 'Apple', slug: 'apple' },
+    { name: 'Dell', slug: 'dell' },
+    { name: 'ASUS', slug: 'asus' },
+    { name: 'Lenovo', slug: 'lenovo' },
+    { name: 'HP', slug: 'hp' },
+    { name: 'MSI', slug: 'msi' },
+    { name: 'Acer', slug: 'acer' },
+    { name: 'LG', slug: 'lg' },
+    { name: 'Microsoft', slug: 'microsoft' },
+  ];
+
+  const viewedProds = (db.viewed || []).map((id) => P(id)).filter(Boolean).slice(0, 4);
+
+  // Dữ liệu Chương trình quảng cáo riêng của từng Hãng máy tính (Manufacturer Campaigns)
+  const BRAND_CAMPAIGNS = {
+    Apple: {
+      brand: 'Apple',
+      tabLabel: 'Apple MacBook',
+      badge: 'CHÍNH HÃNG APPLE VN/A · AUTHORIZED RESELLER',
+      title: 'Tuần Lễ MacBook Chính Hãng — Đặc Quyền S-Student Giảm Thêm 1.000.000₫',
+      desc: 'Trải nghiệm sức mạnh chip Apple M2 / M3 siêu mượt, thời lượng pin tới 18 giờ. Hỗ trợ Thu cũ lên đời MacBook trợ giá tới 2.500.000₫ & Trả góp 0%.',
+      bg: 'linear-gradient(135deg, #0F172A 0%, #1E293B 55%, #334155 100%)',
+      perks: ['Giảm thêm 500K – 1 Triệu cho HSSV', 'Thu cũ đổi mới trợ giá 2.5 Triệu', 'Bảo hành chính hãng Apple VN/A 12 tháng'],
+      ctaHref: '#/products?brand=Apple',
+      realImg: resolveAssetUrl('/uploads/products/real-macbook-pro.jpg'),
+    },
+    ASUS: {
+      brand: 'ASUS',
+      tabLabel: 'ASUS / ROG Gaming',
+      badge: 'ASUS OFFICIAL CAMPAIGN · TUẦN LỄ ASUS',
+      title: 'Tuần Lễ Laptop ASUS — Sắm Máy Cân Bài, Chiến Game Đỉnh Cao',
+      desc: 'Từ dòng Zenbook OLED mỏng nhẹ sang trọng, Vivobook đa nhiệm cho tới chiến thần ROG Strix / TUF Gaming RTX 40-Series tần số quét 144Hz–240Hz.',
+      bg: 'linear-gradient(135deg, #171A21 0%, #25161C 50%, #BE123C 100%)',
+      perks: ['Tặng Balo ASUS ROG + Chuột Gaming', 'Giảm thêm 500K khi thanh toán QR', 'Bảo hành chính hãng ASUS 24 tháng'],
+      ctaHref: '#/products?brand=ASUS',
+      realImg: resolveAssetUrl('/uploads/products/real-asus-rog.jpg'),
+    },
+    Lenovo: {
+      brand: 'Lenovo',
+      tabLabel: 'Lenovo Legion / AI',
+      badge: 'LENOVO AI PC FEST · SMARTER TECHNOLOGY',
+      title: 'Lễ Hội Laptop AI Lenovo — Đỉnh Cao ThinkPad, IdeaPad &amp; LOQ Gaming',
+      desc: 'Bàn phím trứ danh, độ bền chuẩn quân đội Mỹ MIL-STD-810H và tản nhiệt ColdFront mát lạnh trên dòng Lenovo Legion / LOQ Gaming.',
+      bg: 'linear-gradient(135deg, #171A21 0%, #201E2B 50%, #E11D48 100%)',
+      perks: ['Tặng gói bảo hành Lenovo Premier Support', 'Giảm thêm 3% cho thành viên S-Student', 'Trả góp 0% duyệt hồ sơ 5 phút'],
+      ctaHref: '#/products?brand=Lenovo',
+      realImg: resolveAssetUrl('/uploads/products/real-lenovo-legion.jpg'),
+    },
+    MSI: {
+      brand: 'MSI',
+      tabLabel: 'MSI Gaming Series',
+      badge: 'MSI GAMING FESTIVAL · TRUE GAMING',
+      title: 'Đại Tiệc MSI Gaming — Sức Mạnh Rồng Đỏ GeForce RTX 40-Series',
+      desc: 'Chiến mượt mọi tựa game AAA &amp; Esports cùng MSI Katana, Cyborg và Stealth. Tặng ngay bộ Gear Gaming chính hãng cực chất.',
+      bg: 'linear-gradient(135deg, #111318 0%, #1F171A 50%, #9F1239 100%)',
+      perks: ['Tặng Balo MSI Dragon + Chuột Gaming', 'Miễn phí vệ sinh & tra keo tản nhiệt trọn đời', 'Trợ giá lên đời Gaming 2 Triệu'],
+      ctaHref: '#/products?brand=MSI',
+      realImg: resolveAssetUrl('/uploads/products/real-msi-modern.jpg'),
+    },
+    Dell: {
+      brand: 'Dell',
+      tabLabel: 'Dell ProSupport',
+      badge: 'DELL BRAND WEEK · BỀN BỈ VƯỢT THỜI GIAN',
+      title: 'Tuần Lễ Thương Hiệu Dell — Chuẩn Mực Doanh Nhân &amp; Văn Phòng',
+      desc: 'Sở hữu Dell Inspiron, Vostro và tuyệt tác XPS với dịch vụ bảo hành tận nơi ProSupport 24/7 uy tín hàng đầu.',
+      bg: 'linear-gradient(135deg, #0C4A6E 0%, #0284C7 55%, #1E3A8A 100%)',
+      perks: ['Bảo hành tận nơi Dell ProSupport', 'Tặng phần mềm Office + Túi chống sốc', 'Giảm trực tiếp tới 2.000.000₫'],
+      ctaHref: '#/products?brand=Dell',
+      realImg: resolveAssetUrl('/uploads/products/real-dell-xps.jpg'),
+    },
+    HP: {
+      brand: 'HP',
+      tabLabel: 'HP Pavilion / OMEN',
+      badge: 'HP TECHNOLOGY WEEK · THIẾT KẾ TINH TẾ',
+      title: 'Chuyên Trang Quảng Cáo HP — Mỏng Nhẹ Thanh Lịch, Hiệu Năng Mạnh Mẽ',
+      desc: 'Đa dạng lựa chọn từ HP Pavilion, Envy mỏng nhẹ cho tới HP Victus Gaming tản nhiệt OMEN Tempest mạnh mẽ.',
+      bg: 'linear-gradient(135deg, #134E4A 0%, #0D9488 55%, #0369A1 100%)',
+      perks: ['Ưu đãi HSSV giảm ngay 500.000₫', 'Tặng Chuột không dây HP chính hãng', 'Đổi mới trong 15 ngày đầu'],
+      ctaHref: '#/products?brand=HP',
+      realImg: resolveAssetUrl('/uploads/products/real-hp-omen-victus.jpg'),
+    },
+    Acer: {
+      brand: 'Acer',
+      tabLabel: 'Acer Predator / Swift',
+      badge: 'ACER PREDATOR DAY · BẢO HÀNH 3S1',
+      title: 'Ngày Hội Acer Chính Hãng — Quốc Dân Gaming Nitro 5 &amp; Swift Go AI',
+      desc: 'Hiệu năng trên giá thành tốt nhất phân khúc cùng chế độ bảo hành nhanh 3S1 độc quyền từ Acer Việt Nam.',
+      bg: 'linear-gradient(135deg, #14532D 0%, #16A34A 55%, #0F172A 100%)',
+      perks: ['Bảo hành nhanh 3S1 (Quá 3 ngày 1 đổi 1)', 'Tặng Balo Gaming Predator SUV', 'Trả góp 0% qua thẻ & CCCD'],
+      ctaHref: '#/products?brand=Acer',
+      realImg: resolveAssetUrl('/uploads/products/real-acer-predator.jpg'),
+    },
+  };
+
+  // Tích hợp dữ liệu Chuyên trang Thương hiệu từ Database (Admin CMS)
+  const BG_THEME_MAP = {
+    dark: 'linear-gradient(135deg, #0F172A 0%, #1E293B 55%, #334155 100%)',
+    crimson: 'linear-gradient(135deg, #18090C 0%, #2A0F17 50%, #BE123C 100%)',
+    indigo: 'linear-gradient(135deg, #171A21 0%, #25161C 50%, #BE123C 100%)',
+    blue: 'linear-gradient(135deg, #0C4A6E 0%, #0284C7 55%, #1E3A8A 100%)',
+    emerald: 'linear-gradient(135deg, #064E3B 0%, #059669 55%, #0F172A 100%)',
+    purple: 'linear-gradient(135deg, #2E1065 0%, #7C3AED 55%, #0F172A 100%)',
+    amber: 'linear-gradient(135deg, #451A03 0%, #B45309 55%, #1C1917 100%)',
+  };
+
+  brandBanners.forEach((dbB) => {
+    if (!dbB.brand) return;
+    const matchKey = Object.keys(BRAND_CAMPAIGNS).find(
+      (k) => k.toLowerCase() === dbB.brand.toLowerCase()
+    );
+    if (matchKey && BRAND_CAMPAIGNS[matchKey]) {
+      const c = BRAND_CAMPAIGNS[matchKey];
+      if (dbB.badge_text) c.badge = dbB.badge_text;
+      if (dbB.title) c.title = dbB.title;
+      if (dbB.subtitle) c.desc = dbB.subtitle;
+      if (dbB.image_url) c.realImg = resolveAssetUrl(dbB.image_url);
+      if (dbB.cta_link) c.ctaHref = dbB.cta_link;
+      if (dbB.cta_text) c.ctaText = dbB.cta_text;
+      if (dbB.secondary_cta_text) c.secondaryCtaText = dbB.secondary_cta_text;
+      if (dbB.secondary_cta_link) c.secondaryCtaLink = dbB.secondary_cta_link;
+      if (dbB.bg_theme && BG_THEME_MAP[dbB.bg_theme]) c.bg = BG_THEME_MAP[dbB.bg_theme];
+      if (dbB.product_id) c.linkedProd = P('p' + dbB.product_id) || all.find((p) => p.rawId === Number(dbB.product_id));
+      if (dbB.custom_price) c.customPrice = Number(dbB.custom_price);
+      if (dbB.perks_json) {
+        try {
+          const arr = typeof dbB.perks_json === 'string' ? JSON.parse(dbB.perks_json) : dbB.perks_json;
+          if (Array.isArray(arr) && arr.length) c.perks = arr;
+        } catch (e) {}
+      }
+    }
+  });
+
+  const activeBrandKey = cache.activeBrandCampaign && BRAND_CAMPAIGNS[cache.activeBrandCampaign] ? cache.activeBrandCampaign : 'Apple';
+  const curCampaign = BRAND_CAMPAIGNS[activeBrandKey];
+  const brandCampProds = all.filter((p) => p.brand.toLowerCase() === activeBrandKey.toLowerCase());
+  const displayBrandProds = (brandCampProds.length ? brandCampProds : all).slice(0, 4);
+
+  // Bộ lọc thông minh tại Smart Showcase (Image 2)
+  const activeSmartCat = cache.smartCat || 'all';
+  const activeSmartBrand = cache.smartBrand || 'all';
+  let smartProds = [...all];
+  if (activeSmartCat !== 'all') {
+    smartProds = smartProds.filter((p) => String(p.cat) === String(activeSmartCat));
+  }
+  if (activeSmartBrand !== 'all') {
+    smartProds = smartProds.filter((p) => p.brand.toLowerCase() === activeSmartBrand.toLowerCase());
+  }
+  if (!smartProds.length) smartProds = all;
+
+  // Chuẩn bị danh sách 5 sản phẩm bán chạy tiêu biểu (hoặc lọc theo tab)
+  let bestSellerList = [...all];
+  if (activeSmartCat !== 'all') {
+    bestSellerList = bestSellerList.filter((p) => String(p.cat) === String(activeSmartCat));
+  }
+  if (activeSmartBrand !== 'all') {
+    bestSellerList = bestSellerList.filter((p) => p.brand.toLowerCase() === activeSmartBrand.toLowerCase());
+  }
+  if (!bestSellerList.length) bestSellerList = all;
+
+  let bestSellers5 = [];
+  if (activeSmartCat === 'all' && activeSmartBrand === 'all') {
+    const asus = all.find((p) => p.brand.toLowerCase() === 'asus');
+    const apple = all.find((p) => p.brand.toLowerCase() === 'apple');
+    const lenovo = all.find((p) => p.brand.toLowerCase() === 'lenovo');
+    const dell = all.find((p) => p.brand.toLowerCase() === 'dell');
+    const msi = all.find((p) => p.brand.toLowerCase() === 'msi');
+    const defaultCurated = [asus, apple, lenovo, dell, msi].filter(Boolean);
+    const seen = new Set(defaultCurated.map((p) => p.id));
+    for (const p of bestSellerList) {
+      if (defaultCurated.length >= 5) break;
+      if (!seen.has(p.id)) {
+        defaultCurated.push(p);
+        seen.add(p.id);
+      }
+    }
+    bestSellers5 = defaultCurated.slice(0, 5);
+  } else {
+    bestSellers5 = bestSellerList.slice(0, 5);
+  }
+
   return `
-  <div class="aura-master-wrap">
-    
-    <!-- ==================================================================== -->
-    <!-- 1. HERO SECTION (100VH, TỶ LỆ 1:1 NHƯ BẢN VẼ AURA X)                 -->
-    <!-- ==================================================================== -->
-    <section class="aura-hero-viewport" id="aura-hero">
-      <!-- Deep Obsidian Starfield Ambient Background -->
-      <div class="aura-space-bg"></div>
-      <div class="aura-glow-orb aura-glow-cyan"></div>
-      <div class="aura-glow-orb aura-glow-champagne"></div>
+  <div class="wrap modern-home-wrap">
+    <!-- SECTION HERO 3 CỘT: DANH MỤC TRÁI + BANNER MSI RAIDER GIỮA + KHỐI TIỆN ÍCH PHẢI -->
+    <section class="cps-hero-sec modern-hero-sec reveal-on-scroll">
+      <div class="cps-hero-grid modern-hero-grid">
+        <!-- Cột 1 (Trái): 9 Danh mục sản phẩm theme tối sang trọng -->
+        ${renderCategorySidebar(cats, all)}
 
-      <!-- Top Utility Strip (Mỏng, tinh tế) -->
-      <div class="aura-top-utility-strip">
-        <div class="aura-utility-inner">
-          <div class="aura-util-left">
-            <span class="aura-util-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-              Miễn phí giao hàng toàn quốc
-            </span>
-            <span class="aura-util-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              Bảo hành chính hãng 100%
-            </span>
-            <span class="aura-util-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-              Đổi trả trong 7 ngày
-            </span>
-            <span class="aura-util-item">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              Trả góp 0%
-            </span>
-          </div>
+        <!-- Cột 2 (Giữa): Banner Game MSI RAIDER GE78HX 13VH (360px) + Dải Thương hiệu nổi bật (55px) -->
+        <div class="hero-center-col modern-hero-center-col" id="hero-slider" tabindex="0" aria-label="Banner chiến dịch nổi bật"
+             onmouseenter="A.pauseHero()" onmouseleave="A.resumeHero()">
+          
+          <!-- 1. Banner chính MSI Raider GE78HX -->
+          <div class="mhb-card">
+            <div class="mhb-bestseller-ribbon">BEST SELLER</div>
 
-          <div class="aura-util-right">
-            <button type="button" class="aura-util-link" onclick="A.openQuickSearchModal()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              Tìm kiếm nhanh
-            </button>
-            <a href="#/compare" class="aura-util-link">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><line x1="7" y1="21" x2="17" y2="21"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
-              So sánh ${cmpCount ? `<span class="aura-pill-badge">${cmpCount}</span>` : ''}
-            </a>
-            <a href="#/wishlist" class="aura-util-link">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              Yêu thích <span class="aura-pill-badge">${wishCount}</span>
-            </a>
-            <a href="#/cart" class="aura-util-link">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-              Giỏ hàng <span class="aura-pill-badge">${cartCount || 2}</span>
-            </a>
-            <a href="tel:18006888" class="aura-util-link aura-util-hotline">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              Hotline: <b>1800 6888</b>
-            </a>
-            ${
-              u
-                ? `<a href="#/account" class="aura-util-btn-login">${esc(u.name.split(' ').pop())}</a>`
-                : `<button type="button" class="aura-util-btn-login" onclick="A.authModal()">Đăng nhập</button>`
-            }
-          </div>
-        </div>
-      </div>
+            <div class="mhb-main-body">
+              <div class="mhb-left-content">
+                <div class="mhb-brand-logo">
+                  <svg width="86" height="28" viewBox="0 0 100 32" fill="none">
+                    <path d="M12 4L4 12V28H12V14L20 22L28 14V28H36V12L28 4L20 12L12 4Z" fill="#E11D2E"/>
+                    <text x="44" y="24" fill="#FFFFFF" font-family="'Inter',sans-serif" font-weight="900" font-size="22">msi</text>
+                  </svg>
+                </div>
 
-      <!-- Floating VisionOS Optical Glass Pill Navbar -->
-      <header class="aura-glass-navbar-wrap">
-        <div class="aura-glass-navbar">
-          <!-- Logo AURA + badge LAPTOP99 -->
-          <a href="#/" class="aura-nav-brand">
-            <span class="aura-brand-serif">AURA</span>
-            <span class="aura-brand-sep">×</span>
-            <span class="aura-brand-badge">LAPTOP99</span>
-          </a>
+                <h2 class="mhb-main-title">RAIDER GE78HX 13VH</h2>
+                <p class="mhb-sub-title">Sức mạnh tối thượng<br>cho game thủ</p>
+                
+                <div class="mhb-specs-pill-wrap">
+                  <div class="mhb-sp-item">
+                    <span class="mhb-sp-ico">${ic('cpu', 15)}</span>
+                    <div class="mhb-sp-text">
+                      <span class="mhb-sp-val">i9 13980HX</span>
+                      <span class="mhb-sp-lbl">Intel Core™</span>
+                    </div>
+                  </div>
+                  <div class="mhb-sp-sep"></div>
+                  <div class="mhb-sp-item">
+                    <span class="mhb-sp-ico">${ic('spark', 15)}</span>
+                    <div class="mhb-sp-text">
+                      <span class="mhb-sp-val">32GB</span>
+                      <span class="mhb-sp-lbl">DDR5 RAM</span>
+                    </div>
+                  </div>
+                  <div class="mhb-sp-sep"></div>
+                  <div class="mhb-sp-item">
+                    <span class="mhb-sp-ico">${ic('box', 15)}</span>
+                    <div class="mhb-sp-text">
+                      <span class="mhb-sp-val">2TB</span>
+                      <span class="mhb-sp-lbl">SSD</span>
+                    </div>
+                  </div>
+                  <div class="mhb-sp-sep"></div>
+                  <div class="mhb-sp-item">
+                    <span class="mhb-sp-ico">${ic('laptop', 15)}</span>
+                    <div class="mhb-sp-text">
+                      <span class="mhb-sp-val">RTX 4080</span>
+                      <span class="mhb-sp-lbl">Laptop GPU</span>
+                    </div>
+                  </div>
+                </div>
 
-          <!-- 4 Core Nav Links (Notebooks has glowing white underline) -->
-          <nav class="aura-nav-links">
-            <a href="#/" class="aura-nav-link active">
-              <span>Notebooks</span>
-              <span class="aura-nav-glow-bar"></span>
-            </a>
-            <a href="#/products" class="aura-nav-link"><span>Technology</span></a>
-            <a href="#/services" class="aura-nav-link"><span>Craftsmanship</span></a>
-            <a href="#/warranty" class="aura-nav-link"><span>Support</span></a>
-          </nav>
+                <div style="margin-top:14px">
+                  <a href="#/products?cat=2" class="mhb-cta-btn">
+                    <span>Xem chi tiết</span> &rarr;
+                  </a>
+                </div>
+              </div>
 
-          <!-- Right Action Buttons -->
-          <div class="aura-nav-actions">
-            <button type="button" class="aura-pill-drawer-btn" onclick="document.getElementById('bento-storefront')?.scrollIntoView({behavior:'smooth'})" title="Mở danh mục 9 ngành hàng">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-              <span>Danh mục (9)</span>
-            </button>
-            <a href="#/cart" class="aura-nav-ico-btn" title="Giỏ hàng">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-              <span class="aura-nav-badge">${cartCount || 2}</span>
-            </a>
-            <button type="button" class="aura-nav-ico-btn" onclick="A.openQuickSearchModal()" title="Tìm kiếm">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <!-- Hero Main 3-Column Studio Stage -->
-      <div class="aura-hero-grid">
-        
-        <!-- ========================================== -->
-        <!-- CỘT TRÁI (HERO TYPOGRAPHY & SPEC CARD)    -->
-        <!-- ========================================== -->
-        <div class="aura-hero-col-left">
-          <!-- Scrolling Indicator (180 deg rotated on far-left) -->
-          <div class="aura-scrolling-indicator" onclick="document.getElementById('bento-storefront')?.scrollIntoView({behavior:'smooth'})">
-            <div class="aura-scroll-track"><div class="aura-scroll-glow"></div></div>
-            <span class="aura-scroll-label">SCROLL TO STORE</span>
-          </div>
-
-          <div class="aura-left-content">
-            <div class="aura-sub-badge">
-              <span class="aura-sub-dot"></span>
-              <span>EXCLUSIVE TITANIUM UNIBODY FLAGSHIP</span>
+              <div class="mhb-laptop-col">
+                <img src="${resolveAssetUrl('/uploads/msi_raider_laptop_seamless.png?v=20261025_02')}" alt="MSI Raider GE78HX" class="mhb-hero-laptop-img">
+              </div>
             </div>
 
-            <!-- Dòng chữ lớn xếp 3 tầng Cormorant Garamond -->
-            <h1 class="aura-hero-title">
-              <span class="aura-title-line line-1">THE AURA X –</span>
-              <span class="aura-title-line line-2">BEYOND</span>
-              <span class="aura-title-line line-3">ULTIMATE</span>
-            </h1>
+            <!-- Left / Right Navigation Arrows -->
+            <button type="button" class="mhb-nav-arrow prev" onclick="event.stopPropagation(); A.stepHero(-1)" aria-label="Banner trước">${ic('chevL', 16)}</button>
+            <button type="button" class="mhb-nav-arrow next" onclick="event.stopPropagation(); A.stepHero(1)" aria-label="Banner tiếp theo">${ic('chevR', 16)}</button>
 
-            <!-- Nút bấm hình viên thuốc viền vàng Champagne -->
-            <div class="aura-cta-row">
-              <button type="button" class="aura-btn-explore" onclick="document.getElementById('bento-storefront')?.scrollIntoView({behavior:'smooth'})">
-                <span>Explore the Beast</span>
-                <span class="aura-flare-shimmer"></span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </button>
+            <!-- Bottom feature pills -->
+            <div class="mhb-bottom-features">
+              <div class="mhb-bf-item"><span class="mhb-bf-ico">⚡</span> Hiệu năng vượt trội</div>
+              <div class="mhb-bf-item"><span class="mhb-bf-ico">❄️</span> Tản nhiệt Cooler Boost</div>
+              <div class="mhb-bf-item"><span class="mhb-bf-ico">🖥️</span> Màn hình 240Hz</div>
+              <div class="mhb-bf-item"><span class="mhb-bf-ico">💎</span> Thiết kế đẳng cấp</div>
             </div>
+          </div>
 
-            <!-- Thẻ kính mờ góc dưới trái có điểm lóa sáng xanh Cyan ở góc trên trái -->
-            <div class="aura-glass-card aura-spec-bottom-left flare-tl-cyan">
-              <div class="aura-spec-flare-dot cyan tl"></div>
-              <div class="aura-spec-lead">32GB / 2TB /</div>
-              <div class="aura-spec-accent">RTB SSD • 240HZ OLED DISPLAY</div>
-              <div class="aura-spec-detail">Liquid Metal Vapor Chamber · PCIe 5.0 High Bandwidth</div>
+          <!-- 2. Dải THƯƠNG HIỆU NỔI BẬT đặt NGAY SÁT DƯỚI banner (cách 16px) -->
+          <div class="brand-logos-card">
+            <span class="blc-title">THƯƠNG HIỆU NỔI BẬT</span>
+            <div class="blc-logos-track">
+              <a href="#/products?brand=ASUS" class="blc-item" title="Laptop ASUS"><img src="${resolveAssetUrl('/uploads/brands/asus.svg')}" alt="ASUS" onerror="this.src='uploads/brands/asus.png'"></a>
+              <a href="#/products?brand=Acer" class="blc-item" title="Laptop Acer"><img src="${resolveAssetUrl('/uploads/brands/acer.svg')}" alt="Acer" onerror="this.src='uploads/brands/acer.png'"></a>
+              <a href="#/products?brand=Dell" class="blc-item" title="Laptop Dell"><img src="${resolveAssetUrl('/uploads/brands/dell.svg')}" alt="Dell" onerror="this.src='uploads/brands/dell.png'"></a>
+              <a href="#/products?brand=HP" class="blc-item" title="Laptop HP"><img src="${resolveAssetUrl('/uploads/brands/hp.svg')}" alt="HP" onerror="this.src='uploads/brands/hp.png'"></a>
+              <a href="#/products?brand=Lenovo" class="blc-item" title="Laptop Lenovo"><img src="${resolveAssetUrl('/uploads/brands/lenovo.svg')}" alt="Lenovo" onerror="this.src='uploads/brands/lenovo.png'"></a>
+              <a href="#/products?brand=Apple" class="blc-item" title="MacBook Apple"><img src="${resolveAssetUrl('/uploads/brands/apple.svg')}" alt="Apple" onerror="this.src='uploads/brands/apple.png'"></a>
+              <a href="#/products?brand=MSI" class="blc-item" title="Laptop MSI"><img src="${resolveAssetUrl('/uploads/brands/msi.svg')}" alt="MSI" onerror="this.src='uploads/brands/msi.png'"></a>
             </div>
           </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- TRUNG TÂM (SÂN KHẤU 3D THREE.JS CHÂN THỰC) -->
-        <!-- ========================================== -->
-        <div class="aura-hero-col-center">
-          <div id="hero-3d-canvas" class="aura-canvas-stage"></div>
-
-          <!-- Bảng điều khiển góc nhìn 3D (Hero Angle / Exploded View / RGB Mode) -->
-          <div class="aura-3d-controls-pill">
-            <button type="button" class="aura-3d-view-btn active" data-view="hero" onclick="A.setAuraView('hero')">
-              <span class="aura-btn-dot"></span> Hero Angle
-            </button>
-            <button type="button" class="aura-3d-view-btn" data-view="exploded" onclick="A.setAuraView('exploded')">
-              <span class="aura-btn-dot"></span> Exploded View
-            </button>
-            <button type="button" class="aura-3d-view-btn" data-view="rgb" onclick="A.setAuraView('rgb')">
-              <span class="aura-btn-dot"></span> MSI Raider RGB
-            </button>
-          </div>
-
-          <div class="aura-orbit-hint">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-            <span>Kéo chuột xoay 360° • Cuộn zoom không gian</span>
-          </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- CỘT PHẢI (FLOATING SPEC CARDS & EMBLEM)    -->
-        <!-- ========================================== -->
-        <div class="aura-hero-col-right">
-          <!-- Thẻ kính trên (có điểm lóa sáng xanh ở góc trên phải) -->
-          <div class="aura-glass-card aura-spec-top-right flare-tr-cyan">
-            <div class="aura-spec-flare-dot cyan tr"></div>
-            <div class="aura-spec-lead">Intel Ultra 9 /</div>
-            <div class="aura-spec-accent">RTX 5090 • 16GB GDDR7</div>
-            <div class="aura-spec-detail">AI Accelerators · 175W Max TGP Architecture</div>
-          </div>
-
-          <!-- Thẻ kính giữa (cao hơn) kèm nút Pre-Order Now viền xanh nhạt -->
-          <div class="aura-glass-card aura-spec-middle">
-            <div class="aura-spec-flare-dot gold tl"></div>
-            <div class="aura-spec-lead">32GB / 2TB</div>
-            <div class="aura-spec-accent">SSD NVMe Gen5 • 14,000 MB/s</div>
-            <p class="aura-spec-text">Sản xuất giới hạn 99 bản toàn cầu mạ Anodized Titanium nguyên khối CNC.</p>
-            <button type="button" class="aura-pill-btn-cyan" onclick="A.openPreOrderModal()">
-              <span>Pre-Order Now</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
-          </div>
-
-          <!-- Góc dưới phải: Huy hiệu khung vòng cung kép (Double-Arc Emblem) -->
-          <div class="aura-double-arc-emblem">
-            <div class="aura-emblem-star">✦</div>
-            <div class="aura-emblem-badge">AURA SPECIAL EDITION</div>
-            <div class="aura-emblem-quote">Designed for the Extraordinary</div>
-            <div class="aura-emblem-bars">
-              <span class="aura-bar gold"></span>
-              <span class="aura-bar gray"></span>
+        <!-- Cột 3 (Phải): 4 Box Widget Đăng nhập + Ưu đãi + Thu cũ + Phụ kiện (300px) -->
+        <div class="hero-right-col modern-right-col">
+          <!-- Widget 1: Box Xin chào Quý khách -->
+          <div class="mrc-user-card">
+            <div class="mrc-user-top">
+              <div class="mrc-avatar-circle">${ic('user', 18)}</div>
+              <div class="mrc-user-info">
+                <div class="mrc-user-greeting">${u ? 'Hi, ' + esc(u.name) : 'Xin chào Quý khách!'}</div>
+                <div class="mrc-user-sub">${u ? 'Thành viên S-Member VIP' : 'Đăng nhập để có trải nghiệm tốt hơn'}</div>
+              </div>
+            </div>
+            <div class="mrc-btn-row">
+              ${
+                u
+                  ? `<a href="#/account?tab=orders" class="mrc-btn-login" style="text-decoration:none">Đơn hàng</a>
+                     <a href="#/account?tab=warranty" class="mrc-btn-reg" style="text-decoration:none">Bảo hành S/N</a>`
+                  : `<button type="button" class="mrc-btn-login" onclick="A.authModal()">Đăng nhập</button>
+                     <button type="button" class="mrc-btn-reg" onclick="A.authModal('reg')">Đăng ký</button>`
+              }
             </div>
           </div>
-        </div>
 
+          <!-- Widget 2: Khối Ưu đãi sinh viên & Deal hot -->
+          <div class="mrc-promo-card">
+            <a href="#/products?cat=5" class="mrc-promo-row">
+              <span class="mrc-pr-icon-red">${ic('tag', 16)}</span>
+              <div class="mrc-pr-text">
+                <div class="mrc-pr-title">Ưu đãi cho sinh viên</div>
+                <div class="mrc-pr-desc">Giảm thêm đến 5% khi mua laptop</div>
+              </div>
+              <span class="mrc-pr-arrow">Xem ngay &rarr;</span>
+            </a>
+            <a href="#/promos" class="mrc-promo-row">
+              <span class="mrc-pr-icon-red">${ic('spark', 16)}</span>
+              <div class="mrc-pr-text">
+                <div class="mrc-pr-title">Deal hot mỗi ngày</div>
+                <div class="mrc-pr-desc">Sản phẩm giá tốt, số lượng có hạn</div>
+              </div>
+            </a>
+            <a href="#/tradein" class="mrc-promo-row">
+              <span class="mrc-pr-icon-red">${ic('refresh', 16)}</span>
+              <div class="mrc-pr-text">
+                <div class="mrc-pr-title">Laptop cũ đổi mới</div>
+                <div class="mrc-pr-desc">Trợ giá lên đến 3 triệu</div>
+              </div>
+            </a>
+          </div>
+
+          <!-- Widget 3: Thu cũ lên đời giá tốt nhất -->
+          <div class="mrc-tradein-card">
+            <a href="#/tradein" class="mrc-tradein-row">
+              <span class="mrc-pr-icon-red">${ic('dollar', 16)}</span>
+              <div class="mrc-pr-text">
+                <div class="mrc-pr-title">Thu cũ lên đời - Giá tốt nhất</div>
+                <div class="mrc-pr-desc">Định giá nhanh - Thu mua tận nơi</div>
+              </div>
+              <span class="mrc-pr-arrow">Xem ngay &rarr;</span>
+            </a>
+          </div>
+
+          <!-- Widget 4: Banner Phụ kiện giảm đến 50% -->
+          <div class="mrc-mini-banner">
+            <a href="#/products?q=phu+kien" class="mrc-mb-link">
+              <div class="mrc-mb-text">
+                <div class="mrc-mb-badge">Giảm đến 50%</div>
+                <div class="mrc-mb-title">Phụ kiện · Balo · Chuột · Túi chống sốc</div>
+                <div class="mrc-mb-cta">Mua ngay &rarr;</div>
+              </div>
+              <div class="mrc-mb-thumb">
+                <img src="${resolveAssetUrl('/uploads/accessory_thumb.png')}" alt="Phụ kiện" class="mrc-mb-img">
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- ==================================================================== -->
-    <!-- 2. KHU VỰC CỬA HÀNG BÊN DƯỚI (GIỮ ĐẦY ĐỦ 100% DỮ LIỆU LAPTOP99)     -->
-    <!-- ==================================================================== -->
-    <div class="storefront-bento-sec" id="bento-storefront">
-      <div class="wrap" style="max-width:1440px;padding:0 24px">
-        
-        <!-- ========================================== -->
-        <!-- LƯỚI 3 CỘT BENTO DARK LUXURY              -->
-        <!-- ========================================== -->
-        <div class="storefront-hero-grid">
-          
-          <!-- CỘT TRÁI (240px): 9 Danh mục sản phẩm kèm mô tả phụ -->
-          <aside class="cat-sidebar cat-sidebar-dark" aria-label="Danh mục sản phẩm">
-            <div class="cat-side-row active-row">
-              <a href="#/products?cat=2" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">${ic('cpu', 22)}</span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">Laptop Gaming</span>
-                    <small class="cat-sub">RTX 4050, 4060, 4070...</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-
-            <div class="cat-side-row">
-              <a href="#/products?brand=Apple" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.78 1.06-1.85.94-2.94-.92.04-2.02.62-2.67 1.39-.58.67-1.09 1.76-.95 2.81 1.03.08 2.06-.52 2.68-1.26z"/></svg>
-                  </span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">MacBook</span>
-                    <small class="cat-sub">Air, Pro, M1, M2, M3...</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-
-            <div class="cat-side-row">
-              <a href="#/products?cat=1" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">${ic('laptop', 22)}</span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">Laptop Văn Phòng</span>
-                    <small class="cat-sub">Dell, HP, Lenovo, ASUS...</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-
-            <div class="cat-side-row">
-              <a href="#/products?cat=5" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5zM6 12v5c0 2 2.7 3.5 6 3.5s6-1.5 6-3.5v-5"/></svg>
-                  </span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">Laptop Sinh Viên</span>
-                    <small class="cat-sub">Giá tốt, cấu hình ổn định</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-
-            <div class="cat-side-row">
-              <a href="#/products?cat=4" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">${ic('box', 22)}</span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">Đồ Họa - Kỹ Thuật</span>
-                    <small class="cat-sub">Render, AutoCAD, Photos...</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-
-            <div class="cat-side-row">
-              <a href="#/products?q=man+hinh" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">${ic('scale', 22)}</span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">Màn Hình - PC</span>
-                    <small class="cat-sub">Màn hình 2K/4K, PC Gam...</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-
-            <div class="cat-side-row">
-              <a href="#/products?q=phu+kien" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">${ic('headset', 22)}</span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">Phụ Kiện Laptop</span>
-                    <small class="cat-sub">Chuột, balo, tản nhiệt...</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-
-            <div class="cat-side-row">
-              <a href="#/products?q=cu" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">${ic('refresh', 22)}</span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">Laptop Cũ</span>
-                    <small class="cat-sub">Chất lượng, bảo hành uy...</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-
-            <div class="cat-side-row">
-              <a href="#/services" class="cat-side-item">
-                <div class="cat-side-l">
-                  <span class="cat-side-ic">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-                  </span>
-                  <div class="cat-side-txt">
-                    <span class="cat-title">Dịch Vụ</span>
-                    <small class="cat-sub">Nâng cấp, sửa chữa, vệ s...</small>
-                  </div>
-                </div>
-                <div class="cat-side-r">${ic('chevR', 14)}</div>
-              </a>
-            </div>
-          </aside>
-
-          <!-- CỘT GIỮA: Banner Best Seller MSI RAIDER GE78HX 13VH -->
-          <div class="hero-banner-center">
-            <div class="hero-banner-card">
-              <!-- Top Header Row -->
-              <div class="hbc-header">
-                <div class="hbc-logo-row">
-                  <span class="hbc-brand-badge">
-                    <svg width="42" height="18" viewBox="0 0 24 10" fill="#E11D2E"><path d="M0 0h4l2 5 2-5h4l2 5 2-5h4v10h-3V4l-2 5h-2l-2-5v6H6V4L4 9H2L0 4v6H0z"/></svg>
-                    <span style="font-weight:900;letter-spacing:1px;font-size:1.15rem;color:#E11D2E;margin-left:4px">msi</span>
-                  </span>
-                </div>
-                <span class="hbc-bestseller-tag">BEST SELLER</span>
-              </div>
-
-              <!-- Main Hero Banner Body -->
-              <div class="hbc-body">
-                <div class="hbc-text-col">
-                  <h2 class="hbc-title">RAIDER GE78HX 13VH</h2>
-                  <p class="hbc-desc">Sức mạnh tối thượng cho game thủ</p>
-
-                  <!-- 4 Spec Chips -->
-                  <div class="hbc-specs-grid">
-                    <div class="hbc-spec-box">
-                      <div class="hbc-spec-val">i9 13980HX</div>
-                      <div class="hbc-spec-lbl">Intel Core™</div>
-                    </div>
-                    <div class="hbc-spec-box">
-                      <div class="hbc-spec-val">32GB</div>
-                      <div class="hbc-spec-lbl">DDR5 RAM</div>
-                    </div>
-                    <div class="hbc-spec-box">
-                      <div class="hbc-spec-val">2TB</div>
-                      <div class="hbc-spec-lbl">SSD</div>
-                    </div>
-                    <div class="hbc-spec-box">
-                      <div class="hbc-spec-val">RTX 4080</div>
-                      <div class="hbc-spec-lbl">Laptop GPU</div>
-                    </div>
-                  </div>
-
-                  <a href="#/products?q=msi+raider" class="hbc-cta-btn">
-                    <span>Xem chi tiết</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  </a>
-                </div>
-
-                <!-- Laptop Image with dynamic back glow -->
-                <div class="hbc-img-col">
-                  <div class="hbc-img-glow"></div>
-                  <img src="uploads/banner_msi_raider_full.jpg" alt="MSI Raider GE78HX 13VH" class="hbc-laptop-img" onerror="this.src='uploads/msi_raider_laptop_seamless.png'">
-                </div>
-              </div>
-
-              <!-- 4 Feature Badges at Bottom -->
-              <div class="hbc-bottom-features">
-                <div class="hbc-feat-item">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E11D2E" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  <span>Hiệu năng vượt trội</span>
-                </div>
-                <div class="hbc-feat-item">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>
-                  <span>Tản nhiệt Cooler Boost</span>
-                </div>
-                <div class="hbc-feat-item">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                  <span>Màn hình 240Hz</span>
-                </div>
-                <div class="hbc-feat-item">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                  <span>Thiết kế đẳng cấp</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- CỘT PHẢI (300px): Tài khoản & Ưu đãi -->
-          <aside class="hero-right-col">
-            <!-- Hộp Xin chào Quý khách! -->
-            <div class="hrc-login-card">
-              <div class="hrc-user-row">
-                <div class="hrc-user-avatar">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </div>
-                <div class="hrc-user-txt">
-                  <b>Xin chào Quý khách!</b>
-                  <span>Đăng nhập để có trải nghiệm tốt hơn</span>
-                </div>
-              </div>
-              <div class="hrc-login-btns">
-                ${
-                  u
-                    ? `<a href="#/account" class="hrc-btn-primary" style="flex:1">Quản lý Tài khoản</a>`
-                    : `<button type="button" class="hrc-btn-primary" onclick="A.authModal('login')">Đăng nhập</button>
-                       <button type="button" class="hrc-btn-secondary" onclick="A.authModal('register')">Đăng ký</button>`
-                }
-              </div>
-            </div>
-
-            <!-- 3 Mục Ưu Đãi -->
-            <div class="hrc-promos-box">
-              <a href="#/promos" class="hrc-promo-row">
-                <div class="hrc-p-icon">🎓</div>
-                <div class="hrc-p-txt">
-                  <b>Ưu đãi cho sinh viên</b>
-                  <span>Giảm thêm đến 5% khi mua laptop</span>
-                </div>
-                <span class="hrc-p-arrow">Xem ngay &gt;</span>
-              </a>
-              <a href="#/products?price=hot" class="hrc-promo-row">
-                <div class="hrc-p-icon">🔥</div>
-                <div class="hrc-p-txt">
-                  <b>Deal hot mỗi ngày</b>
-                  <span>Sản phẩm giá tốt, số lượng có hạn</span>
-                </div>
-                <span class="hrc-p-arrow">Xem ngay &gt;</span>
-              </a>
-              <a href="#/tradein" class="hrc-promo-row">
-                <div class="hrc-p-icon">🔄</div>
-                <div class="hrc-p-txt">
-                  <b>Laptop cũ đổi mới</b>
-                  <span>Trợ giá lên đến 3 triệu</span>
-                </div>
-                <span class="hrc-p-arrow">Xem ngay &gt;</span>
-              </a>
-            </div>
-
-            <!-- Thẻ Thu cũ lên đời - Giá tốt nhất -->
-            <a href="#/tradein" class="hrc-tradein-card">
-              <div class="hrc-tradein-l">
-                <div class="hrc-tradein-icon">📸</div>
-                <div>
-                  <b>Thu cũ lên đời - Giá tốt nhất</b>
-                  <span>Định giá nhanh - Thu mua tận nơi</span>
-                </div>
-              </div>
-              <span class="hrc-tradein-arr">Xem ngay &gt;</span>
-            </a>
-
-            <!-- Thẻ GIẢM ĐẾN 50% Phụ Kiện -->
-            <a href="#/products?q=phu+kien" class="hrc-accessory-card">
-              <div class="hrc-acc-l">
-                <div class="hrc-acc-badge">GIẢM ĐẾN 50%</div>
-                <div class="hrc-acc-sub">Phụ kiện • Balo • Chuột • Túi chống sốc</div>
-                <span class="hrc-acc-btn">Mua ngay &gt;</span>
-              </div>
-              <div class="hrc-acc-img-wrap">
-                <img src="storefront/assets/logo-laptop99.png" alt="Phụ kiện" class="hrc-acc-thumb" onerror="this.style.display='none'">
-              </div>
-            </a>
-          </aside>
-
-        </div>
-
-        <!-- ========================================== -->
-        <!-- 3. DẢI THƯƠNG HIỆU NỔI BẬT                -->
-        <!-- ========================================== -->
-        <div class="storefront-brands-strip">
-          <div class="sbs-title">THƯƠNG HIỆU NỔI BẬT</div>
-          <div class="sbs-list">
-            <a href="#/products?brand=ASUS" class="sbs-item"><b>ASUS</b></a>
-            <a href="#/products?brand=Acer" class="sbs-item"><b>acer</b></a>
-            <a href="#/products?brand=Dell" class="sbs-item"><b>DELL</b></a>
-            <a href="#/products?brand=HP" class="sbs-item"><b>hp</b></a>
-            <a href="#/products?brand=Lenovo" class="sbs-item"><b>Lenovo</b></a>
-            <a href="#/products?brand=Apple" class="sbs-item">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.78 1.06-1.85.94-2.94-.92.04-2.02.62-2.67 1.39-.58.67-1.09 1.76-.95 2.81 1.03.08 2.06-.52 2.68-1.26z"/></svg>
-            </a>
-            <a href="#/products?brand=MSI" class="sbs-item"><b style="color:#E11D2E">msi</b></a>
+    <!-- SẢN PHẨM BÁN CHẠY (TẤT CẢ, GAMING, MACBOOK, VĂN PHÒNG, SINH VIÊN, ĐỒ HỌA) -->
+    <section class="sec best-sellers-sec reveal-on-scroll">
+      <div class="bss-head">
+        <div class="bss-left">
+          <h2 class="bss-title">SẢN PHẨM BÁN CHẠY</h2>
+          <div class="bss-tabs">
+            <button type="button" class="bss-tab ${activeSmartCat === 'all' && activeSmartBrand === 'all' ? 'active' : ''}" onclick="A.setSmartFilter('cat','all'); A.setSmartFilter('brand','all')">Tất cả</button>
+            <button type="button" class="bss-tab ${activeSmartCat === '2' ? 'active' : ''}" onclick="A.setSmartFilter('cat','2')">Laptop Gaming</button>
+            <button type="button" class="bss-tab ${activeSmartBrand === 'Apple' ? 'active' : ''}" onclick="A.setSmartFilter('brand','Apple')">MacBook</button>
+            <button type="button" class="bss-tab ${activeSmartCat === '1' ? 'active' : ''}" onclick="A.setSmartFilter('cat','1')">Laptop Văn Phòng</button>
+            <button type="button" class="bss-tab ${activeSmartCat === '5' ? 'active' : ''}" onclick="A.setSmartFilter('cat','5')">Laptop Sinh Viên</button>
+            <button type="button" class="bss-tab ${activeSmartCat === '4' ? 'active' : ''}" onclick="A.setSmartFilter('cat','4')">Đồ Họa - Kỹ Thuật</button>
           </div>
         </div>
-
-        <!-- ========================================== -->
-        <!-- 4. KHU VỰC SẢN PHẨM BÁN CHẠY (5 CỘT GRID)  -->
-        <!-- ========================================== -->
-        <section class="storefront-bestsellers-sec">
-          <div class="sbs-sec-header">
-            <h2 class="sbs-heading">SẢN PHẨM BÁN CHẠY</h2>
-            <div class="sbs-filter-tabs">
-              <button type="button" class="sbs-tab-btn ${activeBssTab === 'all' ? 'active' : ''}" onclick="cache.bssTab='all';render()">Tất cả</button>
-              <button type="button" class="sbs-tab-btn ${activeBssTab === 'gaming' ? 'active' : ''}" onclick="cache.bssTab='gaming';render()">Laptop Gaming</button>
-              <button type="button" class="sbs-tab-btn ${activeBssTab === 'macbook' ? 'active' : ''}" onclick="cache.bssTab='macbook';render()">MacBook</button>
-              <button type="button" class="sbs-tab-btn ${activeBssTab === 'office' ? 'active' : ''}" onclick="cache.bssTab='office';render()">Laptop Văn Phòng</button>
-              <button type="button" class="sbs-tab-btn ${activeBssTab === 'student' ? 'active' : ''}" onclick="cache.bssTab='student';render()">Laptop Sinh Viên</button>
-              <button type="button" class="sbs-tab-btn ${activeBssTab === 'creator' ? 'active' : ''}" onclick="cache.bssTab='creator';render()">Đồ Họa - Kỹ Thuật</button>
-            </div>
-            <div class="sbs-slider-arrows">
-              <button type="button" class="sbs-arrow-btn" onclick="toast('Đang ở trang sản phẩm nổi bật')" aria-label="Trước">&lt;</button>
-              <button type="button" class="sbs-arrow-btn" onclick="toast('Đang hiển thị danh sách mới nhất')" aria-label="Sau">&gt;</button>
-            </div>
-          </div>
-
-          <!-- Lưới 5 Cột Sản Phẩm Bán Chạy Thực Tế -->
-          <div class="pg pg-5cols">
-            ${bssProducts.slice(0, 5).map(pcard).join('')}
-          </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- 5. BANNER PHỤ: MACBOOK PRO 16" M3 PRO      -->
-        <!-- ========================================== -->
-        <div class="storefront-bottom-banner">
-          <div class="sbb-inner">
-            <div class="sbb-left-img">
-              <img src="uploads/banner_macbook_laptop.jpg" alt="MacBook Pro 16 M3 Pro" onerror="this.src='uploads/msi_raider_laptop_seamless.png'">
-            </div>
-            <div class="sbb-mid-txt">
-              <div class="sbb-apple-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.78 1.06-1.85.94-2.94-.92.04-2.02.62-2.67 1.39-.58.67-1.09 1.76-.95 2.81 1.03.08 2.06-.52 2.68-1.26z"/></svg>
-                <span>MacBook Pro 16" M3 Pro</span>
-              </div>
-              <p class="sbb-subtitle">Hiệu năng vượt trội - Sáng tạo không giới hạn</p>
-              <div class="sbb-specs-row">
-                <span class="sbb-spec-tag">M3 Pro (Chip Apple)</span>
-                <span class="sbb-spec-tag">18GB Unified Memory</span>
-                <span class="sbb-spec-tag">512GB SSD</span>
-                <a href="#/products?brand=Apple" class="sbb-cta-btn">Khám phá ngay &rarr;</a>
-              </div>
-            </div>
-            <div class="sbb-right-badges">
-              <div class="sbb-badge-col">
-                <span class="sbb-b-icon">⚡</span>
-                <span>Hiệu suất mạnh mẽ</span>
-              </div>
-              <div class="sbb-badge-col">
-                <span class="sbb-b-icon">🖥️</span>
-                <span>Màn hình Liquid Retina XDR</span>
-              </div>
-              <div class="sbb-badge-col">
-                <span class="sbb-b-icon">🔋</span>
-                <span>Pin bền bỉ cả ngày</span>
-              </div>
-              <div class="sbb-badge-col">
-                <span class="sbb-b-icon">✨</span>
-                <span>Thiết kế tinh tế</span>
-              </div>
-            </div>
-          </div>
+        <div class="bss-nav-arrows">
+          <button type="button" class="bss-arrow" onclick="A.stepBestSellers(-1)" aria-label="Trước">${ic('chevL', 14)}</button>
+          <button type="button" class="bss-arrow" onclick="A.stepBestSellers(1)" aria-label="Tiếp">${ic('chevR', 14)}</button>
         </div>
-
-        <!-- ========================================== -->
-        <!-- 6. GỢI Ý CHỌN LAPTOP (RULE-BASED FINDER)   -->
-        <!-- ========================================== -->
-        <section class="showroom-finder-sec" id="finder-sec" style="margin-top:32px">
-          <div class="sh-finder-card">
-            <div class="sh-section-head" style="margin-bottom:0">
-              <div>
-                <h2 class="sh-sec-title">🎯 Gợi Ý Chọn Laptop Phù Hợp</h2>
-                <div class="sh-sec-sub">Chọn 3 tiêu chí đơn giản để hệ thống tự động lọc mẫu máy tối ưu từ kho sản phẩm</div>
-              </div>
-              <span class="sh-match-badge">Kho máy: ${all.length} sản phẩm sẵn sàng</span>
-            </div>
-
-            <div class="sh-finder-wizard">
-              <!-- Bước 1: Nhu Cầu -->
-              <div class="sh-finder-step">
-                <div class="sh-step-num">Bước 1</div>
-                <div class="sh-step-title">Nhu cầu chính</div>
-                <div class="sh-opt-list">
-                  <button type="button" class="sh-opt-btn active" data-type="demand" data-val="all" onclick="A.setFinderOpt('demand','all')">
-                    <span>Toàn bộ nhu cầu</span>
-                    <span>✓</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="demand" data-val="office" onclick="A.setFinderOpt('demand','office')">
-                    <span>Văn phòng – Học tập</span>
-                    <span>💼</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="demand" data-val="gaming" onclick="A.setFinderOpt('demand','gaming')">
-                    <span>Gaming – Đồ họa nặng</span>
-                    <span>🎮</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="demand" data-val="student" onclick="A.setFinderOpt('demand','student')">
-                    <span>Sinh viên – Tiết kiệm</span>
-                    <span>🎓</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="demand" data-val="creator" onclick="A.setFinderOpt('demand','creator')">
-                    <span>Đồ họa – Dựng video</span>
-                    <span>🎨</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="demand" data-val="slim" onclick="A.setFinderOpt('demand','slim')">
-                    <span>Mỏng nhẹ – Cao cấp</span>
-                    <span>✨</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Bước 2: Ngân Sách -->
-              <div class="sh-finder-step">
-                <div class="sh-step-num">Bước 2</div>
-                <div class="sh-step-title">Mức ngân sách</div>
-                <div class="sh-opt-list">
-                  <button type="button" class="sh-opt-btn active" data-type="budget" data-val="all" onclick="A.setFinderOpt('budget','all')">
-                    <span>Mọi mức ngân sách</span>
-                    <span>✓</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="budget" data-val="under15" onclick="A.setFinderOpt('budget','under15')">
-                    <span>Dưới 15 Triệu</span>
-                    <span>🏷️</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="budget" data-val="15to25" onclick="A.setFinderOpt('budget','15to25')">
-                    <span>Từ 15 – 25 Triệu</span>
-                    <span>⚡</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="budget" data-val="25to35" onclick="A.setFinderOpt('budget','25to35')">
-                    <span>Từ 25 – 35 Triệu</span>
-                    <span>⭐</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="budget" data-val="over35" onclick="A.setFinderOpt('budget','over35')">
-                    <span>Trên 35 Triệu</span>
-                    <span>💎</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Bước 3: Thương Hiệu -->
-              <div class="sh-finder-step">
-                <div class="sh-step-num">Bước 3</div>
-                <div class="sh-step-title">Thương hiệu ưu tiên</div>
-                <div class="sh-opt-list">
-                  <button type="button" class="sh-opt-btn active" data-type="brand" data-val="all" onclick="A.setFinderOpt('brand','all')">
-                    <span>Tất cả thương hiệu</span>
-                    <span>✓</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="brand" data-val="Apple" onclick="A.setFinderOpt('brand','Apple')">
-                    <span>Apple (MacBook)</span>
-                    <span>🍎</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="brand" data-val="Dell" onclick="A.setFinderOpt('brand','Dell')">
-                    <span>Dell</span>
-                    <span>💻</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="brand" data-val="ASUS" onclick="A.setFinderOpt('brand','ASUS')">
-                    <span>ASUS</span>
-                    <span>🔥</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="brand" data-val="Lenovo" onclick="A.setFinderOpt('brand','Lenovo')">
-                    <span>Lenovo</span>
-                    <span>💼</span>
-                  </button>
-                  <button type="button" class="sh-opt-btn" data-type="brand" data-val="HP" onclick="A.setFinderOpt('brand','HP')">
-                    <span>HP</span>
-                    <span>✨</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Kết quả lọc thông minh -->
-            <div class="sh-finder-results-wrap">
-              <div class="sh-results-head">
-                <span class="badge ok">Mẫu máy gợi ý tốt nhất theo tiêu chí đã chọn</span>
-                <a href="#/products" class="sh-view-all-link">Xem toàn bộ danh mục sản phẩm &rarr;</a>
-              </div>
-              <div class="pg pg-4cols" id="sh-finder-results-grid"></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ========================================== -->
-        <!-- 7. BỘ SƯU TẬP LAPTOP & MÃ GIẢM GIÁ         -->
-        <!-- ========================================== -->
-        <section class="showroom-collections-sec" style="margin-top:32px">
-          <div class="sh-section-head">
-            <div>
-              <h2 class="sh-sec-title">Bộ Sưu Tập Laptop &amp; Ưu Đãi Đặc Quyền</h2>
-              <div class="sh-sec-sub">Tổng hợp dòng máy chuyên biệt và mã giảm giá áp dụng trực tiếp tại giỏ hàng</div>
-            </div>
-            <a href="#/promos" class="sh-view-all-link">Xem tất cả khuyến mãi &rarr;</a>
-          </div>
-
-          <div class="sh-collections-grid">
-            <div class="sh-col-card">
-              <div class="sh-col-card-body">
-                <span class="sh-col-tag">PREMIUM MACBOOK</span>
-                <h3 class="sh-col-title">MacBook Pro &amp; Air Silicon</h3>
-                <p class="sh-col-desc">Sức mạnh vượt bậc từ chip Apple M-Series. Màn hình Liquid Retina XDR sắc nét đỉnh cao.</p>
-                <div class="sh-col-stat">
-                  <span>Kho máy: <b>${macbooks.length} model</b></span>
-                  <span>Giá từ: <b>${vnd(macbooks[0]?.price || 18990000)}</b></span>
-                </div>
-                <a href="#/products?brand=Apple" class="sh-col-cta">Khám phá bộ sưu tập &rarr;</a>
-              </div>
-            </div>
-
-            <div class="sh-col-card">
-              <div class="sh-col-card-body">
-                <span class="sh-col-tag">RTX GAMING BEAST</span>
-                <h3 class="sh-col-title">Chiến Thần Đồ Họa &amp; Gaming</h3>
-                <p class="sh-col-desc">Trang bị GPU NVIDIA GeForce RTX 40-Series. Tần số quét 144Hz–240Hz, tản nhiệt buồng hơi tân tiến.</p>
-                <div class="sh-col-stat">
-                  <span>Kho máy: <b>${gamingProds.length} model</b></span>
-                  <span>Tặng kèm: <b>Balo + Chuột gaming</b></span>
-                </div>
-                <a href="#/products?cat=2" class="sh-col-cta">Xem dòng Gaming &rarr;</a>
-              </div>
-            </div>
-
-            <div class="sh-col-card">
-              <div class="sh-col-card-body">
-                <span class="sh-col-tag">BUSINESS ULTRABOOK</span>
-                <h3 class="sh-col-title">Doanh Nhân &amp; Văn Phòng</h3>
-                <p class="sh-col-desc">Thời lượng pin lên tới 18 giờ. Trọng lượng siêu nhẹ dưới 1.2kg, bảo mật vân tay &amp; khuôn mặt Windows Hello.</p>
-                <div class="sh-col-stat">
-                  <span>Kho máy: <b>${officeProds.length} model</b></span>
-                  <span>Hỗ trợ: <b>Trả góp 0%</b></span>
-                </div>
-                <a href="#/products?cat=1" class="sh-col-cta">Khám phá Ultrabook &rarr;</a>
-              </div>
-            </div>
-          </div>
-        </section>
-
       </div>
-    </div>
 
+      <!-- Lưới 5 Cột Sản Phẩm Bán Chạy -->
+      <div class="pg pg-5cols">
+        ${bestSellers5.map(pcard).join('')}
+      </div>
+    </section>
+
+    <!-- BANNER NGANG TOÀN KHUNG: MACBOOK PRO 16" M3 PRO SANG TRỌNG CHUẨN THIẾT KẾ THAM CHIẾU -->
+    <section class="sec reveal-on-scroll">
+      <a href="#/products?brand=Apple" class="macbook-showcase-card" title="Khám phá MacBook Pro 16 M3 Pro">
+        <img src="${resolveAssetUrl('/uploads/banner_macbook_pro_showcase_hd.png?v=20261025_03')}"
+             alt="MacBook Pro 16 inch M3 Pro - Hiệu năng vượt trội, Sáng tạo không giới hạn"
+             class="msb-banner-full-img"
+             loading="lazy">
+      </a>
+    </section>
+
+    <!-- BANNER NGANG FLASH SALE KÈM ĐỒNG HỒ ĐẾM NGƯỢC (ĐỒNG BỘ TỪ ADMIN CMS) -->
+    <section class="sec flash-sale-sec reveal-on-scroll">
+      ${(() => {
+        const fsTitle = flashSaleBanner ? esc(flashSaleBanner.title) : 'ĐẠI TIỆC LAPTOP CHÍNH HÃNG';
+        const fsHl = flashSaleBanner && flashSaleBanner.highlight_text ? ('— ' + esc(flashSaleBanner.highlight_text)) : '— GIẢM ĐẾN 35% + TRẢ GÓP 0%';
+        const fsBadge = flashSaleBanner?.badge_text ? esc(flashSaleBanner.badge_text) : '⚡ FLASH SALE GIỜ VÀNG • ĐỘC QUYỀN HÔM NAY';
+        let fsSubHtml = '<span>Đặc quyền S-Student</span> • <span>Thu cũ trợ giá 3 Triệu</span> • <span>Bảo hành điện tử S/N 24 tháng</span>';
+        if (flashSaleBanner && flashSaleBanner.perks_json) {
+          try {
+            const p = typeof flashSaleBanner.perks_json === 'string' ? JSON.parse(flashSaleBanner.perks_json) : flashSaleBanner.perks_json;
+            if (Array.isArray(p) && p.length) {
+              fsSubHtml = p.map((x) => '<span>' + esc(x) + '</span>').join(' • ');
+            }
+          } catch(e) {}
+        } else if (flashSaleBanner && flashSaleBanner.subtitle) {
+          fsSubHtml = '<span>' + esc(flashSaleBanner.subtitle) + '</span>';
+        }
+        const fsImg = resolveAssetUrl(flashSaleBanner?.image_url || '/uploads/products/real-asus-rog.jpg');
+        const fsCtaText = flashSaleBanner?.cta_text || 'SĂN VOUCHER NGAY';
+        const fsCtaLink = flashSaleBanner?.cta_link || '#/promos';
+
+        return `
+      <div class="festival-banner reveal-on-scroll">
+        <div class="fb-left">
+          <span class="fb-badge-premium"><span class="fb-pulse-dot"></span> <i class="fs-lightning-anim">⚡</i> ${fsBadge}</span>
+          <div class="fb-text-content">
+            <div class="fb-title">${fsTitle} <span class="fb-title-hl">${fsHl}</span></div>
+            <div class="fb-sub">
+              ${fsSubHtml}
+            </div>
+          </div>
+        </div>
+        <div class="fb-right">
+          <div class="fb-visual-wrap">
+            <img src="${fsImg}" alt="Laptop Flash Sale" class="fb-hero-img" loading="lazy">
+            <div class="fb-hero-glow"></div>
+          </div>
+          <div class="fb-countdown-wrap" title="Thời gian còn lại của khung giờ Flash Sale">
+            <span class="fb-cd-label">Kết thúc sau:</span>
+            <div class="fb-cd-boxes">
+              <div class="fc-unit"><span class="fc-num" id="fc-h">04</span><span class="fc-lbl">Giờ</span></div>
+              <span class="fc-colon">:</span>
+              <div class="fc-unit"><span class="fc-num" id="fc-m">38</span><span class="fc-lbl">Phút</span></div>
+              <span class="fc-colon">:</span>
+              <div class="fc-unit"><span class="fc-num" id="fc-s">08</span><span class="fc-lbl">Giây</span></div>
+            </div>
+          </div>
+          <a href="${fsCtaLink}" class="fb-cta-premium" style="text-decoration:none">
+            <span>${esc(fsCtaText)}</span> ${ic('arrow', 14)}
+          </a>
+        </div>
+      </div>`;
+      })()}
+
+      <!-- SECTION 10: Dải 4 Cam Kết & Lợi Ích -->
+      ${renderPolicyStrip()}
+    </section>
+
+    <!-- KHÁM PHÁ LAPTOP THEO NHU CẦU & THƯƠNG HIỆU (LƯỚI 4 CỘT RÕ RÀNG, TỰ NHIÊN) -->
+    <section class="sec reveal-on-scroll">
+      <div class="smart-showcase-wrap">
+        <div class="sec-head" style="margin-bottom:12px">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">💻 KHÁM PHÁ LAPTOP THEO NHU CẦU &amp; THƯƠNG HIỆU</h2>
+          </div>
+          <div class="sec-quick-links">
+            <a href="#/compare" class="btn sm">⚖ So sánh cấu hình</a>
+            <a href="#/products" class="btn sm a">Xem tất cả (${all.length}) ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+
+        <!-- Hàng 1: 6 Nút Danh Mục kèm Icon trực quan -->
+        <div class="cat-thumb-pills">
+          <button type="button" class="ctp-item ${activeSmartCat === 'all' ? 'active' : ''}" onclick="A.setSmartFilter('cat','all')">
+            <span class="ctp-icon">${ic('spark', 16)}</span>
+            <span>Tất cả nổi bật</span>
+          </button>
+          <button type="button" class="ctp-item ${activeSmartCat === '1' ? 'active' : ''}" onclick="A.setSmartFilter('cat','1')">
+            <span class="ctp-icon">${ic('laptop', 16)}</span>
+            <span>Văn phòng</span>
+          </button>
+          <button type="button" class="ctp-item ${activeSmartCat === '2' ? 'active' : ''}" onclick="A.setSmartFilter('cat','2')">
+            <span class="ctp-icon">${ic('cpu', 16)}</span>
+            <span>Gaming</span>
+          </button>
+          <button type="button" class="ctp-item ${activeSmartCat === '3' ? 'active' : ''}" onclick="A.setSmartFilter('cat','3')">
+            <span class="ctp-icon">${ic('scale', 16)}</span>
+            <span>Mỏng nhẹ</span>
+          </button>
+          <button type="button" class="ctp-item ${activeSmartCat === '4' ? 'active' : ''}" onclick="A.setSmartFilter('cat','4')">
+            <span class="ctp-icon">${ic('box', 16)}</span>
+            <span>Đồ họa - kỹ thuật</span>
+          </button>
+          <button type="button" class="ctp-item ${activeSmartCat === '5' ? 'active' : ''}" onclick="A.setSmartFilter('cat','5')">
+            <span class="ctp-icon">${ic('tag', 16)}</span>
+            <span>Sinh viên</span>
+          </button>
+        </div>
+
+        <!-- Hàng 2: Các Nút Thương Hiệu (MacBook, ASUS, Lenovo, MSI, Acer, HP, Dell, LG) -->
+        <div class="brand-filter-pills">
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'all' ? 'active' : ''}" onclick="A.setSmartFilter('brand','all')">Tất cả hãng</button>
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'Apple' ? 'active' : ''}" onclick="A.setSmartFilter('brand','Apple')">MacBook</button>
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'ASUS' ? 'active' : ''}" onclick="A.setSmartFilter('brand','ASUS')">ASUS</button>
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'Lenovo' ? 'active' : ''}" onclick="A.setSmartFilter('brand','Lenovo')">Lenovo</button>
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'MSI' ? 'active' : ''}" onclick="A.setSmartFilter('brand','MSI')">MSI</button>
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'Acer' ? 'active' : ''}" onclick="A.setSmartFilter('brand','Acer')">Acer</button>
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'HP' ? 'active' : ''}" onclick="A.setSmartFilter('brand','HP')">HP</button>
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'Dell' ? 'active' : ''}" onclick="A.setSmartFilter('brand','Dell')">Dell</button>
+          <button type="button" class="bfp-pill ${activeSmartBrand === 'LG' ? 'active' : ''}" onclick="A.setSmartFilter('brand','LG')">LG</button>
+          <a href="#/products" class="bfp-pill view-all">Xem tất cả &gt;</a>
+        </div>
+
+        <!-- Hàng 3: Lưới sản phẩm 4 cột tự nhiên, cân đối -->
+        <div class="pg">
+          ${smartProds.slice(0, 8).map(pcard).join('')}
+        </div>
+      </div>
+    </section>
+
+    <!-- CHƯƠNG TRÌNH QUẢNG CÁO RIÊNG DO TỪNG HÃNG MÁY TÍNH TỔ CHỨC -->
+    <section class="sec reveal-on-scroll">
+      <div class="brand-campaign-section">
+        <div class="sec-head" style="margin-bottom:10px">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">🏢 CHUYÊN TRANG THƯƠNG HIỆU &amp; QUÀ TẶNG TỪ HÃNG</h2>
+          </div>
+          <span class="xs muted" style="font-weight:700">Chọn hãng để xem ưu đãi &amp; sản phẩm chính hãng</span>
+        </div>
+
+        <!-- Tabs chọn Hãng máy tính -->
+        <div class="brand-campaign-tabs">
+          ${Object.values(BRAND_CAMPAIGNS)
+            .map(
+              (c) => `
+            <button type="button" class="bct-btn ${c.brand === activeBrandKey ? 'active' : ''}" onclick="A.switchBrandCampaign('${c.brand}')">
+              <span>${c.tabLabel}</span>
+            </button>
+          `,
+            )
+            .join('')}
+        </div>
+
+        <!-- Banner Chiến dịch Quảng cáo riêng của Hãng đang chọn (Thiết kế Flagship Pavilion cao cấp) -->
+        <div class="brand-campaign-banner" style="background: ${curCampaign.bg}">
+          <div>
+            <span class="bcb-badge">${curCampaign.badge}</span>
+            <h3 class="bcb-title">${curCampaign.title}</h3>
+            <p class="bcb-desc">${curCampaign.desc}</p>
+            <div class="bcb-perks">
+              ${curCampaign.perks.map((pk) => `<span class="bcb-perk">✓ ${esc(pk)}</span>`).join('')}
+            </div>
+            <div class="row" style="gap:10px">
+              <a href="${curCampaign.ctaHref}" class="btn lg" style="background:#fff;color:#BE123C;border-color:#fff;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,0.25)">
+                Xem toàn bộ Laptop ${esc(curCampaign.brand)} ${ic('arrow', 15)}
+              </a>
+              <button type="button" class="btn lg" style="background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.35);backdrop-filter:blur(8px)" onclick="A.openPromoPopup(true)">
+                ${ic('tag', 15)} Săn Voucher ${esc(curCampaign.brand)}
+              </button>
+            </div>
+          </div>
+          <div class="bcb-visual">
+            <div class="bcb-visual-img-wrap">
+              <img src="${esc(curCampaign.realImg || curCampaign.linkedProd?.thumbnail || displayBrandProds[0]?.thumbnail || resolveAssetUrl('/uploads/products/real-macbook-pro.jpg'))}" alt="${esc(curCampaign.brand)}" class="bcb-real-img" loading="lazy">
+            </div>
+            <div class="bcb-visual-info">
+              <span class="bcb-visual-badge">Tâm điểm ${esc(curCampaign.brand)}</span>
+              <div class="bcb-visual-title">${esc(curCampaign.linkedProd?.name || displayBrandProds[0]?.name || curCampaign.title)}</div>
+              <div class="bcb-visual-price">${vnd(curCampaign.customPrice || curCampaign.linkedProd?.price || displayBrandProds[0]?.price || 19990000)}</div>
+              <a href="#/product/${curCampaign.linkedProd?.id || displayBrandProds[0]?.id || 'p1'}" class="bcb-visual-link">Khám phá cấu hình chi tiết →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lưới sản phẩm thuộc Chiến dịch của Hãng -->
+        <div class="pg">
+          ${displayBrandProds.map(pcard).join('')}
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SECTION 11.1: KHUYẾN MÃI ĐANG DIỄN RA (HOT SALE) -->
+    ${
+      hotDeals.length
+        ? `
+    <section class="sec reveal-on-scroll">
+      <div class="sec-box hot-deal">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">🔥 KHUYẾN MÃI ĐANG DIỄN RA — DEAL GIẢM SÂU</h2>
+          </div>
+          <div class="sec-quick-links">
+            <a href="#/promos" class="btn sm" style="background:rgba(255,255,255,0.16);color:#fff;border-color:rgba(255,255,255,0.3)">Săn mã giảm giá</a>
+            <a href="#/products?sort=asc" class="btn sm" style="background:#fff;color:var(--acc);border-color:#fff">Xem tất cả ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+
+        ${
+          highlightDeal
+            ? (() => {
+          const dealProd = (hotDealBanner && hotDealBanner.product_id ? P('p' + hotDealBanner.product_id) : null) || highlightDeal;
+          if (!dealProd) return '';
+          const dealBadge = hotDealBanner?.badge_text || ('🔥 Deal Tâm Điểm Giờ Vàng • Tiết kiệm ' + vnd((dealProd.old || 0) - (dealProd.price || 0)));
+          const dealPrice = Number(hotDealBanner?.custom_price) || dealProd.price;
+          const dealOldPrice = Number(hotDealBanner?.custom_old_price) || dealProd.old;
+          const dealTitle = hotDealBanner?.title || dealProd.name;
+          const dealImg = resolveAssetUrl(hotDealBanner?.image_url || dealProd.thumbnail);
+          const dealSpecs = hotDealBanner?.specs_json
+            ? hotDealBanner.specs_json.split(',').map((s) => s.trim()).filter(Boolean)
+            : [dealProd.cpu, 'RAM ' + dealProd.ram, dealProd.ssd, dealProd.gpu, dealProd.screen].filter(Boolean);
+          const dealCta = hotDealBanner?.cta_text || 'Mua ngay giá sốc';
+          const dealLink = hotDealBanner?.cta_link || ('#/product/' + dealProd.id);
+          const dealSecCta = hotDealBanner?.secondary_cta_text || 'Thêm vào giỏ';
+
+          return `
+        <div class="highlight-deal-card">
+          <a href="${dealLink}" class="hdc-thumb-frame" title="${esc(dealTitle)}">
+            <img src="${dealImg}" alt="${esc(dealTitle)}" class="hdc-img" loading="lazy">
+          </a>
+          <div>
+            <div class="row" style="gap:8px;align-items:center;margin-bottom:6px">
+              <span class="hdc-badge-fire">${dealBadge}</span>
+            </div>
+            <div class="hdc-price-row">
+              <div class="hdc-price">${vnd(dealPrice)}</div>
+              ${dealOldPrice > dealPrice ? '<div class="hdc-old">' + vnd(dealOldPrice) + '</div>' : ''}
+              ${dealOldPrice > dealPrice ? '<span class="hdc-discount-tag">-' + Math.round((1 - dealPrice / dealOldPrice) * 100) + '%</span>' : ''}
+            </div>
+            <div class="hdc-progress-bar-wrap" title="Tỷ lệ xuất kho khung giờ vàng">
+              <div class="hdc-progress-fill" style="width: 82%"></div>
+            </div>
+            <a href="${dealLink}" class="hdc-title-link">${esc(dealTitle)}</a>
+            <div class="hdc-specs-chips">
+              ${dealSpecs.map((sp) => '<span class="hdc-spec-chip">' + esc(sp) + '</span>').join('')}
+            </div>
+          </div>
+          <div class="gap" style="gap:10px;min-width:185px">
+            <a class="btn a lg" href="${dealLink}" style="box-shadow:0 4px 18px rgba(225,29,72,0.45);font-weight:800;text-decoration:none">
+              ${esc(dealCta)} ${ic('arrow', 15)}
+            </a>
+            <button type="button" class="btn lg" style="background:rgba(255,255,255,0.12);color:#FFFFFF;border-color:rgba(255,255,255,0.25);backdrop-filter:blur(8px)" onclick="A.add('${dealProd.id}')">
+              ${ic('cart', 15)} ${esc(dealSecCta)}
+            </button>
+          </div>
+        </div>`;
+        })()
+            : ''
+        }
+
+        <div class="pg">${hotDeals.slice(0, 4).map(pcard).join('')}</div>
+      </div>
+    </section>`
+        : ''
+    }
+
+    <!-- SECTION 11.2: LAPTOP BÁN CHẠY NHẤT -->
+    <section class="sec reveal-on-scroll">
+      <div class="sec-box">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">🏆 LAPTOP BÁN CHẠY NHẤT HỆ THỐNG</h2>
+          </div>
+          <div class="sec-quick-links">
+            ${cats
+              .slice(0, 4)
+              .map((c) => `<a href="#/products?cat=${c.id}" class="sec-qlink">${esc(c.name)}</a>`)
+              .join('')}
+            <a href="#/products?sort=pop" class="btn sm a">Xem tất cả ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+        <div class="pg">${bestSellers.slice(0, 8).map(pcard).join('')}</div>
+      </div>
+    </section>
+
+    <!-- SECTION 11.3: LAPTOP GAMING NỔI BẬT -->
+    <section class="sec reveal-on-scroll">
+      <div class="sec-box">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">🎮 LAPTOP GAMING NỔI BẬT</h2>
+          </div>
+          <div class="sec-quick-links">
+            <a href="#/products?cat=2&brand=ASUS" class="sec-qlink">ASUS ROG / TUF</a>
+            <a href="#/products?cat=2&brand=MSI" class="sec-qlink">MSI Gaming</a>
+            <a href="#/products?cat=2&brand=Acer" class="sec-qlink">Acer Nitro</a>
+            <a href="#/products?cat=2&brand=Lenovo" class="sec-qlink">Lenovo LOQ / Legion</a>
+            <a href="#/products?cat=2" class="btn sm a">Xem tất cả ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+        <div class="pg">${gamingProds.slice(0, 4).map(pcard).join('')}</div>
+      </div>
+    </section>
+
+    <!-- SECTION 11.4: MACBOOK CHÍNH HÃNG & MỎNG NHẸ -->
+    <section class="sec reveal-on-scroll">
+      <div class="sec-box">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">🍎 MACBOOK CHÍNH HÃNG &amp; LAPTOP MỎNG NHẸ</h2>
+          </div>
+          <div class="sec-quick-links">
+            <a href="#/products?brand=Apple" class="sec-qlink">MacBook Air / Pro</a>
+            <a href="#/products?cat=3&brand=ASUS" class="sec-qlink">ASUS Zenbook</a>
+            <a href="#/products?cat=3&brand=LG" class="sec-qlink">LG Gram</a>
+            <a href="#/products?cat=3" class="btn sm a">Xem tất cả ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+        <div class="pg">${slimProds.slice(0, 4).map(pcard).join('')}</div>
+      </div>
+    </section>
+
+    <!-- SECTION 11.5: LAPTOP VĂN PHÒNG & DOANH NHÂN -->
+    <section class="sec reveal-on-scroll">
+      <div class="sec-box">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">💼 LAPTOP VĂN PHÒNG &amp; DOANH NHÂN</h2>
+          </div>
+          <div class="sec-quick-links">
+            <a href="#/products?cat=1" class="sec-qlink">Laptop Văn Phòng</a>
+            <a href="#/products?cat=6" class="sec-qlink">Doanh Nhân Cao Cấp</a>
+            <a href="#/products?brand=Dell" class="sec-qlink">Dell Inspiron / XPS</a>
+            <a href="#/products?brand=Lenovo" class="sec-qlink">Lenovo ThinkPad</a>
+            <a href="#/products?cat=1" class="btn sm a">Xem tất cả ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+        <div class="pg">${officeProds.slice(0, 4).map(pcard).join('')}</div>
+      </div>
+    </section>
+
+    <!-- SECTION 11.6 & 11.7: LAPTOP SINH VIÊN & ĐỒ HỌA KỸ THUẬT -->
+    <section class="sec reveal-on-scroll">
+      <div class="sec-box">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">🎓 LAPTOP SINH VIÊN &amp; ĐỒ HỌA – KỸ THUẬT</h2>
+          </div>
+          <div class="sec-quick-links">
+            <a href="#/products?cat=5" class="sec-qlink">Laptop Sinh Viên</a>
+            <a href="#/products?cat=4" class="sec-qlink">Đồ Họa – Kỹ Thuật</a>
+            <a href="#/products?price=u15" class="sec-qlink">Dưới 15 triệu</a>
+            <a href="#/products?cat=5" class="btn sm a">Xem tất cả ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+        <div class="pg">${[...studentProds, ...creatorProds].slice(0, 4).map(pcard).join('')}</div>
+      </div>
+    </section>
+
+    <!-- SECTION 11.9: SẢN PHẨM MỚI VỀ -->
+    <section class="sec reveal-on-scroll">
+      <div class="sec-box">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">✨ SẢN PHẨM MỚI LÊN KỆ</h2>
+          </div>
+          <div class="sec-quick-links">
+            <a href="#/products?sort=new" class="btn sm a">Xem tất cả máy mới ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+        <div class="pg">${newArrivals.map(pcard).join('')}</div>
+      </div>
+    </section>
+
+    <!-- SẢN PHẨM ĐÃ XEM GẦN ĐÂY -->
+    ${
+      viewedProds.length
+        ? `
+    <section class="sec reveal-on-scroll">
+      <div class="sec-box">
+        <div class="sec-head">
+          <h2 class="sec-title">${ic('eye', 19)} SẢN PHẨM BẠN ĐÃ XEM GẦN ĐÂY</h2>
+          <button type="button" class="btn sm" onclick="db.viewed=[];save();render()">Xóa lịch sử xem</button>
+        </div>
+        <div class="pg">${viewedProds.map(pcard).join('')}</div>
+      </div>
+    </section>`
+        : ''
+    }
+
+    <!-- TIN CÔNG NGHỆ & BÁO CHÍ TRONG CÁC TUẦN QUA (LIÊN KẾT BÁO THẬT) -->
+    ${
+      news.length
+        ? `
+    <section class="sec reveal-on-scroll" style="padding-bottom:24px">
+      <div class="sec-box">
+        <div class="sec-head">
+          <div class="sec-title-wrap">
+            <h2 class="sec-title">${ic('news', 19)} TIN TỨC CÔNG NGHỆ MỚI NHẤT TRONG TUẦN</h2>
+          </div>
+          <div class="sec-quick-links">
+            <a href="https://vnexpress.net/so-hoa" target="_blank" rel="noopener noreferrer" class="sec-qlink">VnExpress Số Hóa ↗</a>
+            <a href="https://tinhte.vn/tag/laptop" target="_blank" rel="noopener noreferrer" class="sec-qlink">Tinh Tế ↗</a>
+            <a href="https://genk.vn/may-tinh.chn" target="_blank" rel="noopener noreferrer" class="sec-qlink">GenK ↗</a>
+            <a class="btn sm a" href="#/news">Tất cả tin công nghệ ${ic('chevR', 14)}</a>
+          </div>
+        </div>
+        <div class="three">
+          ${news
+            .map((n) => {
+              const imgUrl = resolveAssetUrl(n.img || '/uploads/news/news-macbook-pro-m4.jpg');
+              const extUrl = n.url || 'https://vnexpress.net/so-hoa/san-pham';
+              const srcName = n.source || 'VnExpress Số Hóa';
+              return `
+            <article class="news-card-editorial">
+              <a href="#/news?open=${n.id}" class="news-thumb-box" title="${esc(n.title)}">
+                <img src="${esc(imgUrl)}" alt="${esc(n.title)}" class="news-thumb-img" loading="lazy">
+                <span class="news-tag-overlay">${esc(n.tag || 'CÔNG NGHỆ')}</span>
+              </a>
+              <div class="news-content-box">
+                <div class="news-meta-row">
+                  <span class="news-source-badge">📰 ${esc(srcName)} <i>✓</i></span>
+                  <span>${sd(n.at)}</span>
+                  <span>⏱ 4 phút đọc</span>
+                </div>
+                <a href="#/news?open=${n.id}" class="news-title-link">
+                  <h3 class="news-title-text">${esc(n.title)}</h3>
+                </a>
+                <p class="news-body-snippet">${esc(n.body)}</p>
+              </div>
+              <div class="news-actions-footer">
+                <a href="#/news?open=${n.id}" class="news-btn-summary">
+                  ${ic('book', 13)} Tóm tắt nhanh
+                </a>
+                <a href="${esc(extUrl)}" target="_blank" rel="noopener noreferrer" class="news-btn-source">
+                  Đọc trên ${esc(srcName)} ↗
+                </a>
+              </div>
+            </article>
+          `;
+            })
+            .join('')}
+        </div>
+      </div>
+    </section>`
+        : ''
+    }
+
+    <!-- NÚT NỔI SĂN ƯU ĐÃI & VOUCHER KHUYẾN MÃI (BẤM VÀO ĐỂ MỞ POPUP ƯU ĐÃI BẤT KỲ LÚC NÀO) -->
+    <button type="button" class="floating-promo-btn" onclick="A.openPromoPopup(true)" title="Xem các voucher và chương trình ưu đãi đang diễn ra">
+      ${ic('tag', 16)}
+      <span>Ưu Đãi Hot ${promos.length ? `(${promos.length})` : ''}</span>
+    </button>
   </div>`;
 }
+
