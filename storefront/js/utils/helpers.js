@@ -25,7 +25,8 @@ function resolveAssetUrl(rawUrl) {
     clean.startsWith('uploads/banners/') ||
     clean.startsWith('uploads/temp/') ||
     clean.includes('product-') ||
-    clean.includes('banner-')
+    clean.includes('banner-') ||
+    /-\d{10,}-/.test(clean)
   ) {
     return 'https://laptop99-ejug.onrender.com/' + clean;
   }

@@ -399,7 +399,7 @@ async function viewProduct(r) {
             ${p.images
               .map(
                 (im, idx) => `
-              <img src="${esc(im.url)}" alt="${esc(im.alt_text || p.name)}" class="pd-thumb-img ${idx === 0 ? 'on' : ''}" onclick="A.switchPdImg(${idx}, '${esc(im.url)}')">
+              <img src="${esc(im.url)}" alt="${esc(im.alt_text || p.name)}" class="pd-thumb-img ${idx === 0 ? 'on' : ''}" onclick="A.switchPdImg(${idx}, '${esc(im.url)}')" onerror="if(!this.dataset.retried&&this.src.indexOf('onrender.com')!==-1){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+this.src.replace(/^https?:\\/\\/[^\\/]+\\//,'');}else if(!this.dataset.retried&&this.src.indexOf('onrender.com')===-1){this.dataset.retried='1';this.src='https://laptop99-ejug.onrender.com/'+this.getAttribute('src').replace(/^\\//,'');}">
             `,
               )
               .join('')}
