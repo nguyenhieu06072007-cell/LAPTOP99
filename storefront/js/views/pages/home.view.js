@@ -6,6 +6,8 @@
    - 100% Authentic DB Products, Categories, Promos & News Preserved
    ========================================================================== */
 
+const fmtDate = typeof sd === 'function' ? sd : (d => d ? new Date(d).toLocaleDateString('vi-VN') : '');
+
 async function viewHome() {
   const [cats, prodsRes, promoRes, newsRes, bannersRes] = await Promise.all([
     ensureCategories(),
