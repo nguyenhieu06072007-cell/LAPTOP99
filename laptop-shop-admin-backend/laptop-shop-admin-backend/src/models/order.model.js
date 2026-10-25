@@ -4,14 +4,14 @@ const OrderModel = {
   async getFinanceSummary() {
     const [[stats]] = await pool.query(`
       SELECT
-        COALESCE(SUM(CASE WHEN payment_status = 'paid' OR status = 'delivered' THEN total_amount ELSE 0 END), 0) AS total_paid,
+        COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS total_paid,
         COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status != 'paid' AND (payment_method LIKE '%COD%' OR payment_method LIKE '%Tiền mặt%') THEN total_amount ELSE 0 END), 0) AS total_cod_pending,
         COALESCE(SUM(CASE WHEN payment_status = 'collecting' THEN total_amount ELSE 0 END), 0) AS collecting,
         COALESCE(SUM(CASE WHEN status != 'cancelled' THEN gateway_fee ELSE 0 END), 0) AS total_gateway_fees,
-        COALESCE(SUM(CASE WHEN status != 'cancelled' THEN COALESCE(NULLIF(net_received, 0), total_amount) ELSE 0 END), 0) AS total_net_received,
+        COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'paid' THEN net_received ELSE 0 END), 0) AS total_net_received,
         COALESCE(SUM(CASE WHEN status != 'cancelled' THEN 1 ELSE 0 END), 0) AS total_orders,
         COALESCE(SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END), 0) AS delivered_orders,
-        COALESCE(SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END), 0) AS delivered_revenue
+        COALESCE(SUM(CASE WHEN status = 'delivered' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS delivered_revenue
       FROM orders
     `);
     return stats;
@@ -83,12 +83,12 @@ const OrderModel = {
     const [[stats]] = await conn.query(
       `SELECT COUNT(*) AS cnt, COALESCE(SUM(total_amount), 0) AS spent
          FROM orders
-        WHERE customer_id = ? AND status != 'cancelled'`,
+        WHERE customer_id = ? AND status = 'delivered' AND payment_status = 'paid'`,
       [customerId],
     );
     const spent = Number(stats?.spent || 0);
     const cnt = Number(stats?.cnt || 0);
-    const tier = spent >= 100_000_000 ? 'VIP' : spent >= 50_000_000 ? 'Thân thiết' : 'Khách mới';
+    const tier = spent >= 100_000_000 ? 'VIP' : spent >= 30_000_000 ? 'Thân thiết' : 'Khách mới';
     await conn.query('UPDATE customers SET order_count = ?, total_spent = ?, tier = ? WHERE id = ?', [cnt, spent, tier, customerId]);
   },
 };

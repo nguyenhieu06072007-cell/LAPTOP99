@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 class ApiError extends Error {
   constructor(status, message, details) {
     super(message);
@@ -8,6 +10,33 @@ class ApiError extends Error {
 
 const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
+
+/** Sinh mã độc nhất an toàn đa luồng, không hardcode năm */
+async function generateUniqueCode(db, table, prefix, len = 6) {
+  const year = new Date().getFullYear();
+  const month = String(new Date().getMonth() + 1).padStart(2, '0');
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const rand = crypto.randomBytes(Math.ceil(len / 2)).toString('hex').slice(0, len).toUpperCase();
+    const code = `${prefix}-${year}${month}-${rand}`;
+    const [rows] = await db.query(`SELECT id FROM ${table} WHERE code = ? LIMIT 1`, [code]);
+    if (!rows.length) return code;
+  }
+  return `${prefix}-${Date.now()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+}
+
+/** Tính ngày hết hạn bảo hành theo tháng lịch chuẩn xác (không nhân 30.44 ngày) */
+function addCalendarMonths(dateInput, months) {
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return new Date();
+  const targetMonth = d.getMonth() + Number(months);
+  const target = new Date(d);
+  target.setMonth(targetMonth);
+  // Xử lý tràn tháng (VD: 31/01 + 1 tháng -> 28/02 thay vì 03/03)
+  if (target.getMonth() % 12 !== ((targetMonth % 12) + 12) % 12) {
+    target.setDate(0);
+  }
+  return target;
+}
 
 /** "Máy tính Đẹp 15" -> "may-tinh-dep-15" */
 function slugify(str) {
@@ -75,4 +104,5 @@ function diff(oldRow, changes) {
 module.exports = {
   ApiError, asyncHandler, slugify, uniqueSlug, pick, toInt,
   paging, pageMeta, escapeLike, diff,
+  generateUniqueCode, addCalendarMonths,
 };

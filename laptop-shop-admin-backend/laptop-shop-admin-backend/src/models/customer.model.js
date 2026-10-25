@@ -9,8 +9,8 @@ const CustomerModel = {
   async findCustomers({ whereClause, params, limit, offset }) {
     const [rows] = await pool.query(
       `SELECT c.*,
-              (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id AND o.status != 'cancelled') AS real_order_count,
-              (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.customer_id = c.id AND o.status != 'cancelled') AS real_total_spent
+              (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id AND o.status = 'delivered' AND o.payment_status = 'paid') AS real_order_count,
+              (SELECT COALESCE(SUM(o.total_amount), 0) FROM orders o WHERE o.customer_id = c.id AND o.status = 'delivered' AND o.payment_status = 'paid') AS real_total_spent
          FROM customers c
          ${whereClause}
         ORDER BY real_total_spent DESC, c.id DESC
@@ -45,10 +45,10 @@ const CustomerModel = {
       [id],
     );
 
-    const nonCancelled = orders.filter((o) => o.status !== 'cancelled');
-    const totalSpent = nonCancelled.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-    const orderCount = nonCancelled.length;
-    const tier = totalSpent >= 100_000_000 ? 'VIP' : totalSpent >= 50_000_000 ? 'Thân thiết' : 'Khách mới';
+    const paidDelivered = orders.filter((o) => o.status === 'delivered' && o.payment_status === 'paid');
+    const totalSpent = paidDelivered.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+    const orderCount = paidDelivered.length;
+    const tier = totalSpent >= 100_000_000 ? 'VIP' : totalSpent >= 30_000_000 ? 'Thân thiết' : 'Khách mới';
 
     return {
       ...customer,

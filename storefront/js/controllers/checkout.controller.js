@@ -103,6 +103,7 @@ const CheckoutController = {
       address: ad,
       payment_method: pay,
       coupon: db.cartCoupon || null,
+      trade_in_id: db.cartTI || null,
       note: val('co-note') || null,
     };
 

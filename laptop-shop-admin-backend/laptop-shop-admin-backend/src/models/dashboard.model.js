@@ -63,8 +63,8 @@ const DashboardModel = {
 
       const [[os]] = await pool.query(`
         SELECT
-          COALESCE(SUM(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0) AS total_revenue,
-          COALESCE(SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END), 0) AS delivered_revenue,
+          COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS total_revenue,
+          COALESCE(SUM(CASE WHEN status = 'delivered' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS delivered_revenue,
           COALESCE(SUM(CASE WHEN status != 'cancelled' THEN 1 ELSE 0 END), 0) AS total_orders,
           COALESCE(SUM(status = 'pending'), 0) AS new_orders
         FROM orders
@@ -93,7 +93,7 @@ const DashboardModel = {
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE DATE(ordered_at) = CURDATE() AND status != 'cancelled'
+          WHERE DATE(ordered_at) = CURDATE() AND status != 'cancelled' AND payment_status = 'paid'
           GROUP BY HOUR(ordered_at)
           ORDER BY hour_num
         `);
@@ -113,7 +113,7 @@ const DashboardModel = {
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE ordered_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status != 'cancelled'
+          WHERE ordered_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status != 'cancelled' AND payment_status = 'paid'
           GROUP BY DATE(ordered_at), day_label
           ORDER BY order_date ASC
         `);
@@ -143,7 +143,7 @@ const DashboardModel = {
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE ${dateFilter} AND status != 'cancelled'
+          WHERE ${dateFilter} AND status != 'cancelled' AND payment_status = 'paid'
           GROUP BY week_label
         `);
 

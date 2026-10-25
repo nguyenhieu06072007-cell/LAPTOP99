@@ -31,10 +31,8 @@ const AuthController = {
         const dest = d.channel === 'sms'
           ? `Số điện thoại <b>${esc(d.masked_phone || ident)}</b> qua tin nhắn SMS`
           : `Hòm thư <b>${esc(d.masked_email || ident)}</b>`;
-        hint.innerHTML = `✅ Đã gửi mã xác thực OTP 6 số đến ${dest}.<br>Mã OTP xác thực: <b style="font-size:1.15rem;color:#047857;letter-spacing:3px">${esc(d.otp_preview)}</b> (Hiệu lực 10 phút).`;
+        hint.innerHTML = `✅ Đã gửi mã xác thực OTP 6 số đến ${dest}.<br><span style="font-size:0.9rem;color:#475569">Vui lòng kiểm tra tin nhắn/hòm thư và nhập mã xác thực OTP bên dưới (hiệu lực 10 phút).</span>`;
       }
-      const otpInp = $('#fg-otp');
-      if (otpInp && res.data && res.data.otp_preview) otpInp.value = res.data.otp_preview;
       this._resetIdent = ident;
       toast(res.message || 'Đã gửi mã xác thực OTP!');
       if (btn) {

@@ -1,9 +1,8 @@
 const { pool, withTransaction } = require('../config/db');
-const { ApiError, toInt, escapeLike } = require('../utils/helpers');
+const { ApiError, generateUniqueCode, addCalendarMonths } = require('../utils/helpers');
+const OrderModel = require('./order.model');
+const OrderService = require('../services/order.service');
 
-/**
- * ClientModel — Tầng Model (MVC) quản lý truy vấn dữ liệu CSDL MySQL cho Storefront Laptop99
- */
 const ClientModel = {
   async getActiveCategories() {
     const [rows] = await pool.query(`
@@ -45,48 +44,58 @@ const ClientModel = {
         where.push('p.brand_id = ?');
         params.push(Number(q.brand));
       } else {
-        where.push('(b.name = ? OR b.slug = ?)');
+        where.push('(b.slug = ? OR b.name = ?)');
         params.push(q.brand, q.brand);
       }
     }
 
-    if (q.price === 'u15') {
-      where.push('COALESCE(p.sale_price, p.price) < 15000000');
-    } else if (q.price === 'm1') {
-      where.push('COALESCE(p.sale_price, p.price) >= 15000000 AND COALESCE(p.sale_price, p.price) < 25000000');
-    } else if (q.price === 'm2') {
-      where.push('COALESCE(p.sale_price, p.price) >= 25000000 AND COALESCE(p.sale_price, p.price) < 40000000');
-    } else if (q.price === 'o40') {
-      where.push('COALESCE(p.sale_price, p.price) >= 40000000');
+    if (q.q) {
+      where.push('(p.name LIKE ? OR p.sku LIKE ? OR p.model_name LIKE ?)');
+      const kw = `%${q.q.trim()}%`;
+      params.push(kw, kw, kw);
+    }
+
+    if (q.price) {
+      if (q.price === 'under15') where.push('COALESCE(p.sale_price, p.price) < 15000000');
+      else if (q.price === '15to25') where.push('COALESCE(p.sale_price, p.price) BETWEEN 15000000 AND 25000000');
+      else if (q.price === '25to35') where.push('COALESCE(p.sale_price, p.price) BETWEEN 25000000 AND 35000000');
+      else if (q.price === 'over35') where.push('COALESCE(p.sale_price, p.price) > 35000000');
+      else if (q.price === 'm1') where.push('COALESCE(p.sale_price, p.price) < 15000000');
+      else if (q.price === 'm2') where.push('COALESCE(p.sale_price, p.price) BETWEEN 15000000 AND 20000000');
+      else if (q.price === 'm3') where.push('COALESCE(p.sale_price, p.price) BETWEEN 20000000 AND 30000000');
+      else if (q.price === 'm4') where.push('COALESCE(p.sale_price, p.price) > 30000000');
+    }
+
+    if (q.cpu) {
+      where.push('(s.cpu_model LIKE ? OR s.cpu_brand LIKE ?)');
+      params.push(`%${q.cpu}%`, `%${q.cpu}%`);
     }
 
     if (q.ram) {
-      if (q.ram === '32') {
-        where.push('s.ram_gb >= 32');
-      } else if (toInt(q.ram)) {
-        where.push('s.ram_gb = ?');
-        params.push(toInt(q.ram));
+      const ramNum = Number(q.ram);
+      if (ramNum) {
+        where.push('s.ram_gb >= ?');
+        params.push(ramNum);
       }
     }
 
-    if (q.q) {
-      const s = `%${escapeLike(String(q.q).trim())}%`;
-      where.push('(p.name LIKE ? OR b.name LIKE ? OR c.name LIKE ? OR p.sku LIKE ? OR p.model_name LIKE ? OR s.cpu_model LIKE ? OR s.gpu_model LIKE ?)');
-      params.push(s, s, s, s, s, s, s);
+    if (q.gpu) {
+      where.push('s.gpu_model LIKE ?');
+      params.push(`%${q.gpu}%`);
     }
 
-    let orderBy = 'p.sold_count DESC, p.id DESC';
-    if (q.sort === 'new') {
-      orderBy = 'p.id DESC';
-    } else if (q.sort === 'asc') {
-      orderBy = 'COALESCE(p.sale_price, p.price) ASC';
-    } else if (q.sort === 'desc') {
-      orderBy = 'COALESCE(p.sale_price, p.price) DESC';
-    } else if (q.sort === 'pop') {
-      orderBy = 'p.sold_count DESC, p.id DESC';
-    }
+    if (q.featured) where.push('p.is_featured = 1');
+    if (q.bestseller) where.push('p.is_bestseller = 1');
+    if (q.new) where.push('p.is_new = 1');
 
-    const limit = Math.min(100, Math.max(1, toInt(q.limit) || 100));
+    let orderBy = 'p.sort_order ASC, p.id DESC';
+    if (q.sort === 'price_asc' || q.sort === 'asc') orderBy = 'final_price ASC';
+    else if (q.sort === 'price_desc' || q.sort === 'desc') orderBy = 'final_price DESC';
+    else if (q.sort === 'newest') orderBy = 'p.id DESC';
+    else if (q.sort === 'popular') orderBy = 'p.view_count DESC';
+    else if (q.sort === 'bestseller') orderBy = 'p.sold_count DESC';
+
+    const limit = Math.min(100, Math.max(1, Number(q.limit) || 40));
 
     const sql = `
       SELECT
@@ -100,8 +109,8 @@ const ClientModel = {
         s.gpu_model, s.gpu_type, s.screen_size_inch, s.screen_resolution, s.refresh_rate_hz,
         s.weight_kg,
         (SELECT i.url FROM product_images i WHERE i.product_id = p.id ORDER BY i.is_thumbnail DESC, i.sort_order ASC LIMIT 1) AS thumbnail,
-        (SELECT COALESCE(AVG(pr.rating), 5.0) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status != 'hidden') AS avg_rating,
-        (SELECT COUNT(*) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status != 'hidden') AS review_count
+        (SELECT COALESCE(AVG(pr.rating), 5.0) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS avg_rating,
+        (SELECT COUNT(*) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS review_count
       FROM products p
       JOIN brands b ON b.id = p.brand_id
       JOIN categories c ON c.id = p.category_id
@@ -132,13 +141,14 @@ const ClientModel = {
         s.storage_gb, s.storage_type,
         s.gpu_model, s.gpu_type, s.vram_gb,
         s.screen_size_inch, s.screen_resolution, s.screen_panel, s.refresh_rate_hz, s.touchscreen,
-        s.battery_wh, s.charger_w, s.wifi, s.bluetooth, s.ports, s.os, s.keyboard, s.webcam,
-        s.fingerprint, s.weight_kg, s.dimensions, s.color, s.material
+        s.battery_wh, s.weight_kg, s.color, s.material, s.os,
+        (SELECT COALESCE(AVG(pr.rating), 5.0) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS avg_rating,
+        (SELECT COUNT(*) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS review_count
       FROM products p
       JOIN brands b ON b.id = p.brand_id
       JOIN categories c ON c.id = p.category_id
       LEFT JOIN product_specs s ON s.product_id = p.id
-      WHERE ${isId ? 'p.id = ?' : 'p.slug = ?'} AND p.deleted_at IS NULL
+      WHERE ${isId ? 'p.id = ?' : 'p.slug = ?'} AND p.deleted_at IS NULL AND p.status = 'active'
     `,
       [isId ? Number(idOrSlug) : idOrSlug],
     );
@@ -156,7 +166,7 @@ const ClientModel = {
     const [reviews] = await pool.query(
       `SELECT id, customer_name, rating, title, comment, verified_purchase, admin_reply, replied_at, created_at
        FROM product_reviews
-       WHERE product_id = ? AND status != 'hidden'
+       WHERE product_id = ? AND status = 'approved'
        ORDER BY created_at DESC`,
       [product.id],
     );
@@ -168,9 +178,19 @@ const ClientModel = {
     };
   },
 
+  async createCustomer(data) {
+    const code = await generateUniqueCode(pool, 'customers', 'KH', 4);
+    const [result] = await pool.query(
+      `INSERT INTO customers (code, full_name, email, phone, address, password_hash, tier)
+       VALUES (?, ?, ?, ?, ?, ?, 'Khách mới')`,
+      [code, data.name, data.email, data.phone || null, data.address || null, data.passwordHash],
+    );
+    return this.findCustomerById(result.insertId);
+  },
+
   async findCustomerById(id) {
     const [rows] = await pool.query(
-      'SELECT id, code, full_name, email, phone, address, tier FROM customers WHERE id = ?',
+      'SELECT id, code, full_name, email, phone, address, tier, total_spent, order_count FROM customers WHERE id = ?',
       [id],
     );
     return rows[0] || null;
@@ -185,57 +205,18 @@ const ClientModel = {
   },
 
   async findCustomerByEmailOrPhone(identifier) {
-    const clean = String(identifier || '').trim();
-    if (!clean) return null;
     const [rows] = await pool.query(
-      'SELECT id, code, full_name, email, phone, address, password_hash, tier FROM customers WHERE LOWER(email) = ? OR phone = ? LIMIT 1',
-      [clean.toLowerCase(), clean],
+      'SELECT id, code, full_name, email, phone, address, password_hash, tier FROM customers WHERE email = ? OR phone = ? LIMIT 1',
+      [identifier, identifier],
     );
     return rows[0] || null;
   },
 
-  async createCustomer({ name, email, phone, address, passwordHash }) {
-    const [[maxRow]] = await pool.query('SELECT COALESCE(MAX(id), 0) AS max_id FROM customers');
-    const code = `CUST-${1001 + Number(maxRow.max_id)}`;
-
-    const [result] = await pool.query(`
-      INSERT INTO customers (code, full_name, phone, address, email, password_hash, tier)
-      VALUES (?, ?, ?, ?, ?, ?, 'Khách mới')
-    `, [code, name, phone, address || '', email, passwordHash]);
-
-    return {
-      id: result.insertId,
-      code,
-      name,
-      email,
-      phone,
-      address: address || '',
-      tier: 'Khách mới',
-    };
-  },
-
   async updateCustomerProfile(customerId, { name, phone, address }) {
-    const updates = [];
-    const params = [];
-
-    if (name && typeof name === 'string' && name.trim().length >= 2) {
-      updates.push('full_name = ?');
-      params.push(name.trim());
-    }
-    if (phone && /^0\d{9}$/.test(phone)) {
-      updates.push('phone = ?');
-      params.push(phone.trim());
-    }
-    if (typeof address === 'string') {
-      updates.push('address = ?');
-      params.push(address.trim());
-    }
-
-    if (updates.length > 0) {
-      params.push(customerId);
-      await pool.query(`UPDATE customers SET ${updates.join(', ')} WHERE id = ?`, params);
-    }
-
+    await pool.query(
+      'UPDATE customers SET full_name = COALESCE(?, full_name), phone = COALESCE(?, phone), address = COALESCE(?, address) WHERE id = ?',
+      [name || null, phone || null, address || null, customerId],
+    );
     return this.findCustomerById(customerId);
   },
 
@@ -244,22 +225,45 @@ const ClientModel = {
     return this.findCustomerById(customerId);
   },
 
+  /**
+   * Khách bấm "Tôi đã chuyển khoản": CHỈ gửi thông báo chờ đối soát, không tự động đánh dấu paid
+   */
   async confirmCustomerOrderPayment(customerId, orderCode, bankInfo = '') {
     const [[order]] = await pool.query(
       'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE code = ? AND customer_id = ?',
       [orderCode, customerId],
     );
-    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
-    const updatedNote = [order.notes, bankInfo ? `[Đã xác nhận CK VietQR: ${bankInfo}]` : '[Đã thanh toán VietQR]']
-      .filter(Boolean)
-      .join(' | ');
+    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng của bạn');
+
+    if (order.status === 'cancelled') {
+      throw new ApiError(400, 'Đơn hàng này đã bị hủy, không thể xác nhận chuyển khoản');
+    }
+
+    if (order.payment_status === 'paid') {
+      throw new ApiError(400, 'Đơn hàng này đã được xác nhận thanh toán trước đó');
+    }
+
+    const updatedNote = [
+      order.notes,
+      bankInfo ? `[Khách gửi xác nhận CK VietQR: ${bankInfo} - Chờ kế toán đối soát]` : '[Khách báo đã quét VietQR - Chờ kế toán đối soát]'
+    ].filter(Boolean).join(' | ');
+
     await pool.query(
-      'UPDATE orders SET payment_status = "paid", net_received = total_amount, notes = ? WHERE id = ?',
+      "UPDATE orders SET payment_verification_status = 'pending_verification', notes = ? WHERE id = ?",
       [updatedNote, order.id],
     );
-    return { code: order.code, payment_status: 'paid' };
+
+    return {
+      code: order.code,
+      payment_status: order.payment_status,
+      verification_status: 'pending_verification',
+      message: 'Đã gửi thông tin chuyển khoản tới hệ thống. Kế toán sẽ đối soát giao dịch ngân hàng và xác nhận trong 15-30 phút.',
+    };
   },
 
+  /**
+   * Tạo đơn hàng trực tuyến an toàn: Khóa tồn kho, đối soát mã giảm giá, khấu trừ phiếu thu cũ chuẩn backend
+   */
   async createOrder(customer, body) {
     return withTransaction(async (conn) => {
       let subtotal = 0;
@@ -267,38 +271,34 @@ const ClientModel = {
 
       for (const item of body.items) {
         const [[prod]] = await conn.query(
-          'SELECT id, sku, name, price, sale_price, stock_quantity, warranty_months FROM products WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
+          'SELECT id, sku, name, price, sale_price, stock_quantity, warranty_months, status, deleted_at, category_id FROM products WHERE id = ? FOR UPDATE',
           [item.pid],
         );
 
-        if (!prod) {
-          throw new ApiError(400, `Sản phẩm mã #${item.pid} không tồn tại`);
+        if (!prod || prod.deleted_at || prod.status !== 'active') {
+          throw new ApiError(400, `Sản phẩm "${prod ? prod.name : item.pid}" hiện không khả dụng để đặt hàng`);
         }
         if (prod.stock_quantity < item.qty) {
-          throw new ApiError(400, `Sản phẩm "${prod.name}" chỉ còn ${prod.stock_quantity} máy trong kho`);
+          throw new ApiError(400, `Sản phẩm "${prod.name}" chỉ còn ${prod.stock_quantity} máy trong kho (yêu cầu ${item.qty})`);
         }
 
         const unitPrice = prod.sale_price ? Number(prod.sale_price) : Number(prod.price);
         const lineTotal = unitPrice * item.qty;
         subtotal += lineTotal;
 
-        const serials = [];
-        for (let k = 0; k < item.qty; k++) {
-          serials.push(`${prod.sku}-${Math.floor(100000 + Math.random() * 900000)}`);
-        }
-
         itemsDetailed.push({
           pid: prod.id,
+          category_id: prod.category_id,
           sku: prod.sku,
           name: prod.name,
           qty: item.qty,
           unit_price: unitPrice,
           line_total: lineTotal,
           warranty_months: prod.warranty_months,
-          serials,
+          serials: ['CHỜ XUẤT KHO'],
         });
 
-        const stockBefore = prod.stock_quantity;
+        const stockBefore = Number(prod.stock_quantity);
         const stockAfter = stockBefore - item.qty;
         await conn.query(
           'UPDATE products SET stock_quantity = ?, sold_count = sold_count + ? WHERE id = ?',
@@ -308,34 +308,87 @@ const ClientModel = {
         await conn.query(`
           INSERT INTO inventory_movements (product_id, type, quantity, stock_before, stock_after, reason)
           VALUES (?, 'export', ?, ?, ?, ?)
-        `, [prod.id, -item.qty, stockBefore, stockAfter, `Đơn hàng trực tuyến của ${customer.full_name}`]);
+        `, [prod.id, -item.qty, stockBefore, stockAfter, `Đơn hàng trực tuyến của khách: ${customer.full_name}`]);
       }
 
+      // 1. Kiểm tra và áp dụng mã khuyến mãi chặt chẽ
       let discount = 0;
       let couponApplied = null;
       if (body.coupon) {
+        const couponCode = String(body.coupon).trim().toUpperCase();
         const [[promo]] = await conn.query(
-          'SELECT * FROM promotions WHERE code = ? AND status = "active" AND start_date <= CURDATE() AND end_date >= CURDATE()',
-          [body.coupon.toUpperCase()],
+          'SELECT * FROM promotions WHERE code = ? FOR UPDATE',
+          [couponCode],
         );
 
-        if (promo && subtotal >= Number(promo.min_order_value)) {
-          if (promo.type === 'percent') {
-            const rawDisc = Math.round((subtotal * Number(promo.discount_value)) / 100);
-            discount = Math.min(rawDisc, 2000000);
-          } else {
-            discount = Number(promo.discount_value);
-          }
-          couponApplied = promo.code;
-          await conn.query('UPDATE promotions SET used_count = used_count + 1 WHERE id = ?', [promo.id]);
+        if (!promo || promo.status !== 'active') {
+          throw new ApiError(400, `Mã khuyến mãi "${couponCode}" không tồn tại hoặc đã ngừng hoạt động`);
         }
+
+        const today = new Date().toISOString().slice(0, 10);
+        if (promo.start_date && promo.start_date > today) {
+          throw new ApiError(400, `Chương trình khuyến mãi chưa bắt đầu (hiệu lực từ ${promo.start_date})`);
+        }
+        if (promo.end_date && promo.end_date < today) {
+          throw new ApiError(400, `Mã khuyến mãi "${couponCode}" đã hết hạn sử dụng`);
+        }
+        if (promo.max_uses > 0 && promo.used_count >= promo.max_uses) {
+          throw new ApiError(400, `Mã khuyến mãi "${couponCode}" đã hết lượt sử dụng`);
+        }
+        if (subtotal < Number(promo.min_order_value || 0)) {
+          throw new ApiError(400, `Đơn hàng chưa đạt giá trị tối thiểu ${new Intl.NumberFormat('vi-VN').format(promo.min_order_value)}đ để áp dụng mã`);
+        }
+
+        // Kiểm tra target_category nếu có
+        let eligibleSubtotal = subtotal;
+        if (promo.target_category) {
+          const eligibleItems = itemsDetailed.filter((it) => {
+            return String(it.category_id) === String(promo.target_category) ||
+                   String(it.name).toLowerCase().includes(promo.target_category.toLowerCase());
+          });
+          if (!eligibleItems.length) {
+            throw new ApiError(400, `Mã khuyến mãi này chỉ áp dụng cho danh mục: ${promo.target_category}`);
+          }
+          eligibleSubtotal = eligibleItems.reduce((sum, it) => sum + it.line_total, 0);
+        }
+
+        if (promo.type === 'percent') {
+          const rawDisc = Math.round((eligibleSubtotal * Number(promo.discount_value)) / 100);
+          discount = Math.min(rawDisc, 2000000);
+        } else {
+          discount = Math.min(eligibleSubtotal, Number(promo.discount_value));
+        }
+
+        couponApplied = promo.code;
+        await conn.query('UPDATE promotions SET used_count = used_count + 1 WHERE id = ?', [promo.id]);
       }
 
-      const totalAmount = Math.max(0, subtotal - discount);
+      // 2. Kiểm tra và áp dụng phiếu thu cũ đổi mới (Trade-In)
+      let tradeInId = null;
+      let tradeInDiscount = 0;
+      if (body.trade_in_id) {
+        const tiId = Number(body.trade_in_id);
+        const [[ti]] = await conn.query('SELECT * FROM trade_ins WHERE id = ? FOR UPDATE', [tiId]);
+        if (!ti) throw new ApiError(404, 'Không tìm thấy phiếu thẩm định thu cũ');
+        if (ti.customer_id !== customer.id) {
+          throw new ApiError(403, 'Phiếu thu cũ không thuộc quyền sở hữu của bạn');
+        }
+        if (ti.used_in_order_id) {
+          throw new ApiError(400, 'Phiếu thu cũ này đã được sử dụng cho một đơn hàng khác');
+        }
+        if (ti.status !== 'Đã định giá' && ti.status !== 'Đã chấp nhận') {
+          throw new ApiError(400, `Phiếu thu cũ đang ở trạng thái "${ti.status}", chưa thể áp dụng trừ tiền`);
+        }
 
-      const [[maxOrder]] = await conn.query('SELECT COALESCE(MAX(id), 0) AS max_id FROM orders');
-      const orderNumber = Number(maxOrder.max_id) + 1;
-      const orderCode = `DH-2026-${String(orderNumber).padStart(4, '0')}`;
+        tradeInDiscount = Number(ti.final_price || ti.estimated_price || 0);
+        tradeInId = ti.id;
+      }
+
+      // Tính tổng tiền sau mọi khoản giảm trừ
+      const totalAmount = Math.max(0, subtotal - discount - tradeInDiscount);
+
+      // 3. Sinh mã đơn hàng an toàn chống trùng (không hardcode năm 2026)
+      const orderCode = await generateUniqueCode(conn, 'orders', 'DH');
 
       const payMap = {
         cod: 'COD (Thu hộ)',
@@ -344,56 +397,63 @@ const ClientModel = {
         installment: 'Trả góp 0%',
       };
       const paymentMethodLabel = payMap[body.payment_method] || body.payment_method;
-
       const firstItem = itemsDetailed[0];
-      const allSerials = itemsDetailed.flatMap((i) => i.serials).join(', ');
 
+      // Ghi nhận đơn hàng: Mới tạo chưa thu tiền => net_received = 0
       const [orderResult] = await conn.query(`
         INSERT INTO orders
           (code, customer_id, customer_name, customer_phone, shipping_address,
            product_id, product_name, sku, serial_number, quantity,
            unit_price, total_amount, discount_amount, coupon_code,
+           trade_in_id, trade_in_discount,
            payment_method, payment_status, net_received, status, branch, notes, items_json)
         VALUES
-          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, 'pending', 'Toàn hệ thống (HQ)', ?, ?)
+          (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', 0, 'pending', 'Toàn hệ thống (HQ)', ?, ?)
       `, [
         orderCode, customer.id, body.name, body.phone, body.address,
         firstItem.pid,
         itemsDetailed.length > 1 ? `${firstItem.name} (+${itemsDetailed.length - 1} sp)` : firstItem.name,
         firstItem.sku,
-        allSerials,
+        'CHỜ XUẤT KHO',
         body.items.reduce((s, i) => s + i.qty, 0),
         firstItem.unit_price,
         totalAmount,
         discount,
         couponApplied,
+        tradeInId,
+        tradeInDiscount,
         paymentMethodLabel,
-        totalAmount,
         body.note || null,
         JSON.stringify(itemsDetailed),
       ]);
 
-      // Đồng bộ thực tế order_count, total_spent và tier cho khách hàng
-      const [[custStats]] = await conn.query(`
-        SELECT COUNT(*) AS cnt, COALESCE(SUM(total_amount), 0) AS spent
-        FROM orders
-        WHERE customer_id = ? AND status != 'cancelled'
-      `, [customer.id]);
-      const spent = Number(custStats.spent || 0);
-      const tier = spent >= 100000000 ? 'VIP' : spent >= 50000000 ? 'Thân thiết' : 'Khách mới';
+      const newOrderId = orderResult.insertId;
 
+      // Đánh dấu phiếu thu cũ đã dùng
+      if (tradeInId) {
+        await conn.query(
+          "UPDATE trade_ins SET status = 'Đã dùng', used_in_order_id = ? WHERE id = ?",
+          [newOrderId, tradeInId]
+        );
+      }
+
+      // Cập nhật số điện thoại & địa chỉ khách nếu chưa có
       await conn.query(
-        'UPDATE customers SET phone = COALESCE(phone, ?), address = COALESCE(NULLIF(address, ""), ?), order_count = ?, total_spent = ?, tier = ? WHERE id = ?',
-        [body.phone, body.address, Number(custStats.cnt || 0), spent, tier, customer.id],
+        'UPDATE customers SET phone = COALESCE(phone, ?), address = COALESCE(NULLIF(address, ""), ?) WHERE id = ?',
+        [body.phone, body.address, customer.id],
       );
 
       return {
-        orderId: orderResult.insertId,
+        orderId: newOrderId,
         orderCode,
+        id: newOrderId,
+        code: orderCode,
         subtotal,
         discount,
+        tradeInDiscount,
+        total: totalAmount,
         totalAmount,
-        serial_number: allSerials,
+        serial_number: 'CHỜ XUẤT KHO',
         items: itemsDetailed,
         pay: body.payment_method,
       };
@@ -411,94 +471,82 @@ const ClientModel = {
   async cancelCustomerOrder(customerId, orderCode) {
     return withTransaction(async (conn) => {
       const [[order]] = await conn.query(
-        'SELECT * FROM orders WHERE code = ? AND customer_id = ? FOR UPDATE',
+        'SELECT id FROM orders WHERE code = ? AND customer_id = ? FOR UPDATE',
         [orderCode, customerId],
       );
-
-      if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
-      if (order.status !== 'pending') {
-        throw new ApiError(400, 'Chỉ có thể hủy đơn hàng đang ở trạng thái Chờ xác nhận');
-      }
-
-      await conn.query('UPDATE orders SET status = "cancelled" WHERE id = ?', [order.id]);
-
-      let items = [];
-      try {
-        items = typeof order.items_json === 'string' ? JSON.parse(order.items_json) : (order.items_json || []);
-      } catch {}
-
-      if (items.length > 0) {
-        for (const it of items) {
-          await conn.query(
-            'UPDATE products SET stock_quantity = stock_quantity + ?, sold_count = GREATEST(0, sold_count - ?) WHERE id = ?',
-            [it.qty, it.qty, it.pid],
-          );
-          await conn.query(`
-            INSERT INTO inventory_movements (product_id, type, quantity, stock_before, stock_after, reason)
-            VALUES (?, 'return', ?, 0, 0, ?)
-          `, [it.pid, it.qty, `Khách hủy đơn hàng ${orderCode}`]);
-        }
-      } else if (order.product_id) {
-        await conn.query(
-          'UPDATE products SET stock_quantity = stock_quantity + ?, sold_count = GREATEST(0, sold_count - ?) WHERE id = ?',
-          [order.quantity, order.quantity, order.product_id],
-        );
-      }
-
-      const [[custStats]] = await conn.query(`
-        SELECT COUNT(*) AS cnt, COALESCE(SUM(total_amount), 0) AS spent
-        FROM orders
-        WHERE customer_id = ? AND status != 'cancelled'
-      `, [customerId]);
-      const spent = Number(custStats.spent || 0);
-      const tier = spent >= 100000000 ? 'VIP' : spent >= 50000000 ? 'Thân thiết' : 'Khách mới';
-      await conn.query(
-        'UPDATE customers SET order_count = ?, total_spent = ?, tier = ? WHERE id = ?',
-        [Number(custStats.cnt || 0), spent, tier, customerId],
-      );
+      if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng của bạn');
+      return OrderService.cancelOrder(conn, {
+        orderId: order.id,
+        reason: 'Khách hàng tự hủy trên website',
+        cancelledBy: customerId,
+        isCustomer: true,
+      });
     });
   },
 
+  /**
+   * Tra cứu bảo hành chính xác theo S/N: Chỉ đơn đã giao thành công (delivered) mới có hiệu lực
+   */
   async findOrderBySerial(sn) {
+    const cleanSn = String(sn || '').trim();
+    if (!cleanSn) return null;
+
     const [orders] = await pool.query(`
-      SELECT o.code, o.ordered_at, o.customer_name, o.serial_number, o.items_json,
+      SELECT o.code, o.ordered_at, o.delivered_at, o.customer_name, o.serial_number, o.items_json, o.status,
              p.name AS product_name, p.sku, p.warranty_months, p.id AS product_id
       FROM orders o
       LEFT JOIN products p ON p.id = o.product_id
-      WHERE (o.serial_number LIKE ? OR o.items_json LIKE ?)
-        AND o.status != 'cancelled'
+      WHERE (o.serial_number = ? OR JSON_CONTAINS(o.items_json, JSON_QUOTE(?), '$[*].serials'))
+        AND o.status = 'delivered'
       ORDER BY o.ordered_at DESC
       LIMIT 1
-    `, [`%${sn}%`, `%${sn}%`]);
+    `, [cleanSn, cleanSn]);
+
     return orders[0] || null;
   },
 
   async getActivePromotions() {
+    const today = new Date().toISOString().slice(0, 10);
     const [rows] = await pool.query(`
       SELECT id, code, title, type, discount_value, min_order_value, target_category, start_date, end_date, status
       FROM promotions
-      WHERE status = 'active' AND end_date >= CURDATE()
+      WHERE status = 'active' AND start_date <= ? AND end_date >= ? AND (max_uses = 0 OR used_count < max_uses)
       ORDER BY id ASC
-    `);
+    `, [today, today]);
     return rows;
   },
 
   async findActivePromotionByCode(code) {
+    const today = new Date().toISOString().slice(0, 10);
     const [[promo]] = await pool.query(
-      'SELECT * FROM promotions WHERE code = ? AND status = "active" AND start_date <= CURDATE() AND end_date >= CURDATE()',
-      [code],
+      'SELECT * FROM promotions WHERE code = ? AND status = "active" AND start_date <= ? AND end_date >= ?',
+      [code, today, today],
     );
     return promo || null;
   },
 
+  /**
+   * Đánh giá sản phẩm: Xác minh verified_purchase từ đơn hàng đã delivered và lưu status 'pending'
+   */
   async createProductReview(customer, { productId, rating, title, comment }) {
     const [[prod]] = await pool.query('SELECT name FROM products WHERE id = ?', [productId]);
     if (!prod) throw new ApiError(404, 'Không tìm thấy sản phẩm');
 
+    // Xác minh khách đã thực sự mua sản phẩm này trong một đơn hàng đã giao thành công chưa
+    const [[purchaseCheck]] = await pool.query(`
+      SELECT COUNT(*) AS cnt 
+      FROM orders 
+      WHERE customer_id = ? 
+        AND status = 'delivered' 
+        AND (product_id = ? OR JSON_CONTAINS(items_json, JSON_OBJECT('pid', ?)))
+    `, [customer.id, productId, productId]);
+
+    const isVerifiedPurchase = Number(purchaseCheck?.cnt || 0) > 0 ? 1 : 0;
+
     await pool.query(`
       INSERT INTO product_reviews
-        (customer_id, customer_name, product_id, product_name, rating, title, comment, status, source)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'customer')
+        (customer_id, customer_name, product_id, product_name, rating, title, comment, verified_purchase, status, source)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'customer')
     `, [
       customer.id,
       customer.full_name,
@@ -507,12 +555,12 @@ const ClientModel = {
       rating,
       title || 'Đánh giá từ khách hàng',
       comment,
+      isVerifiedPurchase,
     ]);
   },
 
   async createTradeInRequest(customer, { brand, model, year, ram, condition_desc, estimated_price }) {
-    const [[maxRow]] = await pool.query('SELECT COALESCE(MAX(id), 0) AS max_id FROM trade_ins');
-    const code = `TC-${String(Number(maxRow.max_id) + 1).padStart(3, '0')}`;
+    const code = await generateUniqueCode(pool, 'trade_ins', 'TC');
 
     await pool.query(`
       INSERT INTO trade_ins
@@ -541,12 +589,53 @@ const ClientModel = {
     return rows;
   },
 
+  /**
+   * Tạo yêu cầu RMA đổi trả: Kiểm tra quyền sở hữu đơn hàng, sản phẩm trong đơn, thời hạn và chống trùng
+   */
   async createRmaRequest(customer, { order_code, product_id, type, reason }) {
     const pid = Number(String(product_id).replace(/^p/, ''));
     const [[prod]] = await pool.query('SELECT name FROM products WHERE id = ?', [pid]);
+    if (!prod) throw new ApiError(404, 'Sản phẩm không tồn tại');
 
-    const [[maxRow]] = await pool.query('SELECT COALESCE(MAX(id), 0) AS max_id FROM rmas');
-    const code = `RMA-${String(Number(maxRow.max_id) + 1).padStart(3, '0')}`;
+    // 1. Kiểm tra đơn hàng thuộc quyền sở hữu của khách hàng
+    const [[order]] = await pool.query(
+      'SELECT * FROM orders WHERE code = ? AND customer_id = ?',
+      [order_code, customer.id]
+    );
+    if (!order) throw new ApiError(404, `Không tìm thấy đơn hàng "${order_code}" thuộc tài khoản của bạn`);
+
+    // 2. Chỉ được đổi trả đơn hàng đã giao thành công (delivered)
+    if (order.status !== 'delivered') {
+      throw new ApiError(400, 'Chỉ có thể tạo yêu cầu đổi trả cho đơn hàng đã giao thành công');
+    }
+
+    // 3. Kiểm tra sản phẩm có trong đơn hàng
+    let items = [];
+    try {
+      items = typeof order.items_json === 'string' ? JSON.parse(order.items_json) : (order.items_json || []);
+    } catch {}
+    const hasProduct = items.some((it) => (it.pid || it.product_id) === pid) || order.product_id === pid;
+    if (!hasProduct) {
+      throw new ApiError(400, `Sản phẩm "${prod.name}" không nằm trong đơn hàng "${order_code}"`);
+    }
+
+    // 4. Kiểm tra thời hạn áp dụng (30 ngày kể từ ngày giao hàng)
+    const orderDate = new Date(order.delivered_at || order.ordered_at);
+    const daysSinceDelivered = (Date.now() - orderDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceDelivered > 30) {
+      throw new ApiError(400, 'Đơn hàng đã vượt quá thời hạn đổi trả chính sách (tối đa 30 ngày)');
+    }
+
+    // 5. Chống tạo yêu cầu trùng đang xử lý
+    const [existingRma] = await pool.query(
+      "SELECT id FROM rmas WHERE order_code = ? AND product_id = ? AND status NOT IN ('Từ chối', 'Đã hủy') LIMIT 1",
+      [order_code, pid]
+    );
+    if (existingRma.length > 0) {
+      throw new ApiError(400, 'Sản phẩm trong đơn hàng này đã có yêu cầu đổi trả đang chờ xử lý');
+    }
+
+    const code = await generateUniqueCode(pool, 'rmas', 'RMA');
 
     await pool.query(`
       INSERT INTO rmas
@@ -556,9 +645,9 @@ const ClientModel = {
       code,
       order_code,
       pid,
-      prod ? prod.name : 'Sản phẩm',
+      prod.name,
       customer.id,
-      type || 'Đổi',
+      type === 'Trả' ? 'Trả' : 'Đổi',
       reason.trim(),
     ]);
     return code;
@@ -584,4 +673,3 @@ const ClientModel = {
 };
 
 module.exports = ClientModel;
-

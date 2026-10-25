@@ -4,7 +4,7 @@ const { pool } = require('../config/db');
 const { can } = require('../config/permissions');
 const { ApiError, asyncHandler } = require('../utils/helpers');
 
-/** Xác thực JWT, rồi đọc lại user từ DB để việc khoá tài khoản có hiệu lực ngay. */
+/** Xác thực JWT Staff/Admin, ngăn chặn token khách hàng và đọc lại user từ DB để việc khoá tài khoản có hiệu lực ngay. */
 const authenticate = asyncHandler(async (req, res, next) => {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
@@ -17,13 +17,18 @@ const authenticate = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
   }
 
+  // Kiểm tra chặt chẽ: Từ chối dứt khoát token customer
+  if (payload.role === 'customer' || payload.type === 'customer' || (payload.type && payload.type !== 'staff')) {
+    throw new ApiError(403, 'Token khách hàng không có quyền truy cập hệ thống quản trị');
+  }
+
   const [rows] = await pool.query(
     `SELECT u.id, u.email, u.full_name, u.status, u.locked_until, u.branch, u.data_visibility, u.custom_permissions, r.name AS role
        FROM users u JOIN roles r ON r.id = u.role_id WHERE u.id = ?`,
     [payload.sub],
   );
   const u = rows[0];
-  if (!u) throw new ApiError(401, 'Tài khoản không tồn tại');
+  if (!u) throw new ApiError(401, 'Tài khoản không tồn tại trong danh sách nhân viên');
   if (u.status !== 'active') throw new ApiError(403, 'Tài khoản đã bị khoá');
   if (u.locked_until && new Date(u.locked_until) > new Date()) {
     throw new ApiError(423, 'Tài khoản đang bị khoá tạm thời');
@@ -54,4 +59,12 @@ const authorize = (...perms) => (req, res, next) => {
   next();
 };
 
-module.exports = { authenticate, authorize };
+/** Yêu cầu có ÍT NHẤT MỘT trong các quyền được liệt kê. */
+const authorizeAny = (...perms) => (req, res, next) => {
+  if (!perms.some((p) => can(req.user, p))) {
+    throw new ApiError(403, 'Bạn không có quyền thực hiện thao tác này');
+  }
+  next();
+};
+
+module.exports = { authenticate, authorize, authorizeAny };

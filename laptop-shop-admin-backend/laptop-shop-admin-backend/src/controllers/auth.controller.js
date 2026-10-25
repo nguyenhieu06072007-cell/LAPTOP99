@@ -62,7 +62,11 @@ const AuthController = {
     }
     const combinedPerms = [...new Set([...rolePerms, ...customPerms])];
 
-    const token = jwt.sign({ sub: user.id, role: user.role }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN });
+    const token = jwt.sign(
+      { sub: user.id, role: user.role, type: 'staff' },
+      env.JWT_SECRET,
+      { expiresIn: env.JWT_EXPIRES_IN }
+    );
     res.json({
       data: {
         token,

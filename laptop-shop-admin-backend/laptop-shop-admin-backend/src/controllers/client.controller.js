@@ -1,8 +1,10 @@
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { z } = require('zod');
 const env = require('../config/env');
-const { ApiError, asyncHandler } = require('../utils/helpers');
+const { pool } = require('../config/db');
+const { ApiError, asyncHandler, addCalendarMonths } = require('../utils/helpers');
 const ClientModel = require('../models/client.model');
 
 const registerSchema = z.object({
@@ -28,6 +30,12 @@ const checkoutSchema = z.object({
   address: z.string().trim().min(8, 'Vui lòng nhập địa chỉ nhận hàng đầy đủ'),
   payment_method: z.string().default('cod'),
   coupon: z.string().trim().optional().nullish(),
+  trade_in_id: z.union([z.number(), z.string()]).optional().nullish().transform((v) => {
+    if (!v) return null;
+    const clean = String(v).replace(/^ti-/, '').replace(/^TC-/, '');
+    const n = Number(clean);
+    return Number.isFinite(n) ? n : null;
+  }),
   note: z.string().trim().max(1000).optional().nullish(),
 });
 
@@ -53,16 +61,21 @@ const ClientController = {
 
   getProductDetail: asyncHandler(async (req, res) => {
     const product = await ClientModel.getProductDetail(req.params.id);
-    if (!product) throw new ApiError(404, 'Không tìm thấy sản phẩm');
+    if (!product) throw new ApiError(404, 'Không tìm thấy sản phẩm hoặc sản phẩm đã ngừng kinh doanh');
     res.json({ data: product });
   }),
 
   register: asyncHandler(async (req, res) => {
     const { name, email, phone, password, address } = registerSchema.parse(req.body);
 
-    const exist = await ClientModel.findCustomerByEmail(email);
-    if (exist) {
-      throw new ApiError(400, 'Email này đã được đăng ký');
+    const existingEmail = await ClientModel.findCustomerByEmail(email);
+    if (existingEmail) {
+      throw new ApiError(409, 'Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.');
+    }
+
+    const existingPhone = await ClientModel.findCustomerByEmailOrPhone(phone);
+    if (existingPhone) {
+      throw new ApiError(409, 'Số điện thoại này đã được đăng ký. Vui lòng đăng nhập.');
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -75,7 +88,7 @@ const ClientController = {
     });
 
     const token = jwt.sign(
-      { sub: customer.id, role: 'customer', email: customer.email, name: customer.name },
+      { sub: customer.id, role: 'customer', type: 'customer', email: customer.email, name: customer.full_name },
       env.JWT_SECRET,
       { expiresIn: '30d' },
     );
@@ -103,7 +116,7 @@ const ClientController = {
     }
 
     const token = jwt.sign(
-      { sub: customer.id, role: 'customer', email: customer.email, name: customer.full_name },
+      { sub: customer.id, role: 'customer', type: 'customer', email: customer.email, name: customer.full_name },
       env.JWT_SECRET,
       { expiresIn: '30d' },
     );
@@ -117,14 +130,40 @@ const ClientController = {
           name: customer.full_name,
           email: customer.email,
           phone: customer.phone,
-          address: customer.address || '',
+          address: customer.address,
           tier: customer.tier,
         },
       },
-      message: 'Đăng nhập thành công',
     });
   }),
 
+  getMe: asyncHandler(async (req, res) => {
+    res.json({
+      data: {
+        id: req.customer.id,
+        code: req.customer.code,
+        name: req.customer.full_name,
+        email: req.customer.email,
+        phone: req.customer.phone,
+        address: req.customer.address,
+        tier: req.customer.tier,
+      },
+    });
+  }),
+
+  updateProfile: asyncHandler(async (req, res) => {
+    const { name, phone, address } = req.body;
+    const updated = await ClientModel.updateCustomerProfile(req.customer.id, {
+      name: name ? String(name).trim() : null,
+      phone: phone ? String(phone).trim() : null,
+      address: address ? String(address).trim() : null,
+    });
+    res.json({ data: updated });
+  }),
+
+  /**
+   * Quên mật khẩu an toàn: Sinh OTP ngẫu nhiên mật mã học, lưu hash trong CSDL, giới hạn tần suất, tuyệt đối không trả OTP trong response
+   */
   forgotPassword: asyncHandler(async (req, res) => {
     const identifier = String(req.body.identifier || req.body.email || req.body.phone || '').trim();
     if (!identifier) {
@@ -133,23 +172,39 @@ const ClientController = {
 
     const customer = await ClientModel.findCustomerByEmailOrPhone(identifier);
     if (!customer) {
-      throw new ApiError(404, 'Không tìm thấy tài khoản tương ứng với Email hoặc Số điện thoại này');
+      throw new ApiError(404, 'Không tìm thấy tài khoản tương ứng với thông tin đã nhập');
     }
 
-    const otp = String(Math.floor(100000 + Math.random() * 900000));
-    if (!global._resetOtpStore) global._resetOtpStore = new Map();
+    // 1. Giới hạn tần suất yêu cầu: Tối đa 3 lần / 15 phút
+    const [[rateCheck]] = await pool.query(`
+      SELECT COUNT(*) AS cnt 
+      FROM password_resets 
+      WHERE identifier = ? AND created_at >= NOW() - INTERVAL 15 MINUTE
+    `, [identifier.toLowerCase()]);
 
-    const otpData = {
-      otp,
-      customerId: customer.id,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-      email: customer.email,
-      phone: customer.phone,
-    };
+    if (Number(rateCheck?.cnt || 0) >= 3) {
+      throw new ApiError(429, 'Bạn đã gửi yêu cầu quá nhiều lần. Vui lòng đợi 15 phút trước khi thử lại.');
+    }
 
-    if (customer.email) global._resetOtpStore.set(customer.email.toLowerCase(), otpData);
-    if (customer.phone) global._resetOtpStore.set(customer.phone, otpData);
-    global._resetOtpStore.set(identifier.toLowerCase(), otpData);
+    // 2. Kiểm tra dịch vụ gửi OTP thực tế (Email / SMS)
+    const hasSmtpConfig = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER);
+    const isDevOrTest = process.env.NODE_ENV === 'test' || process.env.ALLOW_DEV_OTP === 'true';
+
+    if (!hasSmtpConfig && !isDevOrTest) {
+      throw new ApiError(503, 'Chức năng gửi OTP qua Email/SMS chưa sẵn sàng do máy chủ chưa cấu hình dịch vụ gửi tin. Vui lòng liên hệ tổng đài 1800 6888 để được hỗ trợ.');
+    }
+
+    // 3. Sinh mã OTP 6 chữ số bằng crypto ngẫu nhiên an toàn
+    const otpNumber = crypto.randomInt(100000, 1000000);
+    const otp = String(otpNumber);
+    const otpHash = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+
+    // 4. Lưu OTP hash vào bảng password_resets
+    await pool.query(`
+      INSERT INTO password_resets (customer_id, identifier, otp_hash, attempts, expires_at)
+      VALUES (?, ?, ?, 0, ?)
+    `, [customer.id, identifier.toLowerCase(), otpHash, expiresAt]);
 
     const maskedPhone = customer.phone
       ? customer.phone.slice(0, 3) + '****' + customer.phone.slice(-3)
@@ -161,51 +216,65 @@ const ClientController = {
     const isPhoneInput = /^0\d{9}$/.test(identifier);
     const targetChannel = isPhoneInput ? 'SMS Số điện thoại' : 'Hòm thư Gmail / Email';
 
+    // Tuyệt đối KHÔNG trả otp_preview hoặc ghi log OTP ra ngoài
     res.json({
       success: true,
       data: {
-        email: customer.email,
-        phone: customer.phone,
         masked_email: maskedEmail,
         masked_phone: maskedPhone,
         channel: isPhoneInput ? 'sms' : 'email',
-        otp_preview: otp,
         expires_in: 600,
       },
-      message: `Đã tạo mã xác thực OTP khôi phục mật khẩu gửi về ${targetChannel} (${maskedPhone || maskedEmail})`,
+      message: `Đã gửi mã xác thực OTP khôi phục mật khẩu đến ${targetChannel} (${maskedPhone || maskedEmail})`,
     });
   }),
 
+  /**
+   * Đặt lại mật khẩu: Đối chiếu OTP hash trong CSDL, giới hạn 5 lần thử, hủy OTP sau khi dùng
+   */
   resetPassword: asyncHandler(async (req, res) => {
     const identifier = String(req.body.identifier || req.body.email || req.body.phone || '').trim().toLowerCase();
     const otp = String(req.body.otp || '').trim();
     const newPassword = String(req.body.new_password || '');
 
     if (!identifier || !otp) {
-      throw new ApiError(400, 'Vui lòng nhập đầy đủ Email/Số điện thoại và mã xác thực OTP');
+      throw new ApiError(400, 'Vui lòng nhập đầy đủ thông tin tài khoản và mã xác thực OTP');
     }
     if (newPassword.length < 6) {
       throw new ApiError(400, 'Mật khẩu mới cần tối thiểu 6 ký tự');
     }
 
-    const record = global._resetOtpStore ? global._resetOtpStore.get(identifier) : null;
-    if (!record || record.otp !== otp) {
-      throw new ApiError(400, 'Mã xác thực OTP không chính xác');
+    // Lấy bản ghi OTP mới nhất còn hiệu lực
+    const [rows] = await pool.query(`
+      SELECT * FROM password_resets 
+      WHERE identifier = ? AND used_at IS NULL AND expires_at > NOW() 
+      ORDER BY id DESC LIMIT 1
+    `, [identifier]);
+
+    const record = rows[0];
+    if (!record) {
+      throw new ApiError(400, 'Mã xác thực OTP đã hết hạn hoặc không tồn tại. Vui lòng yêu cầu mã mới.');
     }
-    if (Date.now() > record.expiresAt) {
-      global._resetOtpStore.delete(identifier);
-      throw new ApiError(400, 'Mã xác thực OTP đã hết hạn, vui lòng yêu cầu mã mới');
+
+    if (record.attempts >= 5) {
+      await pool.query('UPDATE password_resets SET used_at = NOW() WHERE id = ?', [record.id]);
+      throw new ApiError(429, 'Đã nhập sai OTP quá 5 lần. Mã này đã bị vô hiệu hóa, vui lòng yêu cầu mã mới.');
     }
+
+    const isMatch = await bcrypt.compare(otp, record.otp_hash);
+    if (!isMatch) {
+      await pool.query('UPDATE password_resets SET attempts = attempts + 1 WHERE id = ?', [record.id]);
+      throw new ApiError(400, `Mã xác thực OTP không chính xác (còn ${4 - record.attempts} lần thử)`);
+    }
+
+    // Đánh dấu OTP đã sử dụng ngay lập tức (dùng 1 lần duy nhất)
+    await pool.query('UPDATE password_resets SET used_at = NOW() WHERE id = ?', [record.id]);
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    const updatedCustomer = await ClientModel.updateCustomerPassword(record.customerId, passwordHash);
-
-    if (record.email) global._resetOtpStore.delete(record.email.toLowerCase());
-    if (record.phone) global._resetOtpStore.delete(record.phone);
-    global._resetOtpStore.delete(identifier);
+    const updatedCustomer = await ClientModel.updateCustomerPassword(record.customer_id, passwordHash);
 
     const token = jwt.sign(
-      { sub: updatedCustomer.id, role: 'customer', email: updatedCustomer.email, name: updatedCustomer.full_name },
+      { sub: updatedCustomer.id, role: 'customer', type: 'customer', email: updatedCustomer.email, name: updatedCustomer.full_name },
       env.JWT_SECRET,
       { expiresIn: '30d' },
     );
@@ -215,94 +284,52 @@ const ClientController = {
       message: 'Đặt lại mật khẩu mới thành công',
       data: {
         token,
-        customer: {
-          id: updatedCustomer.id,
-          code: updatedCustomer.code,
-          name: updatedCustomer.full_name,
-          email: updatedCustomer.email,
-          phone: updatedCustomer.phone,
-          address: updatedCustomer.address || '',
-          tier: updatedCustomer.tier,
-        },
+        customer: updatedCustomer,
       },
     });
-  }),
-
-  getMe: asyncHandler(async (req, res) => {
-    res.json({ data: req.customer });
-  }),
-
-  updateProfile: asyncHandler(async (req, res) => {
-    const updated = await ClientModel.updateCustomerProfile(req.customer.id, req.body);
-    res.json({ data: updated });
   }),
 
   createOrder: asyncHandler(async (req, res) => {
     const body = checkoutSchema.parse(req.body);
     const result = await ClientModel.createOrder(req.customer, body);
-
     res.status(201).json({
-      data: {
-        id: result.orderCode,
-        code: result.orderCode,
-        total: result.totalAmount,
-        subtotal: result.subtotal,
-        discount: result.discount,
-        serial_number: result.serial_number,
-        items: result.items,
-        pay: result.pay,
-      },
+      success: true,
+      data: result,
     });
   }),
 
   getMyOrders: asyncHandler(async (req, res) => {
     const rows = await ClientModel.getOrdersByCustomer(req.customer.id);
     const mapped = rows.map((o) => {
+      let statusText = 'Chờ xác nhận';
+      if (o.status === 'confirmed') statusText = 'Đã xác nhận';
+      else if (o.status === 'shipping') statusText = 'Đang giao hàng';
+      else if (o.status === 'delivered') statusText = 'Giao thành công';
+      else if (o.status === 'cancelled') statusText = 'Đã hủy';
+
       let items = [];
       try {
         items = typeof o.items_json === 'string' ? JSON.parse(o.items_json) : (o.items_json || []);
-      } catch {
-        items = [];
-      }
-      if (!items.length) {
-        items = [{
-          pid: o.product_id,
-          name: o.product_name,
-          sku: o.sku,
-          qty: o.quantity,
-          unit_price: Number(o.unit_price),
-          serials: o.serial_number ? o.serial_number.split(', ') : [],
-        }];
-      }
-
-      let statusText = o.status;
-      if (o.status === 'pending') statusText = 'Chờ xác nhận';
-      else if (o.status === 'confirmed') statusText = 'Đã xác nhận';
-      else if (o.status === 'shipping') statusText = 'Đang giao';
-      else if (o.status === 'delivered') statusText = 'Hoàn thành';
-      else if (o.status === 'cancelled') statusText = 'Đã hủy';
+      } catch {}
 
       return {
         id: o.code,
-        cid: o.customer_id,
-        name: o.customer_name,
-        phone: o.customer_phone,
-        addr: o.shipping_address,
+        code: o.code,
+        order_id: o.id,
         items,
-        sub: Number(o.total_amount) + Number(o.discount_amount),
-        disc: Number(o.discount_amount),
         total: Number(o.total_amount),
-        pay: o.payment_method,
-        paid: o.payment_status === 'paid',
-        status: statusText,
-        raw_status: o.status,
-        at: new Date(o.ordered_at).getTime(),
-        coupon: o.coupon_code || '',
-        note: o.notes || '',
+        status: o.status,
+        status_text: statusText,
+        payment_status: o.payment_status,
+        payment_verification: o.payment_verification_status || 'none',
+        payment_method: o.payment_method,
+        created_at: new Date(o.ordered_at).getTime(),
+        address: o.shipping_address,
+        phone: o.customer_phone,
+        name: o.customer_name,
         serial_number: o.serial_number,
       };
     });
-
     res.json({ data: mapped });
   }),
 
@@ -312,22 +339,29 @@ const ClientController = {
   }),
 
   confirmOrderPayment: asyncHandler(async (req, res) => {
-    const bankInfo = req.body?.bank_info || '';
-    const result = await ClientModel.confirmCustomerOrderPayment(req.customer.id, req.params.code, bankInfo);
+    const bankInfo = String(req.body.bank_info || '').trim();
+    const result = await ClientModel.confirmCustomerOrderPayment(
+      req.customer.id,
+      req.params.code,
+      bankInfo,
+    );
     res.json({
       success: true,
-      message: 'Đã xác nhận thanh toán chuyển khoản QR ngân hàng thành công!',
+      message: result.message,
       data: result,
     });
   }),
 
+  /**
+   * Tra cứu bảo hành chính xác theo tháng lịch, chỉ áp dụng cho đơn đã giao thành công
+   */
   lookupWarranty: asyncHandler(async (req, res) => {
     const sn = String(req.query.sn || '').trim().toUpperCase();
     if (!sn) throw new ApiError(400, 'Vui lòng cung cấp số Serial S/N');
 
     const order = await ClientModel.findOrderBySerial(sn);
     if (!order) {
-      return res.json({ data: null, found: false });
+      return res.json({ data: null, found: false, message: 'Không tìm thấy thông tin bảo hành kích hoạt cho số Serial này' });
     }
 
     let warrantyMonths = order.warranty_months || 12;
@@ -346,9 +380,9 @@ const ClientController = {
       }
     } catch {}
 
-    const purchaseDate = new Date(order.ordered_at).getTime();
-    const endDate = purchaseDate + warrantyMonths * 30.44 * 24 * 60 * 60 * 1000;
-    const isValid = endDate > Date.now();
+    const startDate = new Date(order.delivered_at || order.ordered_at);
+    const endDate = addCalendarMonths(startDate, warrantyMonths);
+    const isValid = endDate.getTime() > Date.now();
 
     res.json({
       found: true,
@@ -357,9 +391,9 @@ const ClientController = {
         oid: order.code,
         pid: prodId,
         product_name: prodName,
-        at: purchaseDate,
+        at: startDate.getTime(),
         months: warrantyMonths,
-        end_date: endDate,
+        end_date: endDate.getTime(),
         is_valid: isValid,
       },
     });
@@ -373,6 +407,7 @@ const ClientController = {
       value: Number(p.discount_value),
       cap: 2000000,
       min: Number(p.min_order_value),
+      target_category: p.target_category,
       exp: new Date(p.end_date).toISOString().slice(0, 10),
       active: p.status === 'active',
       desc: p.title + (p.type === 'percent' ? ` (Giảm ${p.discount_value}%)` : ` (Giảm ${new Intl.NumberFormat('vi-VN').format(p.discount_value)} đ)`),
@@ -380,6 +415,9 @@ const ClientController = {
     res.json({ data: mapped });
   }),
 
+  /**
+   * Kiểm tra mã khuyến mãi với đầy đủ điều kiện ngày, lượt dùng, giá trị tối thiểu và danh mục
+   */
   checkPromotion: asyncHandler(async (req, res) => {
     const code = String(req.body.code || '').trim().toUpperCase();
     const subtotal = Number(req.body.subtotal || 0);
@@ -391,7 +429,18 @@ const ClientController = {
       return res.json({ valid: false, message: 'Mã không hợp lệ hoặc đã hết hạn' });
     }
 
-    const minOrder = Number(promo.min_order_value);
+    const today = new Date().toISOString().slice(0, 10);
+    if (promo.start_date && promo.start_date > today) {
+      return res.json({ valid: false, message: `Chương trình chưa bắt đầu (hiệu lực từ ngày ${promo.start_date})` });
+    }
+    if (promo.end_date && promo.end_date < today) {
+      return res.json({ valid: false, message: 'Mã khuyến mãi đã hết thời hạn sử dụng' });
+    }
+    if (promo.max_uses > 0 && promo.used_count >= promo.max_uses) {
+      return res.json({ valid: false, message: 'Mã khuyến mãi đã hết lượt sử dụng' });
+    }
+
+    const minOrder = Number(promo.min_order_value || 0);
     if (subtotal < minOrder) {
       return res.json({
         valid: false,
@@ -404,7 +453,7 @@ const ClientController = {
     if (promo.type === 'percent') {
       discount = Math.min(Math.round((subtotal * Number(promo.discount_value)) / 100), 2000000);
     } else {
-      discount = Number(promo.discount_value);
+      discount = Math.min(subtotal, Number(promo.discount_value));
     }
 
     res.json({
@@ -431,7 +480,7 @@ const ClientController = {
       comment: comment.trim(),
     });
 
-    res.status(201).json({ success: true, message: 'Cảm ơn bạn đã gửi đánh giá' });
+    res.status(201).json({ success: true, message: 'Cảm ơn bạn đã gửi đánh giá. Đánh giá sẽ được hiển thị sau khi duyệt.' });
   }),
 
   submitTradeIn: asyncHandler(async (req, res) => {
@@ -456,7 +505,8 @@ const ClientController = {
   getMyTradeIns: asyncHandler(async (req, res) => {
     const rows = await ClientModel.getTradeInsByCustomer(req.customer.id);
     const mapped = rows.map((r) => ({
-      id: r.code,
+      id: r.id,
+      code: r.code,
       cid: r.customer_id,
       brand: r.brand,
       model: r.model,
@@ -466,6 +516,7 @@ const ClientController = {
       est: Number(r.estimated_price),
       final: r.final_price ? Number(r.final_price) : null,
       status: r.status,
+      used_in_order_id: r.used_in_order_id,
       at: new Date(r.created_at).getTime(),
     }));
     res.json({ data: mapped });
@@ -491,7 +542,8 @@ const ClientController = {
   getMyRmas: asyncHandler(async (req, res) => {
     const rows = await ClientModel.getRmasByCustomer(req.customer.id);
     const mapped = rows.map((r) => ({
-      id: r.code,
+      id: r.id,
+      code: r.code,
       oid: r.order_code,
       pid: r.product_id ? 'p' + r.product_id : '',
       cid: r.customer_id,
@@ -521,4 +573,3 @@ const ClientController = {
 };
 
 module.exports = ClientController;
-

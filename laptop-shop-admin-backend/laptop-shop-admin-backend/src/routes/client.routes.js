@@ -24,12 +24,12 @@ const authenticateCustomer = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
   }
 
-  if (payload.role !== 'customer') {
+  if (payload.role !== 'customer' || payload.type === 'staff') {
     throw new ApiError(403, 'Yêu cầu tài khoản khách hàng');
   }
 
   const customer = await ClientModel.findCustomerById(payload.sub);
-  if (!customer) throw new ApiError(401, 'Tài khoản không tồn tại');
+  if (!customer) throw new ApiError(401, 'Tài khoản khách hàng không tồn tại');
   req.customer = customer;
   next();
 });
@@ -40,7 +40,7 @@ const optionalCustomer = async (req, res, next) => {
   if (token) {
     try {
       const payload = jwt.verify(token, env.JWT_SECRET);
-      if (payload.role === 'customer') {
+      if (payload.role === 'customer' && payload.type !== 'staff') {
         const customer = await ClientModel.findCustomerById(payload.sub);
         if (customer) req.customer = customer;
       }

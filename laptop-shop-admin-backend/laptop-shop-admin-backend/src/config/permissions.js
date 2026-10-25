@@ -67,26 +67,37 @@ function permissionMatches(allowed, requested) {
   const allowedPerm = String(allowed).trim().toLowerCase();
   const requestedPerm = String(requested).trim().toLowerCase();
 
-  if (allowedPerm === '*' || requestedPerm === '*') return true;
+  // Wildcard '*' được cấp cho người dùng => có toàn bộ quyền
+  if (allowedPerm === '*') return true;
   if (allowedPerm === requestedPerm) return true;
 
-  const regex = new RegExp(`^${allowedPerm.replace(/[|\\{}()[\]^$+?.]/g, '\\$&').replace(/\*/g, '.*')}$`);
-  return regex.test(requestedPerm);
+  // Xử lý wildcard dạng namespace như 'order:*', 'inventory:*'
+  if (allowedPerm.includes('*')) {
+    const regexPattern = `^${allowedPerm.replace(/[|\\{}()[\]^$+?.]/g, '\\$&').replace(/\*/g, '.*')}$`;
+    const regex = new RegExp(regexPattern);
+    return regex.test(requestedPerm);
+  }
+
+  return false;
 }
 
 function can(userOrRole, permission) {
   if (!userOrRole || !permission) return false;
 
   const role = typeof userOrRole === 'string' ? userOrRole : userOrRole.role;
+  const roleName = String(role || '').trim().toLowerCase();
+  if (roleName === 'super_admin') return true;
+
   const customPerms = typeof userOrRole === 'object' ? normalizePermissionList(userOrRole.custom_permissions) : [];
   const rolePerms = normalizePermissionList(ROLE_PERMISSIONS[role] || []);
   const allPerms = [...new Set([...rolePerms, ...customPerms])];
 
-  if (allPerms.some((p) => permissionMatches(p, '*')) || String(role || '').trim().toLowerCase() === 'super_admin') {
+  if (allPerms.includes('*') || allPerms.some((p) => String(p).trim().toLowerCase() === '*')) {
     return true;
   }
 
-  return allPerms.some((p) => permissionMatches(p, permission));
+  const requested = String(permission).trim().toLowerCase();
+  return allPerms.some((p) => permissionMatches(p, requested));
 }
 
 module.exports = { ROLE_PERMISSIONS, can };
