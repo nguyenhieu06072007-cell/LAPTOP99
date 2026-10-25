@@ -14,7 +14,6 @@ function sd(d) {
   return `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
 }
 
-const fmtDate = sd;
 window.fmtDate = sd;
 
 function stars(n) {

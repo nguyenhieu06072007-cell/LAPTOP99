@@ -6,8 +6,6 @@
    - 100% Authentic DB Products, Categories, Promos & News Preserved
    ========================================================================== */
 
-const fmtDate = typeof sd === 'function' ? sd : (d => d ? new Date(d).toLocaleDateString('vi-VN') : '');
-
 async function viewHome() {
   const [cats, prodsRes, promoRes, newsRes, bannersRes] = await Promise.all([
     ensureCategories(),
@@ -591,7 +589,7 @@ async function viewHome() {
             <a href="#/news/${n.id}" class="sh-news-card">
               <img src="${resolveAssetUrl(n.thumbnail || '/uploads/products/real-macbook-pro.jpg')}" alt="${esc(n.title)}" class="sh-news-thumb" loading="lazy">
               <div class="sh-news-body">
-                <div class="sh-news-date">📅 ${fmtDate(n.created_at || Date.now())}</div>
+                <div class="sh-news-date">📅 ${sd(n.created_at || Date.now())}</div>
                 <div class="sh-news-title">${esc(n.title)}</div>
                 <div class="sh-news-summary">${esc(n.summary || '')}</div>
               </div>
