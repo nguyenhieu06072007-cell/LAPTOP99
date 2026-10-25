@@ -36,6 +36,7 @@ async function viewHome() {
 
   // Cấu hình Hero 3D Showroom từ Admin DB (nếu có lưu ở banners table)
   const hero3dConfig = dbBanners.find((b) => b.position === 'hero_3d');
+  cache.hero3dConfig = hero3dConfig;
   const hero3dEnabled = hero3dConfig ? hero3dConfig.is_active !== 0 : true;
   const heroBadge = hero3dConfig?.badge_text || '✨ SHOWROOM CÔNG NGHỆ 3D • LAPTOP99';
   const heroTitle = hero3dConfig?.title || 'Trải Nghiệm Laptop Tương Tác';
@@ -125,6 +126,17 @@ async function viewHome() {
                   <button type="button" class="sh-view-btn active" data-view="perspective" onclick="A.setHero3DView('perspective')">Phối cảnh</button>
                   <button type="button" class="sh-view-btn" data-view="front" onclick="A.setHero3DView('front')">Chính diện</button>
                   <button type="button" class="sh-view-btn" data-view="top" onclick="A.setHero3DView('top')">Góc nghiêng</button>
+                </div>
+              </div>
+
+              <div class="sh-control-row">
+                <span class="sh-control-lbl">Ảnh màn hình:</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <label class="sh-view-btn" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+                    <span>📷 Đổi ảnh màn hình</span>
+                    <input type="file" accept="image/*" style="display:none" onchange="if(this.files[0]) A.setHero3DScreenImage(this.files[0])">
+                  </label>
+                  <button type="button" class="sh-view-btn" onclick="A.initHero3D('hero-3d-canvas', { defaultColor: '${heroDefaultColor}', screenImageUrl: null })" title="Màn hình mặc định">Mặc định</button>
                 </div>
               </div>
             </div>

@@ -400,6 +400,11 @@ const Hero3DService = (function () {
     const model = buildLaptopModel(activeColor);
     scene.add(model);
 
+    // Apply custom screen image if provided
+    if (options && options.screenImageUrl) {
+      setScreenImage(options.screenImageUrl);
+    }
+
     // Initial position & rotation
     laptopGroup.position.set(0, 0.05, 0);
     currentRotationY = 0.38;
@@ -531,6 +536,26 @@ const Hero3DService = (function () {
     renderer.render(scene, camera);
   }
 
+  function setScreenImage(imageUrlOrData) {
+    if (!screenMesh || !imageUrlOrData) return;
+    const resolvedUrl = typeof resolveAssetUrl === 'function' ? resolveAssetUrl(imageUrlOrData) : imageUrlOrData;
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
+    loader.load(
+      resolvedUrl,
+      (texture) => {
+        texture.anisotropy = 4;
+        texture.generateMipmaps = true;
+        screenMesh.material.map = texture;
+        screenMesh.material.needsUpdate = true;
+      },
+      undefined,
+      (err) => {
+        console.warn('Could not load screen texture:', err);
+      }
+    );
+  }
+
   // Switch Laptop Color Material in Real-time
   function setColor(colorKey) {
     activeColor = colorKey;
@@ -599,6 +624,7 @@ const Hero3DService = (function () {
   return {
     init,
     setColor,
+    setScreenImage,
     setView,
     destroy,
     COLOR_PALETTE,
@@ -608,3 +634,4 @@ const Hero3DService = (function () {
 
 // Attach to window for global access
 window.Hero3DService = Hero3DService;
+

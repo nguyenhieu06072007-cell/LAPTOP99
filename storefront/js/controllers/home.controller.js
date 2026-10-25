@@ -513,6 +513,21 @@ const HomeController = {
     }
   },
 
+  setHero3DScreenImage(urlOrFile) {
+    if (urlOrFile instanceof File) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (typeof Hero3DService !== 'undefined' && Hero3DService.setScreenImage) {
+          Hero3DService.setScreenImage(e.target.result);
+          toast('Đã dán ảnh lên màn hình Laptop 3D!');
+        }
+      };
+      reader.readAsDataURL(urlOrFile);
+    } else if (typeof Hero3DService !== 'undefined' && Hero3DService.setScreenImage) {
+      Hero3DService.setScreenImage(urlOrFile);
+    }
+  },
+
   /* ========================================================================
      RULE-BASED LAPTOP FINDER ("Gợi ý chọn laptop")
      ======================================================================== */

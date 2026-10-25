@@ -171,7 +171,11 @@ async function render() {
     A.resumeTrust();
     if (document.getElementById('hero-3d-canvas')) {
       setTimeout(() => {
-        A.initHero3D('hero-3d-canvas');
+        const cfg = cache.hero3dConfig || {};
+        A.initHero3D('hero-3d-canvas', {
+          defaultColor: cfg.bg_theme || 'space_gray',
+          screenImageUrl: cfg.image_url || null,
+        });
       }, 50);
     }
     if (document.getElementById('sh-finder-results-grid')) {
