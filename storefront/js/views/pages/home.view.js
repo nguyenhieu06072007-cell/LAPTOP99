@@ -409,7 +409,7 @@ async function viewHome() {
               </div>
 
               <div class="mhb-visual-box">
-                <img src="${resolveAssetUrl('/uploads/products/real-asus-rog.jpg')}" alt="MSI Raider Gaming" class="mhb-laptop-img">
+                <img src="${resolveAssetUrl('/uploads/msi_raider_laptop_seamless.png')}" alt="MSI Raider GE78HX" class="mhb-laptop-img">
               </div>
             </div>
 
@@ -496,7 +496,7 @@ async function viewHome() {
                 <div class="mrc-mb-cta">Mua ngay &gt;</div>
               </div>
               <div class="mrc-mb-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-lenovo-legion.jpg')}" alt="Phụ kiện" class="mrc-mb-img">
+                <img src="${resolveAssetUrl('/uploads/accessory_thumb.png')}" alt="Phụ kiện" class="mrc-mb-img">
               </div>
             </a>
           </div>
@@ -509,13 +509,13 @@ async function viewHome() {
       <div class="brand-logos-card">
         <span class="blc-title">THƯƠNG HIỆU NỔI BẬT</span>
         <div class="blc-logos-track">
-          <a href="#/products?brand=ASUS" class="blc-item" title="Laptop ASUS"><img src="${resolveAssetUrl('/uploads/asus.svg')}" alt="ASUS"></a>
-          <a href="#/products?brand=Acer" class="blc-item" title="Laptop Acer"><img src="${resolveAssetUrl('/uploads/acer.svg')}" alt="Acer"></a>
-          <a href="#/products?brand=Dell" class="blc-item" title="Laptop Dell"><img src="${resolveAssetUrl('/uploads/dell.svg')}" alt="Dell"></a>
-          <a href="#/products?brand=HP" class="blc-item" title="Laptop HP"><img src="${resolveAssetUrl('/uploads/hp.svg')}" alt="HP"></a>
-          <a href="#/products?brand=Lenovo" class="blc-item" title="Laptop Lenovo"><img src="${resolveAssetUrl('/uploads/lenovo.svg')}" alt="Lenovo"></a>
-          <a href="#/products?brand=Apple" class="blc-item" title="MacBook Apple"><img src="${resolveAssetUrl('/uploads/apple.svg')}" alt="Apple"></a>
-          <a href="#/products?brand=MSI" class="blc-item" title="Laptop MSI"><img src="${resolveAssetUrl('/uploads/msi.svg')}" alt="MSI"></a>
+          <a href="#/products?brand=ASUS" class="blc-item" title="Laptop ASUS"><img src="${resolveAssetUrl('/uploads/brands/asus.svg')}" alt="ASUS" onerror="this.src='uploads/brands/asus.png'"></a>
+          <a href="#/products?brand=Acer" class="blc-item" title="Laptop Acer"><img src="${resolveAssetUrl('/uploads/brands/acer.svg')}" alt="Acer" onerror="this.src='uploads/brands/acer.png'"></a>
+          <a href="#/products?brand=Dell" class="blc-item" title="Laptop Dell"><img src="${resolveAssetUrl('/uploads/brands/dell.svg')}" alt="Dell" onerror="this.src='uploads/brands/dell.png'"></a>
+          <a href="#/products?brand=HP" class="blc-item" title="Laptop HP"><img src="${resolveAssetUrl('/uploads/brands/hp.svg')}" alt="HP" onerror="this.src='uploads/brands/hp.png'"></a>
+          <a href="#/products?brand=Lenovo" class="blc-item" title="Laptop Lenovo"><img src="${resolveAssetUrl('/uploads/brands/lenovo.svg')}" alt="Lenovo" onerror="this.src='uploads/brands/lenovo.png'"></a>
+          <a href="#/products?brand=Apple" class="blc-item" title="MacBook Apple"><img src="${resolveAssetUrl('/uploads/brands/apple.svg')}" alt="Apple" onerror="this.src='uploads/brands/apple.png'"></a>
+          <a href="#/products?brand=MSI" class="blc-item" title="Laptop MSI"><img src="${resolveAssetUrl('/uploads/brands/msi.svg')}" alt="MSI" onerror="this.src='uploads/brands/msi.png'"></a>
         </div>
       </div>
     </section>
@@ -550,7 +550,7 @@ async function viewHome() {
     <section class="sec reveal-on-scroll">
       <div class="macbook-showcase-banner">
         <div class="msb-left">
-          <img src="${resolveAssetUrl('/uploads/products/real-macbook-pro.jpg')}" alt="MacBook Pro 16 M3 Pro" class="msb-img">
+          <img src="${resolveAssetUrl('/uploads/banner_macbook_laptop_seamless.png')}" alt="MacBook Pro 16 M3 Pro" class="msb-img">
         </div>
         <div class="msb-center">
           <div class="msb-title-row">
@@ -608,7 +608,8 @@ async function viewHome() {
       </div>
     </section>
 
-      <!-- BANNER NGANG FLASH SALE KÈM ĐỒNG HỒ ĐẾM NGƯỢC (ĐỒNG BỘ TỪ ADMIN CMS) -->
+    <!-- BANNER NGANG FLASH SALE KÈM ĐỒNG HỒ ĐẾM NGƯỢC (ĐỒNG BỘ TỪ ADMIN CMS) -->
+    <section class="sec flash-sale-sec reveal-on-scroll">
       ${(() => {
         const fsTitle = flashSaleBanner ? esc(flashSaleBanner.title) : 'ĐẠI TIỆC LAPTOP CHÍNH HÃNG';
         const fsHl = flashSaleBanner && flashSaleBanner.highlight_text ? ('— ' + esc(flashSaleBanner.highlight_text)) : '— GIẢM ĐẾN 35% + TRẢ GÓP 0%';

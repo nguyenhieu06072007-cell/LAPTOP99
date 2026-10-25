@@ -30,7 +30,7 @@ function renderTopInfoBar() {
       </div>
       <div class="tib-right">
         <a href="tel:18006888" class="tib-item tib-hotline">
-          <span class="tib-icon">📞</span> Hotline: <b>1800 6888</b>
+          <span class="tib-icon">${ic('phone', 14)}</span> Hotline: <b>1800 6888</b>
         </a>
       </div>
     </div>

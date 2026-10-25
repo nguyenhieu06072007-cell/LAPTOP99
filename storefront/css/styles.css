@@ -155,15 +155,15 @@ input[type=checkbox], input[type=radio] { width: auto; accent-color: var(--acc);
 h1, h2, h3, h4 { margin: 0; font-weight: 700; color: var(--fg); line-height: 1.28; }
 p { margin: 0; }
 
-/* Standard compact e-commerce container (1200px) */
+/* Standard compact e-commerce container (1340px) */
 .wrap {
-  max-width: 1200px;
+  max-width: 1340px;
   width: 100%;
   margin: 0 auto;
   padding: 0 14px;
 }
 @media (min-width: 1440px) {
-  .wrap { max-width: 1220px; padding: 0 16px; }
+  .wrap { max-width: 1360px; padding: 0 16px; }
 }
 
 .muted { color: var(--mut); }
@@ -5204,9 +5204,27 @@ p { margin: 0; }
   color: #64748B !important;
 }
 
+/* 4.5. MODERN HERO LAYOUT GRID */
+.modern-home-wrap {
+  max-width: 1340px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.modern-hero-sec {
+  padding: 14px 0 8px !important;
+}
+
+.modern-hero-grid {
+  display: grid !important;
+  grid-template-columns: 205px minmax(0, 1fr) 250px !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+}
+
 /* 5. MODERN HERO BANNER (MSI RAIDER GAMING) */
 .modern-hero-banner .mhb-card {
-  background: radial-gradient(circle at 82% 35%, #2B101E 0%, #161824 55%, #0F1017 100%);
+  background: radial-gradient(circle at 75% 45%, #2A0F1D 0%, #151824 50%, #0D0E15 100%);
   border: 1px solid rgba(225, 29, 72, 0.25);
   border-radius: 14px;
   position: relative;
@@ -5304,12 +5322,15 @@ p { margin: 0; }
   align-items: center;
   justify-content: center;
   position: relative;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 .mhb-laptop-img {
   width: 100%;
-  max-height: 220px;
+  max-height: 240px;
   object-fit: contain;
-  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.65));
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.75));
   transition: transform 0.3s ease;
 }
 .mhb-card:hover .mhb-laptop-img {
