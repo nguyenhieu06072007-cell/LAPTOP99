@@ -44,54 +44,53 @@ const BRAND_RIBBON_MAP = {
 };
 
 function brandLogo(mode = 'full') {
+  const logoSrc = 'storefront/assets/logo-laptop99.png';
+  const sz = mode === 'mini' ? 20 : 38;
   const isHeader = mode === 'header';
   const isFooter = mode === 'footer';
 
-  const laptopIcoSvg = `<svg width="34" height="26" viewBox="0 0 38 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-    <rect x="5" y="2" width="28" height="19" rx="3" stroke="#FFFFFF" stroke-width="2.2" fill="#1E202B"/>
-    <rect x="8" y="5" width="22" height="13" rx="1.5" fill="#E11D48"/>
-    <path d="M12 9L15 12L12 15" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="17" y1="14" x2="25" y2="14" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M1 23C1 22.4477 1.44772 22 2 22H36C36.5523 22 37 22.4477 37 23V24C37 25.1046 36.1046 26 35 26H3C1.89543 26 1 25.1046 1 24V23Z" fill="#E11D48"/>
-    <line x1="16" y1="24" x2="22" y2="24" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
-  </svg>`;
+  const imgHtml = `<img src="${logoSrc}" alt="Laptop99 Logo" width="${sz}" height="${sz}" class="brand-logo-img" style="width:${sz}px;height:${sz}px;border-radius:${mode === 'mini' ? '5px' : '9px'};object-fit:cover;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.22);border:1.5px solid rgba(255,255,255,0.75)">`;
+
+  if (mode === 'mini') {
+    return `<span class="hs-brand-seal brand-logo-wrap" title="Thương hiệu Laptop99 Chính Hãng">${imgHtml} <span>LAPTOP<span style="color:var(--brand-red)">99</span> OFFICIAL</span></span>`;
+  }
 
   if (isHeader) {
-    return `<span class="brand-logo-wrap" style="display:inline-flex;align-items:center;gap:10px">
-      ${laptopIcoSvg}
-      <span style="display:flex;flex-direction:column;line-height:1">
-        <span class="brand-title" style="font-size:1.45rem;font-weight:900;letter-spacing:-0.03em;color:#FFFFFF;display:inline-flex;align-items:center">
-          <span>LAPTOP</span><span style="color:#E11D48;margin-left:1px">99</span>
+    return `<span class="brand-logo-wrap" style="display:inline-flex;align-items:center;gap:9px">
+      ${imgHtml}
+      <span style="display:flex;flex-direction:column;line-height:1.05">
+        <span class="brand-title" style="font-size:1.32rem;font-weight:900;letter-spacing:-0.03em;color:#FFFFFF;text-shadow:0 1px 3px rgba(0,0,0,0.35);display:inline-flex;align-items:center">
+          <span style="color:#FFFFFF">LAPTOP</span><span style="color:#FEF08A;font-weight:900;margin-left:1px;filter:drop-shadow(0 0 6px rgba(254,240,138,0.6))">99</span>
         </span>
-        <span class="brand-sub-badge" style="font-size:0.56rem;font-weight:700;letter-spacing:0.16em;color:#E11D48;margin-top:4px;text-transform:uppercase">
-          UY TÍN TẠO NÊN THƯƠNG HIỆU
+        <span class="brand-sub-badge" style="font-size:0.54rem;font-weight:800;letter-spacing:0.1em;color:rgba(255,255,255,0.92);display:inline-flex;align-items:center;gap:4.5px;margin-top:2px">
+          CHÍNH HÃNG 100% <i class="pulse-live-beacon"></i>
         </span>
       </span>
     </span>`;
   }
 
   if (isFooter) {
-    return `<span class="brand-logo-wrap footer-mode" style="display:inline-flex;align-items:center;gap:10px">
-      ${laptopIcoSvg}
-      <span style="display:flex;flex-direction:column;line-height:1">
-        <span class="brand-title" style="font-size:1.35rem;font-weight:900;letter-spacing:-0.03em;color:#FFFFFF;display:inline-flex;align-items:center">
-          <span>LAPTOP</span><span style="color:#E11D48;margin-left:1px">99</span>
+    return `<span class="brand-logo-wrap footer-mode" style="display:inline-flex;align-items:center;gap:9px">
+      ${imgHtml}
+      <span style="display:flex;flex-direction:column;line-height:1.05">
+        <span class="brand-title" style="font-size:1.24rem;font-weight:900;letter-spacing:-0.03em;color:#FFFFFF;display:inline-flex;align-items:center">
+          <span style="color:#FFFFFF">LAPTOP</span><span style="color:var(--brand-red);font-weight:900;margin-left:1px">99</span>
         </span>
-        <span class="brand-sub-badge" style="font-size:0.55rem;font-weight:700;letter-spacing:0.14em;color:#AEB4BF;margin-top:3px;text-transform:uppercase">
-          UY TÍN TẠO NÊN THƯƠNG HIỆU
+        <span class="brand-sub-badge" style="font-size:0.53rem;font-weight:800;letter-spacing:0.1em;color:#AEB4BF;display:inline-flex;align-items:center;gap:4.5px;margin-top:2px">
+          CHÍNH HÃNG 100% <i class="pulse-live-beacon"></i>
         </span>
       </span>
     </span>`;
   }
 
-  return `<span class="brand-logo-wrap" style="display:inline-flex;align-items:center;gap:10px">
-    ${laptopIcoSvg}
-    <span style="display:flex;flex-direction:column;line-height:1">
-      <span class="brand-title" style="font-size:1.35rem;font-weight:900;letter-spacing:-0.03em;color:#FFFFFF;display:inline-flex;align-items:center">
-        <span style="color:#111827">LAPTOP</span><span style="color:#E11D48;margin-left:1px">99</span>
+  return `<span class="brand-logo-wrap" style="display:inline-flex;align-items:center;gap:9px">
+    ${imgHtml}
+    <span style="display:flex;flex-direction:column;line-height:1.05">
+      <span class="brand-title" style="font-size:1.22rem;font-weight:900;letter-spacing:-0.03em;color:#171A21;display:inline-flex;align-items:center">
+        <span style="color:#171A21">LAPTOP</span><span style="color:var(--brand-red);font-weight:900;margin-left:1px">99</span>
       </span>
-      <span class="brand-sub-badge" style="font-size:0.55rem;font-weight:700;letter-spacing:0.14em;color:#E11D48;margin-top:3px;text-transform:uppercase">
-        UY TÍN TẠO NÊN THƯƠNG HIỆU
+      <span class="brand-sub-badge" style="font-size:0.54rem;font-weight:800;letter-spacing:0.12em;color:var(--brand-red);display:inline-flex;align-items:center;gap:4px;margin-top:2px">
+        CHÍNH HÃNG 100% <i class="pulse-live-beacon"></i>
       </span>
     </span>
   </span>`;
@@ -101,67 +100,80 @@ function pcard(p) {
   const d = discPct(p);
   const inC = (db.compare || []).includes(p.id);
   const inW = (db.wishlist || []).includes(p.id);
+  const brandInfo = BRAND_RIBBON_MAP[p.brand] || {
+    cls: '',
+    text: `Chính hãng ${p.brand || 'Laptop99'} · Giá tốt`,
+    gift: 'Tặng Balo Laptop99 chống sốc + Chuột không dây',
+  };
+  const studentPrice = Math.max(0, Math.round((p.price * 0.97) / 10000) * 10000);
+  const gpuShort = String(p.gpu || 'Onboard')
+    .replace(/NVIDIA GeForce /i, '')
+    .replace(/AMD Radeon /i, '')
+    .replace(/Integrated /i, '');
+  const cpuShort = String(p.cpu || 'Core i5')
+    .replace(/Intel /i, '')
+    .replace(/AMD /i, '');
 
-  // Badge theo phong cách hiện đại từ screenshot
-  let badgeHtml = '';
-  if (d > 0) {
-    badgeHtml = `<span class="pc-badge pc-badge-sale">Giảm giá</span>`;
-  } else if (p.isBestseller || (p.soldCount && p.soldCount > 30)) {
-    badgeHtml = `<span class="pc-badge pc-badge-bestseller">Bán chạy</span>`;
-  } else if (p.isNew) {
-    badgeHtml = `<span class="pc-badge pc-badge-new">Mới</span>`;
-  } else {
-    badgeHtml = `<span class="pc-badge pc-badge-hot">Hot</span>`;
-  }
-
-  // Chuỗi cấu hình rút gọn đẹp mắt: CPU | RAM | SSD | GPU
-  const cpuShort = String(p.cpu || 'Core i5').replace(/Intel /i, '').replace(/AMD /i, '');
-  const gpuShort = String(p.gpu || 'RTX 4060').replace(/NVIDIA GeForce /i, '').replace(/AMD Radeon /i, '').replace(/Integrated /i, 'Onboard');
-  const ramShort = String(p.ram || '16GB').toUpperCase();
-  const ssdShort = String(p.ssd || '512GB').toUpperCase();
-  
-  let specSummary = `${cpuShort} | ${ramShort} | ${ssdShort}`;
-  if (gpuShort && gpuShort !== 'Onboard') {
-    specSummary += ` | ${gpuShort}`;
-  }
-
-  return `<article class="pc pc-modern-card">
+  return `<article class="pc">
     <div class="pc-img-box">
-      ${badgeHtml}
-      <a href="#/product/${p.id}" class="pc-img-link">
+      ${
+        d > 0
+          ? `<span class="pc-ribbon-left">Giảm ${d}%</span>`
+          : p.isBestseller
+          ? `<span class="pc-ribbon-left">Bán chạy</span>`
+          : `<span class="pc-ribbon-left">Giá tốt</span>`
+      }
+      <span class="pc-ribbon-right">Trả góp 0%</span>
+
+      <a href="#/product/${p.id}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding-bottom:14px">
         ${pimg(p)}
       </a>
-      <div class="pc-actions-floating">
-        <button type="button" class="pc-act-btn wish ${inW ? 'on' : ''}" title="Yêu thích" onclick="event.preventDefault();A.wish('${p.id}')">
-          ${ic('heart', 13)}
-        </button>
-        <button type="button" class="pc-act-btn cmp ${inC ? 'on' : ''}" title="So sánh" onclick="event.preventDefault();A.cmp('${p.id}')">
-          ${ic('scale', 13)}
-        </button>
+
+      <div class="pc-brand-ribbon ${brandInfo.cls}" title="${esc(brandInfo.text)}">
+        <span>${esc(brandInfo.text)}</span>
       </div>
     </div>
 
     <div class="pc-body">
-      <a href="#/product/${p.id}" class="pc-title" title="${esc(p.name)}">${esc(p.name)}</a>
-      <div class="pc-spec-summary" title="${esc(specSummary)}">${esc(specSummary)}</div>
-
-      <div class="pc-price-row">
-        <span class="pc-price">${vnd(p.price)}</span>
-        ${d > 0 ? `<span class="pc-old">${vnd(p.old)}</span>` : ''}
+      <div class="pc-spec-center">
+        <div class="pc-spec-cpu">${esc(cpuShort)} &nbsp;|&nbsp; ${esc(gpuShort)}</div>
+        <div class="pc-spec-ram">${esc(p.ram)} &nbsp;|&nbsp; ${esc(p.ssd)} &nbsp;|&nbsp; ${esc((p.screen || '15.6" FHD').split(' ')[0])}</div>
       </div>
 
-      <div class="pc-footer-row">
-        <div class="pc-rating-wrap">
-          <span class="pc-star">★</span>
-          <span class="pc-star">★</span>
-          <span class="pc-star">★</span>
-          <span class="pc-star">★</span>
-          <span class="pc-star">★</span>
-          <span class="pc-rev-count">(${p.reviewCount || 128})</span>
+      <a href="#/product/${p.id}" class="pc-title" title="${esc(p.name)}">${esc(p.name)}</a>
+
+      <div class="pc-price-wrap">
+        <div>
+          <span class="pc-price">${vnd(p.price)}</span>
+          ${d > 0 ? `<span class="pc-old">${vnd(p.old)}</span>` : ''}
         </div>
-        <button type="button" class="pc-cart-btn" onclick="event.preventDefault(); A.add('${p.id}')" title="Thêm vào giỏ hàng" aria-label="Thêm vào giỏ hàng">
-          ${ic('cart', 16)}
+        <span class="pc-student-pill">🎓 Giá S-Student: <b>${vnd(studentPrice)}</b></span>
+      </div>
+
+      <div class="pc-gift-note">${esc(brandInfo.gift)}</div>
+
+      <div class="pc-sold-bar" title="Số lượng đã bán">
+        <div class="pc-sold-fill" style="width:${Math.min(92, Math.max(38, (Number(p.soldCount || 15) * 4) % 95))}%"></div>
+        <span class="pc-sold-txt">🔥 Đã bán ${p.soldCount || 18} máy</span>
+      </div>
+
+      <div class="pc-meta">
+        <span class="pc-rate">★ ${rate(p)} <span class="muted" style="font-weight:400">(${p.reviewCount || 12})</span></span>
+        <div class="row" style="gap:4px">
+          <button type="button" class="pc-act-btn wish ${inW ? 'on' : ''}" style="width:24px;height:24px" title="Yêu thích" onclick="event.preventDefault();A.wish('${p.id}')">
+            ${ic('heart', 12)}
+          </button>
+          <button type="button" class="pc-act-btn ${inC ? 'on' : ''}" style="width:24px;height:24px" title="So sánh" onclick="event.preventDefault();A.cmp('${p.id}')">
+            ${ic('scale', 12)}
+          </button>
+        </div>
+      </div>
+
+      <div class="pc-cta">
+        <button type="button" class="btn a sm grow" ${p.stock <= 0 ? 'disabled' : ''} onclick="A.add('${p.id}')">
+          ${ic('cart', 13)} ${p.stock <= 0 ? 'Hết hàng' : 'Mua ngay'}
         </button>
+        <a class="btn sm" href="#/product/${p.id}" title="Xem chi tiết cấu hình">Chi tiết</a>
       </div>
     </div>
   </article>`;
