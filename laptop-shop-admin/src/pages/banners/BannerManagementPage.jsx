@@ -81,7 +81,7 @@ const EMPTY_FORM = {
   sort_order: 1,
   is_active: 1,
   autoplay_ms: 3500,
-  image_mode: 'background',
+  image_mode: 'full_cover',
   content_position: 'left',
   image_position: 'center center',
   overlay_style: 'gradient_dark',
@@ -159,7 +159,7 @@ export default function BannerManagementPage() {
       sort_order: b.sort_order || 1,
       is_active: b.is_active ? 1 : 0,
       autoplay_ms: b.autoplay_ms || 3500,
-      image_mode: b.image_mode || 'background',
+      image_mode: b.image_mode || 'full_cover',
       content_position: b.content_position || 'left',
       image_position: b.image_position || 'center center',
       overlay_style: b.overlay_style || 'gradient_dark',
@@ -265,7 +265,7 @@ export default function BannerManagementPage() {
       });
       const uploadedUrl = res.data?.data?.url;
       if (uploadedUrl) {
-        setForm((prev) => ({ ...prev, image_url: uploadedUrl }));
+        setForm((prev) => ({ ...prev, image_url: uploadedUrl, image_mode: 'full_cover' }));
         toast.success('Đã tải hình ảnh lên thành công!');
       }
     } catch (err) {
@@ -537,6 +537,15 @@ export default function BannerManagementPage() {
                             </span>
                           )}
                         </div>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                              (b.image_mode || 'full_cover') === 'full_cover'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {(b.image_mode || 'full_cover') === 'full_cover' ? '🖼️ Bao trùm 100%' : '🧩 Bố cục ghép'}
+                          </span>
                         <h4 className="text-xs font-black text-gray-900 truncate">{b.title}</h4>
                         <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">
                           {b.subtitle || b.highlight_text || 'Chưa có mô tả'}
@@ -599,6 +608,65 @@ export default function BannerManagementPage() {
               </span>
             </div>
 
+            {/* PREVIEW VARIANT: FULL COVER BANNER (1 ẢNH BAO TRÙM TOÀN BỘ) */}
+            {(form.image_mode === 'full_cover') ? (
+              <div className="space-y-3">
+                <div
+                  className="relative w-full rounded-2xl overflow-hidden shadow-2xl border-2 border-indigo-500/50 bg-gray-950 group transition-all"
+                  style={{
+                    height: form.position === 'flash_sale' ? '140px' : form.position === 'entry_popup' ? '360px' : '280px',
+                  }}
+                >
+                  {form.image_url ? (
+                    <img
+                      src={form.image_url.startsWith('http') ? form.image_url : `https://laptop99.vercel.app${form.image_url}`}
+                      alt={form.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-gray-400 bg-gradient-to-br from-gray-900 to-slate-900 border-2 border-dashed border-gray-700">
+                      <HiOutlinePhoto className="w-12 h-12 text-indigo-400 mb-2 animate-pulse" />
+                      <p className="text-sm font-bold text-gray-200">Chưa có hình ảnh banner bao trùm</p>
+                      <p className="text-xs text-gray-400 mt-1 max-w-sm">
+                        Vui lòng bấm nút <strong>&quot;Tải tệp từ máy&quot;</strong> hoặc nhập URL ảnh bên dưới để ảnh bao trùm 100% diện tích
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Floating Status Badges */}
+                  <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 flex items-center gap-1.5 shadow-lg">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>1 Ảnh Đơn Tràn Viền (100% Full Cover)</span>
+                  </div>
+
+                  <div className="absolute top-3 right-3 bg-indigo-600/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-black uppercase text-white border border-indigo-400/40 shadow-lg">
+                    {form.position === 'hero' ? '🖥️ Hero Slider' : form.position === 'flash_sale' ? '⚡ Flash Sale' : form.position === 'brand_showcase' ? `🏢 Hãng: ${form.brand}` : form.position === 'entry_popup' ? '🎯 Popup Đầu Trang' : '🔥 Deal Tâm Điểm'}
+                  </div>
+
+                  {/* Clickable CTA link info pill at bottom */}
+                  <div className="absolute bottom-3 right-3 bg-black/80 hover:bg-rose-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold border border-white/20 shadow-xl backdrop-blur-md flex items-center gap-1.5 transition">
+                    <span>Click liên kết:</span>
+                    <span className="text-[11px] text-rose-300 font-mono truncate max-w-[200px]">{form.cta_link || '#/products'}</span>
+                    <span>→</span>
+                  </div>
+
+                  {form.position === 'hero' && form.tab_title && (
+                    <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-bold text-gray-200 border border-white/10">
+                      Tab tiêu đề: <span className="text-white font-black">{form.tab_title}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-gray-500 px-1">
+                  <span className="flex items-center gap-1">
+                    <HiOutlineSparkles className="w-3.5 h-3.5 text-indigo-500" />
+                    Ảnh tự động co giãn bao trùm 100% khung hiển thị trên mọi thiết bị (Desktop / Mobile)
+                  </span>
+                  <span className="text-emerald-600 font-bold">✓ Hiển thị trọn vẹn không che xén</span>
+                </div>
+              </div>
+            ) : (
+              <>
             {/* PREVIEW VARIANT: ENTRY POPUP BANNER (LAPTOP88 CYBER GAMING STYLE) */}
             {form.position === 'entry_popup' && (
               <div className="relative rounded-3xl p-6 text-white shadow-2xl overflow-hidden border-2 border-purple-500/70 bg-gradient-to-b from-[#180C2E] via-[#0E061D] to-[#06020D] flex flex-col items-center text-center">
@@ -897,6 +965,8 @@ export default function BannerManagementPage() {
                 </div>
               </div>
             )}
+              </>
+            )}
           </div>
 
           {/* COMPREHENSIVE EDITOR FORM */}
@@ -975,6 +1045,77 @@ export default function BannerManagementPage() {
                     />
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Section: Chế Độ Hiển Thị Banner (Layout Mode) */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-2 border-indigo-500/40 rounded-2xl p-4 text-white shadow-md space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-indigo-600/30 text-indigo-300 border border-indigo-400/40">
+                    <HiOutlineSparkles className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-black text-white">Chế Độ Hiển Thị Banner (Layout Mode)</h4>
+                    <p className="text-xs text-gray-300">Chọn cách thức đẩy hình ảnh và bố cục banner</p>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-600/40 text-indigo-200 border border-indigo-400/30">
+                  {form.image_mode === 'full_cover' ? '🖼️ 1 Ảnh Bao Trùm 100%' : '🧩 Bố Cục Ghép Text'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, image_mode: 'full_cover' })}
+                  className={`p-3.5 rounded-xl border text-left transition flex items-start gap-3 ${
+                    form.image_mode === 'full_cover'
+                      ? 'bg-indigo-600/30 border-indigo-400 ring-2 ring-indigo-500 shadow-md'
+                      : 'bg-white/5 border-white/10 hover:bg-white/10 text-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="image_mode"
+                    checked={form.image_mode === 'full_cover'}
+                    onChange={() => setForm({ ...form, image_mode: 'full_cover' })}
+                    className="mt-1 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <div>
+                    <div className="text-xs font-black text-white flex items-center gap-1.5">
+                      <span>🌟 1 Ảnh Đơn Bao Trùm 100%</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 font-bold uppercase">Khuyên dùng</span>
+                    </div>
+                    <p className="text-[11px] text-gray-300 mt-1 leading-snug">
+                      Đẩy 1 ảnh thiết kế hoàn chỉnh (Photoshop / Canva / Campaign art). Ảnh bao trùm 100% khung banner, tràn viền đẹp mắt, không bị xén méo và không bị các khối chữ che khuất.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, image_mode: 'split_card' })}
+                  className={`p-3.5 rounded-xl border text-left transition flex items-start gap-3 ${
+                    form.image_mode === 'split_card'
+                      ? 'bg-indigo-600/30 border-indigo-400 ring-2 ring-indigo-500 shadow-md'
+                      : 'bg-white/5 border-white/10 hover:bg-white/10 text-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="image_mode"
+                    checked={form.image_mode === 'split_card'}
+                    onChange={() => setForm({ ...form, image_mode: 'split_card' })}
+                    className="mt-1 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <div>
+                    <div className="text-xs font-black text-white">🧩 Bố Cục Chia Đôi Ghép Nội Dung</div>
+                    <p className="text-[11px] text-gray-300 mt-1 leading-snug">
+                      Cột trái hiển thị tiêu đề, thông số, huy hiệu, nút bấm CTA; Cột phải hiển thị ảnh sản phẩm riêng trong hộp thumbnail.
+                    </p>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -1143,17 +1284,24 @@ export default function BannerManagementPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Đường Dẫn Hình Ảnh (URL hoặc tải lên)
-                  </label>
+                <div className="md:col-span-2 bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                      <HiOutlinePhoto className="w-4 h-4 text-indigo-600" />
+                      <span>{form.image_mode === 'full_cover' ? 'Đẩy 1 Ảnh Banner Bao Trùm Toàn Bộ (*)' : 'Hình Ảnh Banner / Sản Phẩm (*)'}</span>
+                    </label>
+                    <span className="text-[11px] text-indigo-700 font-semibold">
+                      Tự động lưu trữ trên hệ thống &amp; bao trùm 100% khung banner
+                    </span>
+                  </div>
+
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={form.image_url}
                       onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                      placeholder="VD: /uploads/products/real-macbook-pro.jpg"
-                      className="flex-1 px-3.5 py-2 text-sm border border-gray-300 rounded-xl text-gray-700"
+                      placeholder="Dán URL ảnh hoặc bấm Tải tệp từ máy..."
+                      className="flex-1 px-3.5 py-2 text-sm border border-gray-300 rounded-xl text-gray-800 bg-white font-medium"
                     />
                     <input
                       ref={fileInputRef}
@@ -1166,12 +1314,35 @@ export default function BannerManagementPage() {
                       type="button"
                       disabled={uploading}
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0"
+                      className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-rose-600 hover:from-indigo-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 shadow-md transition"
                     >
                       <HiOutlineArrowUpTray className="w-4 h-4" />
-                      {uploading ? 'Đang tải...' : 'Tải tệp'}
+                      {uploading ? 'Đang tải lên...' : 'Tải tệp từ máy'}
                     </button>
                   </div>
+
+                  {form.image_url && (
+                    <div className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-indigo-150 shadow-xs">
+                      <div className="w-20 h-12 rounded-lg overflow-hidden bg-gray-900 border shrink-0">
+                        <img
+                          src={form.image_url.startsWith('http') ? form.image_url : `https://laptop99.vercel.app${form.image_url}`}
+                          alt="Thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-gray-800 truncate">{form.image_url}</div>
+                        <div className="text-[11px] text-emerald-600 font-semibold">✓ Ảnh đã sẵn sàng bao trùm 100% banner</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, image_url: '' })}
+                        className="text-xs text-red-600 hover:text-red-800 font-bold px-2 py-1"
+                      >
+                        Gỡ ảnh
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div>

@@ -224,6 +224,20 @@ const HomeController = {
 
     // Giao diện Banner Quảng Cáo Đầu Trang (Laptop88 Cyber Style)
     if (entryBanner && viewMode !== 'vouchers') {
+      if (entryBanner.image_mode === 'full_cover' || entryBanner.image_mode === 'complete' || entryBanner.image_mode === 'full_image') {
+        const fullImg = resolveAssetUrl(entryBanner.image_url || '/uploads/products/laptop-gaming-lenovo-loq-15irx9-i5-13450hx-16gb-512gb-rtx-4050-1.jpg');
+        const fullLink = entryBanner.cta_link || (entryBanner.product_id ? `#/product/p${entryBanner.product_id}` : '#/products');
+        const fullHtml = `
+        <div class="entry-popup-container" style="max-width:560px;position:relative;border-radius:24px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.85);border:2px solid rgba(255,255,255,0.25)">
+          <button type="button" class="ep-close-btn" onclick="closeModal()" title="Đóng quảng cáo" aria-label="Đóng popup" style="position:absolute;top:12px;right:12px;z-index:20;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.5);border-radius:50%;width:34px;height:34px;cursor:pointer;font-weight:bold;font-size:14px;display:flex;align-items:center;justify-content:center">
+            ✕
+          </button>
+          <a href="${fullLink}" onclick="closeModal()" style="display:block;width:100%;line-height:0" title="${esc(entryBanner.title || 'Ưu đãi')}">
+            <img src="${fullImg}" alt="${esc(entryBanner.title || 'Ưu đãi')}" style="width:100%;height:auto;max-height:80vh;object-fit:cover;display:block">
+          </a>
+        </div>`;
+        return modal(fullHtml);
+      }
       const bannerBadge = esc(entryBanner.badge_text || 'DEAL CỰC SỐC');
       const bannerTitle = esc(entryBanner.title || 'LOQ 2026');
       const bannerHl = esc(entryBanner.highlight_text || 'GIẢM TỚI 6 TRIỆU/MÁY');

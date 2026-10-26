@@ -1127,7 +1127,7 @@ p { margin: 0; }
 .hero-bg-img {
   width: 100%;
   height: 100%;
-  object-fit: fill; /* Khít 100% toàn bộ khung banner, hiển thị trọn vẹn mọi mép chữ và nút */
+  object-fit: cover; /* Bao trùm 100% khung banner */
   object-position: center center;
   display: block;
 }
@@ -4984,3 +4984,8 @@ p { margin: 0; }
   .ep-pill-text { font-size: 0.65rem; }
   .ep-pill-hero-text { font-size: 0.76rem; }
 }
+
+/* Hero Slide Full Cover */
+.hero-slide-full-cover { cursor: pointer; }
+.hero-slide-full-cover .hero-bg-img, .hero-bg-img.hero-full-cover-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+.hero-slide-full-cover:hover .hero-bg-img { transform: scale(1.015); }

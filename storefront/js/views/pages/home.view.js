@@ -319,6 +319,7 @@ async function viewHome() {
       if (dbB.bg_theme && BG_THEME_MAP[dbB.bg_theme]) c.bg = BG_THEME_MAP[dbB.bg_theme];
       if (dbB.product_id) c.linkedProd = P('p' + dbB.product_id) || all.find((p) => p.rawId === Number(dbB.product_id));
       if (dbB.custom_price) c.customPrice = Number(dbB.custom_price);
+      if (dbB.image_mode) c.imageMode = dbB.image_mode;
       if (dbB.perks_json) {
         try {
           const arr = typeof dbB.perks_json === 'string' ? JSON.parse(dbB.perks_json) : dbB.perks_json;
@@ -391,20 +392,22 @@ async function viewHome() {
 
             <!-- Track Flex trượt mượt mà theo trục X -->
             <div class="hero-track" id="hero-track" style="transform: translateX(-${curHero * 100}%)">
-              ${heroCampaigns
+                            ${heroCampaigns
                 .map(
-                  (s, idx) => `
+                  (s, idx) => {
+                    const isFullCover = s.imageMode === 'full_cover' || s.imageMode === 'complete' || s.imageMode === 'full_image';
+                    return `
                   <a href="${esc(s.targetUrl || s.ctaHref || '#/products')}" 
-                     class="hero-slide ${idx === curHero ? 'active' : ''}" 
+                     class="hero-slide ${isFullCover ? 'hero-slide-full-cover' : ''} ${idx === curHero ? 'active' : ''}" 
                      data-slide="${idx}"
                      title="Xem chi tiết ${esc(s.tabTitle || s.prodName || s.title)}">
                     <img src="${esc(s.imgUrl)}" 
                          alt="${esc(s.tabTitle || s.prodName || s.title)}" 
-                         class="hero-bg-img" 
+                         class="hero-bg-img ${isFullCover ? 'hero-full-cover-img' : ''}" 
                          style="object-position: ${esc(s.imagePosition || 'center center')};"
                          loading="${idx === 0 ? 'eager' : 'lazy'}">
-                    ${s.imageMode === 'complete' ? `
-                      <!-- Chế độ A: Ảnh poster hoàn chỉnh phủ 100% khung, click toàn banner chuyển trang -->
+                    ${isFullCover ? `
+                      <!-- Chế độ 1 Ảnh Đơn Bao Trùm 100% Khung Banner (Tràn viền, không bị che bởi text/gradient) -->
                     ` : `
                       <!-- Caption góc trái dưới, nền gradient tối mờ, chữ trắng, nút CTA đỏ bo tròn -->
                       <div class="hero-caption">
@@ -416,7 +419,8 @@ async function viewHome() {
                         <span class="hero-caption-cta">${esc(s.ctaText || 'Xem chi tiết')} &rarr;</span>
                       </div>
                     `}
-                  </a>`,
+                  </a>`;
+                  }
                 )
                 .join('')}
             </div>
@@ -576,6 +580,15 @@ async function viewHome() {
         const fsCtaText = flashSaleBanner?.cta_text || 'SĂN VOUCHER NGAY';
         const fsCtaLink = flashSaleBanner?.cta_link || '#/promos';
 
+        if (flashSaleBanner && (flashSaleBanner.image_mode === 'full_cover' || flashSaleBanner.image_mode === 'complete' || flashSaleBanner.image_mode === 'full_image')) {
+          return `
+      <div class="festival-banner festival-banner-full-cover reveal-on-scroll" style="padding:0;overflow:hidden;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15)">
+        <a href="${fsCtaLink}" style="display:block;width:100%;height:100%;line-height:0" title="${fsTitle}">
+          <img src="${fsImg}" alt="${fsTitle}" style="width:100%;height:auto;min-height:120px;max-height:160px;object-fit:cover;display:block" loading="lazy">
+        </a>
+      </div>`;
+        }
+
         return `
       <div class="festival-banner reveal-on-scroll">
         <div class="fb-left">
@@ -698,7 +711,15 @@ async function viewHome() {
             .join('')}
         </div>
 
-        <!-- Banner Chiến dịch Quảng cáo riêng của Hãng đang chọn (Thiết kế Flagship Pavilion cao cấp) -->
+        <!-- Banner Chiến dịch Quảng cáo riêng của Hãng đang chọn -->
+        ${curCampaign.imageMode === 'full_cover' || curCampaign.imageMode === 'complete' || curCampaign.imageMode === 'full_image' ? `
+          <!-- Chế độ 1 Ảnh Bao Trùm Toàn Bộ Chuyên Trang Thương Hiệu -->
+          <div class="brand-campaign-banner-full-cover" style="border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 8px 28px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15)">
+            <a href="${curCampaign.ctaHref || '#/products'}" style="display:block;width:100%;height:100%;line-height:0" title="${esc(curCampaign.title)}">
+              <img src="${esc(curCampaign.realImg)}" alt="${esc(curCampaign.brand)}" style="width:100%;height:auto;min-height:220px;max-height:340px;object-fit:cover;display:block" loading="lazy">
+            </a>
+          </div>
+        ` : `
         <div class="brand-campaign-banner" style="background: ${curCampaign.bg}">
           <div>
             <span class="bcb-badge">${curCampaign.badge}</span>
@@ -727,6 +748,7 @@ async function viewHome() {
               <a href="#/product/${curCampaign.linkedProd?.id || displayBrandProds[0]?.id || 'p1'}" class="bcb-visual-link">Khám phá cấu hình chi tiết →</a>
             </div>
           </div>
+        `}
 
         <!-- Lưới sản phẩm thuộc Chiến dịch của Hãng -->
         <div class="pg">
@@ -768,6 +790,15 @@ async function viewHome() {
           const dealCta = hotDealBanner?.cta_text || 'Mua ngay giá sốc';
           const dealLink = hotDealBanner?.cta_link || ('#/product/' + dealProd.id);
           const dealSecCta = hotDealBanner?.secondary_cta_text || 'Thêm vào giỏ';
+
+          if (hotDealBanner && (hotDealBanner.image_mode === 'full_cover' || hotDealBanner.image_mode === 'complete' || hotDealBanner.image_mode === 'full_image')) {
+            return `
+        <div class="highlight-deal-card highlight-deal-card-full-cover" style="padding:0;overflow:hidden;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15)">
+          <a href="${dealLink}" style="display:block;width:100%;height:100%;line-height:0" title="${esc(dealTitle)}">
+            <img src="${dealImg}" alt="${esc(dealTitle)}" style="width:100%;height:auto;min-height:160px;max-height:220px;object-fit:cover;display:block" loading="lazy">
+          </a>
+        </div>`;
+          }
 
           return `
         <div class="highlight-deal-card">
