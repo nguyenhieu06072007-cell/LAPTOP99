@@ -315,6 +315,16 @@ document.addEventListener('click', (e) => {
 
 window.addEventListener('hashchange', render);
 
+// Tự động cập nhật dữ liệu mới nhất khi người dùng chuyển từ tab Admin sang tab Storefront
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    const r = route();
+    if (r.path === '/' || !r.path) {
+      render();
+    }
+  }
+});
+
 // Đồng bộ session khách hàng khi tải trang
 if (API.getToken() && db.session) {
   API.get('/auth/me', true)

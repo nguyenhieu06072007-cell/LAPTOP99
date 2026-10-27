@@ -154,6 +154,7 @@ export default function BannerManagementPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [newPerkInput, setNewPerkInput] = useState('');
   const fileInputRef = useRef(null);
   const previewRef = useRef(null);
@@ -283,6 +284,7 @@ export default function BannerManagementPage() {
 
   const selectBanner = (b) => {
     if (!b) return;
+    setIsDirty(false);
     setEditingId(b.id);
     setForm({
       position: b.position || 'hero',
@@ -637,7 +639,12 @@ export default function BannerManagementPage() {
                 return (
                   <div
                     key={b.id}
-                    onClick={() => selectBanner(b)}
+                    onClick={() => {
+                      if (editingId !== b.id && isDirty && !window.confirm('Bạn có thay đổi chưa lưu trên banner hiện tại. Bạn có chắc muốn chuyển sang banner khác mà không lưu?')) {
+                        return;
+                      }
+                      selectBanner(b);
+                    }}
                     className={`p-3 rounded-xl border transition-all cursor-pointer relative group ${
                       isSelected
                         ? 'border-rose-500 bg-rose-50/50 shadow-sm'

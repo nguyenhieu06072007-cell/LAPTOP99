@@ -34,6 +34,17 @@ function resolveAssetUrl(rawUrl) {
   if (typeof window !== 'undefined' && (window.location.protocol === 'file:')) {
     return clean;
   }
+
+  // Nếu là file upload động từ Admin (bắt đầu bằng uploads/banners/ hoặc có chứa banner- / product-)
+  // thì ưu tiên tải từ server Backend Render nơi lưu trữ các tệp upload
+  if (
+    clean.startsWith('uploads/banners/') ||
+    clean.includes('banner-') ||
+    clean.startsWith('uploads/temp/')
+  ) {
+    return 'https://laptop99-ejug.onrender.com/' + clean;
+  }
+
   return '/' + clean;
 }
 
