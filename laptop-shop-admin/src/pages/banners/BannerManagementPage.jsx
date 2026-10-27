@@ -413,7 +413,7 @@ export default function BannerManagementPage() {
       });
       const uploadedUrl = res.data?.data?.url;
       if (uploadedUrl) {
-        setForm((prev) => ({ ...prev, image_url: uploadedUrl, image_mode: prev.image_mode || 'full_cover' }));
+        setForm((prev) => ({ ...prev, image_url: uploadedUrl, image_mode: 'full_cover' }));
         toast.success('Đã tải hình ảnh lên thành công và khớp vào khung!');
       }
     } catch (err) {

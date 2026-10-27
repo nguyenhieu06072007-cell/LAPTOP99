@@ -777,7 +777,7 @@ async function viewHome() {
         ${
           highlightDeal
             ? (() => {
-          const dealProd = (hotDealBanner && hotDealBanner.product_id ? (P('p' + hotDealBanner.product_id) || all.find((p) => p.rawId === Number(hotDealBanner.product_id) || p.id === 'p' + hotDealBanner.product_id || p.id === hotDealBanner.product_id)) : null) || highlightDeal;
+          const dealProd = (hotDealBanner && hotDealBanner.product_id ? P('p' + hotDealBanner.product_id) : null) || highlightDeal;
           if (!dealProd) return '';
           const dealBadge = hotDealBanner?.badge_text || ('🔥 Deal Tâm Điểm Giờ Vàng • Tiết kiệm ' + vnd((dealProd.old || 0) - (dealProd.price || 0)));
           const dealPrice = Number(hotDealBanner?.custom_price) || dealProd.price;
