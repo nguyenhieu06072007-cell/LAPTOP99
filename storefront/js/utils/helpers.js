@@ -1,3 +1,6 @@
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
 function sanitizeHtml(str) {
   if (!str) return '';
   return String(str)
