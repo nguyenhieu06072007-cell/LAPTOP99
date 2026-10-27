@@ -14,6 +14,7 @@ const A = {
   ...CheckoutController,
   ...AuthController,
   ...ServicesController,
+  ...ChatbotController,
 };
 
 async function storeRoute(r) {

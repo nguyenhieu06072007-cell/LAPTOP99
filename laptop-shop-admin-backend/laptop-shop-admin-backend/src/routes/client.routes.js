@@ -99,4 +99,7 @@ router.get('/rma/my-requests', authenticateCustomer, ClientController.getMyRmas)
 // 10. Tech News
 router.get('/news', ClientController.getNews);
 
+// 11. AI Chatbot Assistant
+router.post('/ai/chat', optionalCustomer, ClientController.aiChat);
+
 module.exports = router;

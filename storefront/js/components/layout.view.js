@@ -375,7 +375,8 @@ function renderContactWidget() {
       <span>Liên hệ</span>
       ${ic('headset', 18)}
     </button>
-  </div>`;
+  </div>
+  ${typeof renderChatbotWidget === 'function' ? renderChatbotWidget() : ''}`;
 }
 
 function storeShell(inner, r) {
