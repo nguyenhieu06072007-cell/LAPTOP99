@@ -1,5 +1,5 @@
 /* ==========================================================================
-   STOREFRONT MVC CONTROLLER: AI Chatbot Assistant Controller
+   STOREFRONT MVC CONTROLLER: LAPTOP99 AI Chatbot Assistant Controller
    ========================================================================== */
 
 const ChatbotController = {
@@ -8,44 +8,112 @@ const ChatbotController = {
     isInitialized: false,
     messages: [],
     suggestions: [
-      'Laptop sinh viên dưới 15 triệu',
-      'MacBook Air làm việc mỏng nhẹ',
-      'Laptop gaming RTX 4060 rẻ nhất',
-      'Chính sách đổi trả trong 15 ngày',
-      'Tra cứu đơn hàng của tôi',
+      'Tư vấn laptop dưới 20 triệu',
+      'Laptop học lập trình',
+      'So sánh hai sản phẩm',
+      'Chính sách bảo hành',
     ],
     isTyping: false,
+    currentProduct: null,
+    lastFailedPrompt: null,
   },
 
   initChatbot() {
     if (this.chatState.isInitialized) return;
     this.chatState.isInitialized = true;
 
-    // Load from sessionStorage if exists
+    // Phục hồi tin nhắn từ sessionStorage nếu có
     try {
-      const saved = sessionStorage.getItem('laptop99_chatbot_msgs');
+      const saved = sessionStorage.getItem('laptop99_ai_chat_history');
       if (saved) {
         this.chatState.messages = JSON.parse(saved);
       }
     } catch (e) {}
 
-    // Initial greeting if empty
+    // Lời chào mở đầu chuẩn mực nếu phiên hội thoại mới
     if (!this.chatState.messages || this.chatState.messages.length === 0) {
       this.chatState.messages = [
         {
           sender: 'bot',
-          text: 'Xin chào Quý khách! 👋 Em là **Trợ lý AI của LAPTOP99**.\n\nEm có thể giúp bạn:\n- 🎯 **Tìm laptop phù hợp** theo ngân sách & nhu cầu (học tập, đồ họa, gaming, văn phòng...)\n- 💰 **So sánh cấu hình & giá khuyến mãi**\n- 📦 **Tra cứu đơn hàng & chính sách bảo hành, đổi trả**\n\nBạn đang quan tâm đến dòng laptop nào ạ?',
+          text:
+            'Xin chào Quý khách! 👋 Em là **LAPTOP99 AI** — Trợ lý tư vấn bán hàng chính hãng.\n\n' +
+            'Em có thể hỗ trợ bạn:\n' +
+            '- 🎯 **Tư vấn laptop chuẩn cấu hình** theo ngân sách và ngành học/công việc\n' +
+            '- ⚖️ **So sánh trực tiếp 2–3 máy** theo bảng thông số thực tế từ kho\n' +
+            '- 📦 **Tra cứu đơn hàng** & chính sách bảo hành S/N, đổi trả 15 ngày\n\n' +
+            'Bạn đang quan tâm đến dòng máy hoặc mức giá nào ạ?',
           products: [],
           time: this.formatChatTime(new Date()),
         },
       ];
     }
+
+    this.bindKeyboardEvents();
+  },
+
+  bindKeyboardEvents() {
+    const input = document.getElementById('chatbot-input');
+    if (!input || input.dataset.bound) return;
+    input.dataset.bound = 'true';
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.submitChatMessage();
+      }
+    });
+
+    // Auto-grow textarea
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+    });
   },
 
   formatChatTime(d) {
     const hours = String(d.getHours()).padStart(2, '0');
     const mins = String(d.getMinutes()).padStart(2, '0');
     return `${hours}:${mins}`;
+  },
+
+  checkCurrentProductContext() {
+    const hash = window.location.hash || '';
+    const match = hash.match(/#\/product\/([^/?]+)/);
+    const strip = document.getElementById('chatbot-context-strip');
+    const stripText = document.getElementById('chatbot-context-text');
+
+    if (match && match[1]) {
+      const pid = match[1];
+      const allProds = (typeof cache !== 'undefined' && cache.products) || (typeof db !== 'undefined' && db.products) || [];
+      const prod = allProds.find((p) => String(p.id) === String(pid) || String(p.rawId) === String(pid));
+
+      if (prod) {
+        this.chatState.currentProduct = {
+          id: prod.id,
+          name: prod.name,
+          brand: prod.brand,
+          price: prod.price,
+        };
+        if (strip && stripText) {
+          stripText.textContent = `Đang xem: ${prod.name.slice(0, 32)}...`;
+          strip.style.display = 'flex';
+        }
+        return;
+      }
+    }
+
+    this.chatState.currentProduct = null;
+    if (strip) strip.style.display = 'none';
+  },
+
+  askAboutCurrentProduct() {
+    if (!this.chatState.currentProduct) return;
+    const name = this.chatState.currentProduct.name;
+    const input = document.getElementById('chatbot-input');
+    if (input) {
+      input.value = `Tư vấn chi tiết cấu hình và ưu nhược điểm của máy ${name}`;
+      this.submitChatMessage();
+    }
   },
 
   toggleChatbot() {
@@ -57,6 +125,7 @@ const ChatbotController = {
     if (this.chatState.isOpen) {
       win.style.display = 'flex';
       win.classList.add('open');
+      this.checkCurrentProductContext();
       this.renderChatMessages();
       const input = document.getElementById('chatbot-input');
       if (input) setTimeout(() => input.focus(), 150);
@@ -76,14 +145,14 @@ const ChatbotController = {
       },
     ];
     this.chatState.suggestions = [
-      'Laptop sinh viên dưới 15 triệu',
-      'MacBook Air làm việc mỏng nhẹ',
-      'Laptop gaming RTX 4060 rẻ nhất',
-      'Chính sách đổi trả trong 15 ngày',
-      'Tra cứu đơn hàng của tôi',
+      'Tư vấn laptop dưới 20 triệu',
+      'Laptop học lập trình',
+      'So sánh hai sản phẩm',
+      'Chính sách bảo hành',
     ];
+    this.chatState.lastFailedPrompt = null;
     try {
-      sessionStorage.removeItem('laptop99_chatbot_msgs');
+      sessionStorage.removeItem('laptop99_ai_chat_history');
     } catch (e) {}
     this.renderChatMessages();
   },
@@ -96,15 +165,28 @@ const ChatbotController = {
     }
   },
 
+  retryLastMessage() {
+    if (!this.chatState.lastFailedPrompt) return;
+    const input = document.getElementById('chatbot-input');
+    if (input) {
+      input.value = this.chatState.lastFailedPrompt;
+      this.submitChatMessage();
+    }
+  },
+
   async submitChatMessage() {
     const input = document.getElementById('chatbot-input');
     if (!input) return;
     const text = input.value.trim();
     if (!text || this.chatState.isTyping) return;
 
+    // Reset height & clear
     input.value = '';
+    input.style.height = 'auto';
 
-    // Add user message
+    this.chatState.lastFailedPrompt = null;
+
+    // 1. Thêm tin nhắn của User
     this.chatState.messages.push({
       sender: 'user',
       text: text,
@@ -115,101 +197,63 @@ const ChatbotController = {
     this.chatState.isTyping = true;
     this.renderChatMessages();
 
-    // Show typing
+    // Hiển thị trạng thái đang nhập
     const typingEl = document.getElementById('chatbot-typing');
     if (typingEl) typingEl.style.display = 'flex';
-    this.scrollChatBottom();
+    this.scrollChatBottom(true);
 
     try {
-      // Call backend API
-      let data = null;
-      try {
-        data = await API.post(
-          '/ai/chat',
-          {
-            message: text,
-            history: this.chatState.messages.slice(-6).map((m) => ({ sender: m.sender, text: m.text })),
-          },
-          true,
-        );
-      } catch (err) {
-        // Fallback to client intelligent search if backend unavailable
-        data = this.clientFallbackEngine(text);
-      }
+      // 2. Gửi request lên Backend API với sliding history & context
+      const res = await API.post(
+        '/ai/chat',
+        {
+          message: text,
+          history: this.chatState.messages.slice(-8).map((m) => ({
+            sender: m.sender,
+            text: m.text,
+          })),
+          current_product: this.chatState.currentProduct,
+        },
+        true,
+      );
 
-      if (data && data.success) {
+      if (res && res.success) {
         this.chatState.messages.push({
           sender: 'bot',
-          text: data.reply,
-          products: data.products || [],
+          text: res.reply,
+          products: res.products || [],
           time: this.formatChatTime(new Date()),
         });
-        if (data.suggestions && data.suggestions.length > 0) {
-          this.chatState.suggestions = data.suggestions;
+        if (res.suggestions && res.suggestions.length > 0) {
+          this.chatState.suggestions = res.suggestions;
         }
       } else {
-        throw new Error('No data');
+        throw new Error(res?.message || 'Không nhận được phản hồi hợp lệ');
       }
     } catch (err) {
-      const fallback = this.clientFallbackEngine(text);
+      console.warn('[LAPTOP99 AI] API chat warning:', err.message);
+      this.chatState.lastFailedPrompt = text;
+
       this.chatState.messages.push({
         sender: 'bot',
-        text: fallback.reply,
-        products: fallback.products || [],
+        isError: true,
+        text:
+          '⚠️ **Đã xảy ra sự cố kết nối máy chủ.**\n\n' +
+          'Quý khách vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau giây lát. Em rất xin lỗi vì sự bất tiện này!',
+        products: [],
         time: this.formatChatTime(new Date()),
       });
-      if (fallback.suggestions) this.chatState.suggestions = fallback.suggestions;
     } finally {
       this.chatState.isTyping = false;
       if (typingEl) typingEl.style.display = 'none';
+
+      // Lưu lịch sử vào sessionStorage
       try {
-        sessionStorage.setItem('laptop99_chatbot_msgs', JSON.stringify(this.chatState.messages.slice(-20)));
+        sessionStorage.setItem('laptop99_ai_chat_history', JSON.stringify(this.chatState.messages.slice(-20)));
       } catch (e) {}
+
       this.renderChatMessages();
     }
-  },
-
-  clientFallbackEngine(text) {
-    const lower = text.toLowerCase();
-    const allProds = (typeof cache !== 'undefined' && cache.products) || (typeof db !== 'undefined' && db.products) || [];
-
-    // Filter by keyword or budget
-    let matched = allProds;
-    if (lower.includes('15') && (lower.includes('dưới') || lower.includes('<'))) {
-      matched = allProds.filter((p) => (Number(p.sale_price) || Number(p.price)) < 15000000);
-    } else if (lower.includes('20') && (lower.includes('dưới') || lower.includes('<'))) {
-      matched = allProds.filter((p) => (Number(p.sale_price) || Number(p.price)) < 20000000);
-    } else if (lower.includes('macbook') || lower.includes('apple')) {
-      matched = allProds.filter((p) => (p.brand || '').toLowerCase().includes('apple'));
-    } else if (lower.includes('gaming') || lower.includes('game') || lower.includes('rtx')) {
-      matched = allProds.filter((p) => p.cat === 2 || (p.gpu || '').toLowerCase().includes('rtx'));
-    } else if (lower.includes('sinh viên')) {
-      matched = allProds.filter((p) => p.cat === 5 || (Number(p.sale_price) || Number(p.price)) < 18000000);
-    }
-
-    const top = (matched.length > 0 ? matched : allProds).slice(0, 3).map((p) => ({
-      id: p.id,
-      name: p.name,
-      brand: p.brand,
-      price: Number(p.sale_price) || Number(p.price),
-      thumbnail: p.thumbnail,
-      cpu: p.cpu || '',
-      ram: p.ram ? `${p.ram}GB` : '',
-      gpu: p.gpu || '',
-    }));
-
-    let reply = `✨ Dựa trên yêu cầu của bạn, em xin gợi ý các dòng laptop bán chạy và phù hợp nhất tại LAPTOP99:\n\n`;
-    top.forEach((p, i) => {
-      reply += `${i + 1}. **${p.name}**\n   - Giá ưu đãi: **${new Intl.NumberFormat('vi-VN').format(p.price)}₫**\n\n`;
-    });
-    reply += `*Quý khách bấm vào từng thẻ máy bên dưới để xem cấu hình chi tiết hoặc liên hệ tư vấn viên qua Hotline 1800.6868 nhé!*`;
-
-    return {
-      success: true,
-      reply,
-      products: top,
-      suggestions: ['Laptop gaming RTX 4060', 'MacBook Air M2/M3', 'Chính sách đổi trả 15 ngày'],
-    };
   },
 
   renderChatMessages() {
@@ -222,41 +266,60 @@ const ChatbotController = {
       const isBot = msg.sender === 'bot';
       const formattedText = this.formatMarkdown(msg.text);
 
+      // Render thẻ sản phẩm tương tác nếu có
       let productsHtml = '';
       if (msg.products && msg.products.length > 0) {
         productsHtml = `
         <div class="chatbot-products-grid">
           ${msg.products
-            .map(
-              (p) => `
-            <div class="chatbot-pcard">
-              <a href="#/product/${p.id}" class="chatbot-pcard-link" onclick="A.toggleChatbot()">
-                <div class="chatbot-pcard-img-wrap">
-                  <img src="${p.thumbnail || '/uploads/products/laptop-apple-macbook-air-13-inch-m2-8gb-256gb-1.jpg'}" alt="${esc(p.name)}" class="chatbot-pcard-img" loading="lazy" onerror="this.src='/uploads/products/laptop-apple-macbook-air-13-inch-m2-8gb-256gb-1.jpg'">
+            .map((p) => {
+              const inStock = p.in_stock !== false && (p.stock === undefined || p.stock > 0);
+              const stockBadge = inStock ? '<span class="pcard-stock in">Còn hàng</span>' : '<span class="pcard-stock out">Tạm hết</span>';
+              return `
+              <div class="chatbot-pcard">
+                <a href="${esc(p.url || `#/product/${p.id}`)}" class="chatbot-pcard-link" onclick="A.toggleChatbot()">
+                  <div class="chatbot-pcard-img-wrap">
+                    <img src="${esc(p.thumbnail || '/uploads/products/laptop-apple-macbook-air-13-inch-m2-8gb-256gb-1.jpg')}" 
+                         alt="${esc(p.name)}" 
+                         class="chatbot-pcard-img" 
+                         loading="lazy" 
+                         onerror="this.src='/uploads/products/laptop-apple-macbook-air-13-inch-m2-8gb-256gb-1.jpg'">
+                  </div>
+                  <div class="chatbot-pcard-info">
+                    <div class="chatbot-pcard-top">
+                      <span class="chatbot-pcard-brand">${esc(p.brand || 'LAPTOP')}</span>
+                      ${stockBadge}
+                    </div>
+                    <div class="chatbot-pcard-name" title="${esc(p.name)}">${esc(p.name)}</div>
+                    ${p.cpu || p.ram || p.gpu ? `<div class="chatbot-pcard-spec">${esc([p.cpu, p.ram, p.gpu].filter(Boolean).join(' · '))}</div>` : ''}
+                    <div class="chatbot-pcard-price">${new Intl.NumberFormat('vi-VN').format(p.price)}₫</div>
+                  </div>
+                </a>
+                <div class="chatbot-pcard-actions">
+                  <a href="${esc(p.url || `#/product/${p.id}`)}" class="chatbot-pcard-btn" onclick="A.toggleChatbot()">Xem chi tiết máy →</a>
                 </div>
-                <div class="chatbot-pcard-info">
-                  <span class="chatbot-pcard-brand">${esc(p.brand || 'LAPTOP')}</span>
-                  <div class="chatbot-pcard-name" title="${esc(p.name)}">${esc(p.name)}</div>
-                  ${p.cpu || p.gpu ? `<div class="chatbot-pcard-spec">${esc([p.cpu, p.ram, p.gpu].filter(Boolean).join(' · '))}</div>` : ''}
-                  <div class="chatbot-pcard-price">${new Intl.NumberFormat('vi-VN').format(p.price)}₫</div>
-                </div>
-              </a>
-              <div class="chatbot-pcard-actions">
-                <a href="#/product/${p.id}" class="chatbot-pcard-btn" onclick="A.toggleChatbot()">Xem máy →</a>
-              </div>
-            </div>
-          `,
-            )
+              </div>`;
+            })
             .join('')}
         </div>`;
       }
 
+      // Nút thử lại nếu tin nhắn bị lỗi
+      let retryHtml = '';
+      if (msg.isError && this.chatState.lastFailedPrompt) {
+        retryHtml = `
+          <div class="chatbot-retry-wrap">
+            <button type="button" class="chatbot-retry-btn" onclick="A.retryLastMessage()">🔄 Thử gửi lại</button>
+          </div>
+        `;
+      }
+
       html += `
-      <div class="chatbot-msg ${isBot ? 'bot' : 'user'}">
+      <div class="chatbot-msg ${isBot ? 'bot' : 'user'} ${msg.isError ? 'has-error' : ''}">
         ${
           isBot
             ? `
-          <div class="chatbot-mini-avatar" title="Trợ lý AI Laptop99">
+          <div class="chatbot-mini-avatar" aria-hidden="true" title="LAPTOP99 AI">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C5A46D" stroke-width="2.2"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/></svg>
           </div>
         `
@@ -266,6 +329,7 @@ const ChatbotController = {
           <div class="chatbot-bubble">
             <div class="chatbot-bubble-text">${formattedText}</div>
             ${productsHtml}
+            ${retryHtml}
           </div>
           <span class="chatbot-time">${msg.time || ''}</span>
         </div>
@@ -274,7 +338,7 @@ const ChatbotController = {
 
     container.innerHTML = html;
 
-    // Render quick suggestion pills
+    // Render các nút gợi ý câu hỏi 1 chạm
     if (quickWrap) {
       if (this.chatState.suggestions && this.chatState.suggestions.length > 0) {
         quickWrap.innerHTML = `
@@ -297,26 +361,73 @@ const ChatbotController = {
     this.scrollChatBottom();
   },
 
+  /**
+   * Parser Markdown an toàn hỗ trợ Bold, Italic, Lists và Tables so sánh
+   */
   formatMarkdown(text) {
     if (!text) return '';
+
+    // An toàn XSS: escape HTML trước khi render
     let out = esc(text);
-    // Bold **text**
+
+    // 1. Markdown Tables (| Col1 | Col2 | ...)
+    out = out.replace(/((?:\|[^\n]+\|\r?\n)+)/g, (match) => {
+      const rows = match.trim().split(/\r?\n/);
+      if (rows.length < 2) return match;
+
+      let tableHtml = '<div class="chatbot-table-wrap"><table class="chatbot-table">';
+      rows.forEach((row, rowIdx) => {
+        // Bỏ qua dòng separator | :--- | :--- |
+        if (/^\|[\s\-:]+\|\s*$/.test(row)) return;
+
+        const cols = row
+          .split('|')
+          .slice(1, -1)
+          .map((c) => c.trim());
+
+        if (cols.length === 0) return;
+
+        if (rowIdx === 0) {
+          tableHtml += '<thead><tr>' + cols.map((c) => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+        } else {
+          tableHtml += '<tr>' + cols.map((c) => `<td>${c}</td>`).join('') + '</tr>';
+        }
+      });
+      tableHtml += '</tbody></table></div>';
+      return tableHtml;
+    });
+
+    // 2. Bold **text**
     out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Italic *text*
+
+    // 3. Italic *text*
     out = out.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    // Inline code `code`
+
+    // 4. Inline code `code`
     out = out.replace(/`(.*?)`/g, '<code>$1</code>');
-    // Bullet points
-    out = out.replace(/^- (.*)$/gm, '• $1');
-    // Line breaks
-    out = out.replace(/\n/g, '<br>');
+
+    // 5. Bullet points
+    out = out.replace(/^• (.*)$/gm, '<li class="chatbot-li">• $1</li>');
+    out = out.replace(/^- (.*)$/gm, '<li class="chatbot-li">• $1</li>');
+
+    // 6. Line breaks (giữ format nhưng không làm hỏng thẻ table)
+    out = out.replace(/\n(?!(?:<table|<\/table|<thead>|<\/thead|<tbody>|<\/tbody|<tr|<\/tr|<th|<td))/g, '<br>');
+
     return out;
   },
 
-  scrollChatBottom() {
+  /**
+   * Tự cuộn hợp lý: Chỉ cuộn nếu người dùng đang ở gần đáy khung chat
+   */
+  scrollChatBottom(force = false) {
     setTimeout(() => {
       const body = document.getElementById('chatbot-body');
-      if (body) body.scrollTop = body.scrollHeight;
+      if (!body) return;
+
+      const distanceFromBottom = body.scrollHeight - body.scrollTop - body.clientHeight;
+      if (force || distanceFromBottom < 120) {
+        body.scrollTop = body.scrollHeight;
+      }
     }, 50);
   },
 };

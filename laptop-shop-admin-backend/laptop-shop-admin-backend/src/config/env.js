@@ -16,4 +16,9 @@ module.exports = {
   CORS_ORIGINS: (e.CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean),
   UPLOAD_DIR: e.UPLOAD_DIR || 'uploads',
   TRUST_PROXY: Number(e.TRUST_PROXY) || 0,
+  AI_PROVIDER: e.AI_PROVIDER || 'gemini',
+  GEMINI_API_KEY: e.GEMINI_API_KEY || '',
+  GEMINI_MODEL: e.GEMINI_MODEL || 'gemini-1.5-flash',
+  OPENAI_API_KEY: e.OPENAI_API_KEY || '',
+  OPENAI_MODEL: e.OPENAI_MODEL || 'gpt-4o-mini',
 };

@@ -5659,3 +5659,145 @@ p { margin: 0; }
     right: 14px;
   }
 }
+
+/* LAPTOP99 AI Context Strip */
+.chatbot-context-strip {
+  background: #F4EAD8;
+  border-bottom: 1px solid #E4C68F;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #80551F;
+}
+
+.chatbot-context-strip .context-text {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chatbot-context-strip .context-ask-btn {
+  background: #101D35;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s ease;
+}
+
+.chatbot-context-strip .context-ask-btn:hover {
+  background: #1F355C;
+}
+
+/* Comparison Markdown Table */
+.chatbot-table-wrap {
+  overflow-x: auto;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #E5E3DD;
+  background: #FFFFFF;
+}
+
+.chatbot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  text-align: left;
+}
+
+.chatbot-table th {
+  background: #101D35;
+  color: #FFFFFF;
+  padding: 6px 8px;
+  font-weight: 700;
+  border: 1px solid #1E2D48;
+  white-space: nowrap;
+}
+
+.chatbot-table td {
+  padding: 6px 8px;
+  border: 1px solid #E5E3DD;
+  color: #14243B;
+  vertical-align: top;
+}
+
+.chatbot-table tr:nth-child(even) td {
+  background: #FDFCFB;
+}
+
+/* Retry Button on Failure */
+.chatbot-retry-wrap {
+  margin-top: 8px;
+}
+
+.chatbot-retry-btn {
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FCA5A5;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.chatbot-retry-btn:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+}
+
+/* Stock Badges inside Chat Product Cards */
+.chatbot-pcard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pcard-stock {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.pcard-stock.in {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.pcard-stock.out {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.chatbot-li {
+  list-style: none;
+  margin: 3px 0;
+}
+
+/* Textarea input wrapper */
+.chatbot-input-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.chatbot-footer textarea.chatbot-input {
+  width: 100%;
+  resize: none;
+  min-height: 38px;
+  max-height: 100px;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
