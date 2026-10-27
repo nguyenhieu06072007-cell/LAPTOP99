@@ -582,9 +582,9 @@ async function viewHome() {
 
         if (flashSaleBanner && (flashSaleBanner.image_mode === 'full_cover' || flashSaleBanner.image_mode === 'complete' || flashSaleBanner.image_mode === 'full_image')) {
           return `
-      <div class="festival-banner festival-banner-full-cover reveal-on-scroll" style="padding:0;overflow:hidden;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15)">
-        <a href="${fsCtaLink}" style="display:block;width:100%;height:100%;line-height:0" title="${fsTitle}">
-          <img src="${fsImg}" alt="${fsTitle}" style="width:100%;height:auto;min-height:120px;max-height:160px;object-fit:cover;display:block" loading="lazy">
+      <div class="festival-banner festival-banner-full-cover reveal-on-scroll">
+        <a href="${fsCtaLink}" title="${fsTitle}">
+          <img src="${fsImg}" alt="${fsTitle}" loading="lazy">
         </a>
       </div>`;
         }
@@ -714,9 +714,9 @@ async function viewHome() {
         <!-- Banner Chiến dịch Quảng cáo riêng của Hãng đang chọn -->
         ${curCampaign.imageMode === 'full_cover' || curCampaign.imageMode === 'complete' || curCampaign.imageMode === 'full_image' ? `
           <!-- Chế độ 1 Ảnh Bao Trùm Toàn Bộ Chuyên Trang Thương Hiệu -->
-          <div class="brand-campaign-banner-full-cover" style="border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:0 8px 28px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15)">
-            <a href="${curCampaign.ctaHref || '#/products'}" style="display:block;width:100%;height:100%;line-height:0" title="${esc(curCampaign.title)}">
-              <img src="${esc(curCampaign.realImg)}" alt="${esc(curCampaign.brand)}" style="width:100%;height:auto;min-height:220px;max-height:340px;object-fit:cover;display:block" loading="lazy">
+          <div class="brand-campaign-banner-full-cover">
+            <a href="${curCampaign.ctaHref || '#/products'}" title="${esc(curCampaign.title)}">
+              <img src="${esc(curCampaign.realImg)}" alt="${esc(curCampaign.brand)}" loading="lazy">
             </a>
           </div>
         ` : `

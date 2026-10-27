@@ -56,6 +56,59 @@ const BADGE_STYLES = {
   purple: { label: 'Tím Đặc Quyền', cls: 'bg-purple-600 text-white' },
 };
 
+export const BANNER_RATIO_CONFIGS = {
+  hero: {
+    ratio: '690 / 300',
+    width: 690,
+    height: 300,
+    label: '690 × 300 px (Tỉ lệ 2.3 : 1)',
+    highRes: '1380 × 600 px (Chuẩn HD 2x)',
+    badge: '🖥️ Hero Slider Trang Chủ',
+    desc: 'Khung trượt trung tâm, chuẩn tỉ lệ 2.3:1 thương mại điện tử CellphoneS',
+    maxHeight: '300px',
+  },
+  flash_sale: {
+    ratio: '1200 / 140',
+    width: 1200,
+    height: 140,
+    label: '1200 × 140 px (Tỉ lệ 8.57 : 1)',
+    highRes: '1920 × 224 px (Full HD Strip)',
+    badge: '⚡ Dải Flash Sale Giờ Vàng',
+    desc: 'Dải banner ngang đếm ngược giờ vàng chạy ngang trang',
+    maxHeight: '140px',
+  },
+  brand_showcase: {
+    ratio: '1200 / 300',
+    width: 1200,
+    height: 300,
+    label: '1200 × 300 px (Tỉ lệ 4 : 1)',
+    highRes: '1600 × 400 px (HD Showcase)',
+    badge: '🏢 Chuyên Trang Hãng',
+    desc: 'Khu vực chuyên trang thương hiệu theo từng hãng (Apple, ASUS, Lenovo...)',
+    maxHeight: '260px',
+  },
+  hot_deal: {
+    ratio: '1200 / 220',
+    width: 1200,
+    height: 220,
+    label: '1200 × 220 px (Tỉ lệ 5.45 : 1)',
+    highRes: '1600 × 293 px (HD Deal)',
+    badge: '🔥 Deal Tâm Điểm Giảm Sâu',
+    desc: 'Thẻ deal tâm điểm giờ vàng giảm sâu',
+    maxHeight: '200px',
+  },
+  entry_popup: {
+    ratio: '1 / 1',
+    width: 600,
+    height: 600,
+    label: '600 × 600 px (Tỉ lệ 1 : 1 Vuông)',
+    highRes: '800 × 800 px (HD Popup)',
+    badge: '🎯 Popup Ưu Đãi Đầu Trang',
+    desc: 'Hộp thoại popup chào mừng khách khi vừa vào trang',
+    maxHeight: '380px',
+  },
+};
+
 const EMPTY_FORM = {
   position: 'hero',
   brand: 'Apple',
@@ -594,18 +647,14 @@ export default function BannerManagementPage() {
                   Xem Trước Trực Quan Thực Tế (Live Storefront Preview)
                 </h3>
               </div>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
-                Vị trí:{' '}
-                {form.position === 'entry_popup'
-                  ? '🎯 Banner Popup Đầu Trang (Laptop88 Cyber Style)'
-                  : form.position === 'flash_sale'
-                  ? '⚡ Dải Flash Sale Giờ Vàng'
-                  : form.position === 'brand_showcase'
-                  ? `🏢 Chuyên Trang ${form.brand || 'Apple'}`
-                  : form.position === 'hot_deal'
-                  ? '🔥 Deal Tâm Điểm Giảm Sâu'
-                  : '🖥️ Hero Slider Trang Chủ'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1 shadow-xs">
+                  <span>📐</span> {(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).label}
+                </span>
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
+                  {(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).badge}
+                </span>
+              </div>
             </div>
 
             {/* PREVIEW VARIANT: FULL COVER BANNER (1 ẢNH BAO TRÙM TOÀN BỘ) */}
@@ -614,7 +663,11 @@ export default function BannerManagementPage() {
                 <div
                   className="relative w-full rounded-2xl overflow-hidden shadow-2xl border-2 border-indigo-500/50 bg-gray-950 group transition-all"
                   style={{
-                    height: form.position === 'flash_sale' ? '140px' : form.position === 'entry_popup' ? '360px' : '280px',
+                    aspectRatio: (BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).ratio,
+                    width: '100%',
+                    maxHeight: (BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).maxHeight,
+                    maxWidth: form.position === 'entry_popup' ? '380px' : '100%',
+                    margin: form.position === 'entry_popup' ? '0 auto' : undefined,
                   }}
                 >
                   {form.image_url ? (
@@ -622,13 +675,14 @@ export default function BannerManagementPage() {
                       src={form.image_url.startsWith('http') ? form.image_url : `https://laptop99.vercel.app${form.image_url}`}
                       alt={form.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      style={{ objectPosition: form.image_position || 'center center' }}
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-gray-400 bg-gradient-to-br from-gray-900 to-slate-900 border-2 border-dashed border-gray-700">
                       <HiOutlinePhoto className="w-12 h-12 text-indigo-400 mb-2 animate-pulse" />
                       <p className="text-sm font-bold text-gray-200">Chưa có hình ảnh banner bao trùm</p>
                       <p className="text-xs text-gray-400 mt-1 max-w-sm">
-                        Vui lòng bấm nút <strong>&quot;Tải tệp từ máy&quot;</strong> hoặc nhập URL ảnh bên dưới để ảnh bao trùm 100% diện tích
+                        Vui lòng bấm nút <strong>&quot;Tải tệp từ máy&quot;</strong> hoặc nhập URL ảnh (Khuyến nghị: <strong>{(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).label}</strong>)
                       </p>
                     </div>
                   )}
@@ -636,11 +690,11 @@ export default function BannerManagementPage() {
                   {/* Floating Status Badges */}
                   <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white border border-white/20 flex items-center gap-1.5 shadow-lg">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>1 Ảnh Đơn Tràn Viền (100% Full Cover)</span>
+                    <span>100% Khung ({ (BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).ratio })</span>
                   </div>
 
                   <div className="absolute top-3 right-3 bg-indigo-600/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-black uppercase text-white border border-indigo-400/40 shadow-lg">
-                    {form.position === 'hero' ? '🖥️ Hero Slider' : form.position === 'flash_sale' ? '⚡ Flash Sale' : form.position === 'brand_showcase' ? `🏢 Hãng: ${form.brand}` : form.position === 'entry_popup' ? '🎯 Popup Đầu Trang' : '🔥 Deal Tâm Điểm'}
+                    {(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).badge}
                   </div>
 
                   {/* Clickable CTA link info pill at bottom */}
@@ -660,9 +714,9 @@ export default function BannerManagementPage() {
                 <div className="flex items-center justify-between text-xs text-gray-500 px-1">
                   <span className="flex items-center gap-1">
                     <HiOutlineSparkles className="w-3.5 h-3.5 text-indigo-500" />
-                    Ảnh tự động co giãn bao trùm 100% khung hiển thị trên mọi thiết bị (Desktop / Mobile)
+                    Khung preview tự động chuẩn tỉ lệ <strong>{(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).label}</strong> (Storefront)
                   </span>
-                  <span className="text-emerald-600 font-bold">✓ Hiển thị trọn vẹn không che xén</span>
+                  <span className="text-emerald-600 font-bold">✓ Tỉ lệ chuẩn khớp tuyệt đối</span>
                 </div>
               </div>
             ) : (
@@ -1003,11 +1057,11 @@ export default function BannerManagementPage() {
                     onChange={(e) => setForm({ ...form, position: e.target.value })}
                     className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-xl bg-white font-bold text-gray-800 focus:ring-2 focus:ring-rose-500/30"
                   >
-                    <option value="entry_popup">🎯 1. Banner Popup Đầu Vào Trang (Laptop88 Cyber Style)</option>
-                    <option value="hero">🖥️ 2. Hero Slider Đầu Trang (Carousel)</option>
-                    <option value="flash_sale">⚡ 3. Dải Banner Flash Sale Giờ Vàng (Đếm ngược)</option>
-                    <option value="brand_showcase">🏢 4. Chuyên Trang Thương Hiệu Theo Hãng (Apple, ASUS...)</option>
-                    <option value="hot_deal">🔥 5. Banner Deal Tâm Điểm Giảm Sâu</option>
+                    <option value="entry_popup">🎯 1. Banner Popup Đầu Trang (600×600 px — 1:1 Vuông)</option>
+                    <option value="hero">🖥️ 2. Hero Slider Đầu Trang (690×300 px — 2.3:1 Chuẩn CellphoneS)</option>
+                    <option value="flash_sale">⚡ 3. Dải Banner Flash Sale Giờ Vàng (1200×140 px — 8.57:1)</option>
+                    <option value="brand_showcase">🏢 4. Chuyên Trang Thương Hiệu Theo Hãng (1200×300 px — 4:1)</option>
+                    <option value="hot_deal">🔥 5. Banner Deal Tâm Điểm Giảm Sâu (1200×220 px — 5.45:1)</option>
                   </select>
                 </div>
 
@@ -1285,6 +1339,27 @@ export default function BannerManagementPage() {
                 </div>
 
                 <div className="md:col-span-2 bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 space-y-3">
+                  {/* Aspect Ratio Specs Guide Box */}
+                  <div className="bg-white/90 border border-indigo-200 rounded-xl p-3 flex items-start gap-3 shadow-xs">
+                    <div className="p-2 bg-indigo-600 text-white rounded-lg shrink-0 mt-0.5 shadow-sm">
+                      <HiOutlinePhoto className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-black text-indigo-950">📐 Khung Tỉ Lệ Tiêu Chuẩn:</span>
+                        <span className="px-2.5 py-0.5 rounded-md bg-indigo-600 text-white text-xs font-black">
+                          {(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).label}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-300 text-indigo-800 text-[11px] font-bold">
+                          Nét cao HD: {(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).highRes}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-indigo-900 mt-1 leading-snug">
+                        {(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).desc}. Xuất ảnh đúng tỉ lệ này để banner bao trùm 100% khung hình, hiển thị sắc nét và không bao giờ bị méo dẹt hay cắt mất chữ.
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-black text-indigo-950 flex items-center gap-1.5">
                       <HiOutlinePhoto className="w-4 h-4 text-indigo-600" />
