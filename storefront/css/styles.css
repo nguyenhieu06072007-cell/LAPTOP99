@@ -1721,6 +1721,45 @@ p { margin: 0; }
   height: 100%;
   background: var(--brand-red);
 }
+/* Full cover banner for hot deal */
+.sec-box.hot-deal .highlight-deal-card.highlight-deal-card-full-cover,
+.highlight-deal-card.highlight-deal-card-full-cover {
+  display: block !important;
+  grid-template-columns: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  margin-bottom: 16px !important;
+  border: 1px solid rgba(225, 29, 72, 0.35) !important;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45) !important;
+  aspect-ratio: 1200 / 220;
+  max-height: 240px;
+}
+.sec-box.hot-deal .highlight-deal-card.highlight-deal-card-full-cover::before {
+  display: none !important;
+}
+.highlight-deal-card.highlight-deal-card-full-cover a {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  line-height: 0;
+}
+.highlight-deal-card.highlight-deal-card-full-cover img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: 16px;
+}
+@media (max-width: 768px) {
+  .sec-box.hot-deal .highlight-deal-card.highlight-deal-card-full-cover,
+  .highlight-deal-card.highlight-deal-card-full-cover {
+    aspect-ratio: auto;
+    min-height: 140px;
+    height: auto;
+  }
+}
 .hdc-thumb-frame {
   width: 100%;
   height: 140px;

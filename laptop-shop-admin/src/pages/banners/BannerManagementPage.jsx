@@ -25,6 +25,7 @@ import {
   HiOutlineMagnifyingGlass,
   HiOutlineShoppingBag,
   HiOutlineShoppingCart,
+  HiOutlineArrowsPointingOut,
 } from 'react-icons/hi2';
 
 const POSITIONS = [
@@ -155,6 +156,102 @@ export default function BannerManagementPage() {
   const [uploading, setUploading] = useState(false);
   const [newPerkInput, setNewPerkInput] = useState('');
   const fileInputRef = useRef(null);
+  const previewRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [startCoord, setStartCoord] = useState({ x: 50, y: 50 });
+  const [isDragOverFile, setIsDragOverFile] = useState(false);
+  const [fitMode, setFitMode] = useState('cover'); // 'cover' | 'contain'
+  const [zoomLevel, setZoomLevel] = useState(100); // 100 to 150
+
+  const parsePosition = (posStr) => {
+    if (!posStr) return { x: 50, y: 50 };
+    const str = String(posStr).trim().toLowerCase();
+    if (str === 'center center' || str === 'center') return { x: 50, y: 50 };
+    if (str === 'left center' || str === 'left') return { x: 0, y: 50 };
+    if (str === 'right center' || str === 'right') return { x: 100, y: 50 };
+    if (str === 'top center' || str === 'center top') return { x: 50, y: 0 };
+    if (str === 'bottom center' || str === 'center bottom') return { x: 50, y: 100 };
+    if (str === 'left top' || str === 'top left') return { x: 0, y: 0 };
+    if (str === 'right top' || str === 'top right') return { x: 100, y: 0 };
+    if (str === 'left bottom' || str === 'bottom left') return { x: 0, y: 100 };
+    if (str === 'right bottom' || str === 'bottom right') return { x: 100, y: 100 };
+    const parts = str.split(/\s+/);
+    if (parts.length >= 2) {
+      const x = parseFloat(parts[0]);
+      const y = parseFloat(parts[1]);
+      return {
+        x: isNaN(x) ? 50 : Math.max(0, Math.min(100, Math.round(x))),
+        y: isNaN(y) ? 50 : Math.max(0, Math.min(100, Math.round(y))),
+      };
+    }
+    return { x: 50, y: 50 };
+  };
+
+  const handleMouseDown = (e) => {
+    if (!form.image_url) return;
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('input')) return;
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setStartCoord(parsePosition(form.image_position));
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging || !previewRef.current) return;
+      const rect = previewRef.current.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
+      const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
+      const newX = Math.round(Math.max(0, Math.min(100, startCoord.x - deltaX)));
+      const newY = Math.round(Math.max(0, Math.min(100, startCoord.y - deltaY)));
+      setForm((prev) => ({
+        ...prev,
+        image_position: `${newX}% ${newY}%`,
+      }));
+    };
+
+    const handleMouseUp = () => {
+      if (isDragging) setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart, startCoord]);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOverFile(true);
+  };
+
+  const handleDragLeave = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragOverFile(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOverFile(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      uploadImageFile(file);
+    }
+  };
+
+  const setQuickAlign = (x, y) => {
+    setForm((prev) => ({
+      ...prev,
+      image_position: `${x}% ${y}%`,
+    }));
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -298,10 +395,8 @@ export default function BannerManagementPage() {
     }));
   };
 
-  const handleUploadImage = async (e) => {
-    const file = e.target.files?.[0];
+    const uploadImageFile = async (file) => {
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
       return toast.error('Vui lòng chọn tệp hình ảnh (.jpg, .png, .webp, .svg)');
     }
@@ -319,7 +414,7 @@ export default function BannerManagementPage() {
       const uploadedUrl = res.data?.data?.url;
       if (uploadedUrl) {
         setForm((prev) => ({ ...prev, image_url: uploadedUrl, image_mode: 'full_cover' }));
-        toast.success('Đã tải hình ảnh lên thành công!');
+        toast.success('Đã tải hình ảnh lên thành công và khớp vào khung!');
       }
     } catch (err) {
       toast.error(err.message || 'Lỗi tải ảnh lên');
@@ -327,6 +422,11 @@ export default function BannerManagementPage() {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  const handleUploadImage = (e) => {
+    const file = e.target.files?.[0];
+    uploadImageFile(file);
   };
 
   const getPerksList = () => {
@@ -661,7 +761,18 @@ export default function BannerManagementPage() {
             {(form.image_mode === 'full_cover') ? (
               <div className="space-y-3">
                 <div
-                  className="relative w-full rounded-2xl overflow-hidden shadow-2xl border-2 border-indigo-500/50 bg-gray-950 group transition-all"
+                  ref={previewRef}
+                  onMouseDown={handleMouseDown}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`relative w-full rounded-2xl overflow-hidden shadow-2xl border-2 select-none transition-all ${
+                    isDragOverFile
+                      ? 'border-emerald-400 ring-4 ring-emerald-400/40 bg-emerald-950/30'
+                      : isDragging
+                      ? 'border-amber-400 ring-4 ring-amber-400/30 cursor-grabbing'
+                      : 'border-indigo-500/50 hover:border-indigo-400 cursor-grab'
+                  } bg-gray-950`}
                   style={{
                     aspectRatio: (BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).ratio,
                     width: '100%',
@@ -669,21 +780,46 @@ export default function BannerManagementPage() {
                     maxWidth: form.position === 'entry_popup' ? '380px' : '100%',
                     margin: form.position === 'entry_popup' ? '0 auto' : undefined,
                   }}
+                  title="Nhấn giữ chuột và kéo nhả để căn chỉnh góc hiển thị trong khung"
                 >
+                  {isDragOverFile && (
+                    <div className="absolute inset-0 z-30 bg-indigo-950/85 backdrop-blur-sm border-2 border-dashed border-emerald-400 rounded-2xl flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+                      <HiOutlineArrowUpTray className="w-12 h-12 text-emerald-400 animate-bounce mb-2" />
+                      <p className="text-sm font-black text-white">Thả hình ảnh vào đây để tải lên ngay!</p>
+                      <p className="text-xs text-emerald-200 mt-1">Khớp tự động vào khung {(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).label}</p>
+                    </div>
+                  )}
+
                   {form.image_url ? (
                     <img
                       src={form.image_url.startsWith('http') ? form.image_url : `https://laptop99.vercel.app${form.image_url}`}
                       alt={form.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      style={{ objectPosition: form.image_position || 'center center' }}
+                      className="w-full h-full select-none pointer-events-none transition-none"
+                      style={{
+                        objectFit: fitMode || 'cover',
+                        objectPosition: form.image_position || 'center center',
+                        transform: zoomLevel > 100 ? `scale(${zoomLevel / 100})` : undefined,
+                        transformOrigin: form.image_position || 'center center',
+                      }}
+                      draggable={false}
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-gray-400 bg-gradient-to-br from-gray-900 to-slate-900 border-2 border-dashed border-gray-700">
                       <HiOutlinePhoto className="w-12 h-12 text-indigo-400 mb-2 animate-pulse" />
                       <p className="text-sm font-bold text-gray-200">Chưa có hình ảnh banner bao trùm</p>
                       <p className="text-xs text-gray-400 mt-1 max-w-sm">
-                        Vui lòng bấm nút <strong>&quot;Tải tệp từ máy&quot;</strong> hoặc nhập URL ảnh (Khuyến nghị: <strong>{(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).label}</strong>)
+                        Kéo thả file ảnh trực tiếp vào đây hoặc bấm <strong>&quot;Tải tệp từ máy&quot;</strong> (Khuyến nghị: <strong>{(BANNER_RATIO_CONFIGS[form.position] || BANNER_RATIO_CONFIGS.hero).label}</strong>)
                       </p>
+                    </div>
+                  )}
+
+                  {/* Drag-to-Position Floating Indicator Badge */}
+                  {form.image_url && (
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-black/85 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-bold text-white border border-white/20 flex items-center gap-2 shadow-2xl pointer-events-none">
+                      <span className={`w-2 h-2 rounded-full ${isDragging ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`}></span>
+                      <span>🖱️ Kéo nhả căn khung:</span>
+                      <span className="font-mono text-amber-300 font-black">X: {parsePosition(form.image_position).x}% • Y: {parsePosition(form.image_position).y}%</span>
+                      {isDragging && <span className="text-[10px] bg-amber-500/30 text-amber-200 px-1.5 py-0.5 rounded font-black">Đang kéo...</span>}
                     </div>
                   )}
 
@@ -709,6 +845,150 @@ export default function BannerManagementPage() {
                       Tab tiêu đề: <span className="text-white font-black">{form.tab_title}</span>
                     </div>
                   )}
+                </div>
+
+                {/* BỘ CÔNG CỤ CĂN CHỈNH KHUNG HÌNH & KÉO NHẢ */}
+                <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-700/80 text-white shadow-lg space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🎯</span>
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-200">
+                        Tính Năng Kéo Nhả &amp; Căn Chỉnh Khớp Khung
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 font-mono">
+                        {form.image_position || 'center center'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setFitMode('cover')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                          fitMode === 'cover'
+                            ? 'bg-indigo-600 text-white shadow-sm ring-1 ring-indigo-400'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        Phủ đầy (Cover)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFitMode('contain')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                          fitMode === 'contain'
+                            ? 'bg-indigo-600 text-white shadow-sm ring-1 ring-indigo-400'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        Vừa vặn 100% (Contain)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                    {/* 9-Point Alignment Grid (5 cols) */}
+                    <div className="md:col-span-5 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 flex flex-col items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-slate-400">9 Điểm Căn Nhanh:</span>
+                      <div className="grid grid-cols-3 gap-1 w-full max-w-[200px]">
+                        {[
+                          { label: '↖', x: 0, y: 0, title: 'Trên Trái' },
+                          { label: '⬆', x: 50, y: 0, title: 'Trên Giữa' },
+                          { label: '↗', x: 100, y: 0, title: 'Trên Phải' },
+                          { label: '⬅', x: 0, y: 50, title: 'Giữa Trái' },
+                          { label: '⏺', x: 50, y: 50, title: 'Chính Giữa' },
+                          { label: '➡', x: 100, y: 50, title: 'Giữa Phải' },
+                          { label: '↙', x: 0, y: 100, title: 'Dưới Trái' },
+                          { label: '⬇', x: 50, y: 100, title: 'Dưới Giữa' },
+                          { label: '↘', x: 100, y: 100, title: 'Dưới Phải' },
+                        ].map((p, idx) => {
+                          const cur = parsePosition(form.image_position);
+                          const active = cur.x === p.x && cur.y === p.y;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              title={p.title}
+                              onClick={() => setQuickAlign(p.x, p.y)}
+                              className={`py-1.5 rounded text-xs font-black transition ${
+                                active
+                                  ? 'bg-amber-500 text-slate-950 shadow-md font-black scale-105'
+                                  : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                              }`}
+                            >
+                              {p.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* X and Y Sliders + Zoom (7 cols) */}
+                    <div className="md:col-span-7 space-y-2.5 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+                      {/* X Slider */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-300 w-16 shrink-0">Trục X (Ngang):</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={parsePosition(form.image_position).x}
+                          onChange={(e) => {
+                            const cur = parsePosition(form.image_position);
+                            setForm((prev) => ({ ...prev, image_position: `${e.target.value}% ${cur.y}%` }));
+                          }}
+                          className="flex-1 accent-indigo-500 cursor-pointer"
+                        />
+                        <span className="font-mono text-xs font-bold text-amber-400 w-10 text-right">
+                          {parsePosition(form.image_position).x}%
+                        </span>
+                      </div>
+
+                      {/* Y Slider */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-300 w-16 shrink-0">Trục Y (Dọc):</span>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={parsePosition(form.image_position).y}
+                          onChange={(e) => {
+                            const cur = parsePosition(form.image_position);
+                            setForm((prev) => ({ ...prev, image_position: `${cur.x}% ${e.target.value}%` }));
+                          }}
+                          className="flex-1 accent-indigo-500 cursor-pointer"
+                        />
+                        <span className="font-mono text-xs font-bold text-amber-400 w-10 text-right">
+                          {parsePosition(form.image_position).y}%
+                        </span>
+                      </div>
+
+                      {/* Zoom / Scale Slider & Reset */}
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-xs">
+                        <div className="flex items-center gap-2 flex-1 mr-3">
+                          <span className="font-bold text-slate-400 shrink-0">Thu phóng:</span>
+                          <input
+                            type="range"
+                            min="100"
+                            max="150"
+                            value={zoomLevel}
+                            onChange={(e) => setZoomLevel(Number(e.target.value))}
+                            className="flex-1 accent-emerald-500 cursor-pointer"
+                          />
+                          <span className="font-mono text-emerald-400 font-bold w-10 text-right">{zoomLevel}%</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuickAlign(50, 50);
+                            setZoomLevel(100);
+                          }}
+                          className="text-[11px] font-bold text-slate-400 hover:text-white underline shrink-0"
+                        >
+                          Đặt lại giữa
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-gray-500 px-1">
@@ -930,12 +1210,35 @@ export default function BannerManagementPage() {
             {/* PREVIEW VARIANT C: HOT DEAL SPOTLIGHT CARD */}
             {form.position === 'hot_deal' && (
               <div className="rounded-2xl bg-gradient-to-br from-gray-950 via-slate-900 to-rose-950 border border-rose-500/40 p-4 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center gap-4">
-                <div className="w-40 h-28 rounded-xl bg-black/50 border border-white/10 p-2 shrink-0 flex items-center justify-center relative">
+                <div
+                  ref={form.image_mode !== 'full_cover' ? previewRef : undefined}
+                  onMouseDown={handleMouseDown}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`w-48 h-32 rounded-xl bg-black/50 border p-2 shrink-0 flex items-center justify-center relative overflow-hidden transition select-none ${
+                    isDragOverFile
+                      ? 'border-emerald-400 ring-2 ring-emerald-400'
+                      : isDragging
+                      ? 'border-amber-400 ring-2 ring-amber-400 cursor-grabbing'
+                      : 'border-white/10 hover:border-white/30 cursor-grab'
+                  }`}
+                  title="Nhấn giữ chuột kéo nhả hoặc thả tệp ảnh vào đây"
+                >
                   <img
                     src={form.image_url.startsWith('http') ? form.image_url : `https://laptop99.vercel.app${form.image_url}`}
                     alt="Hot Deal Preview"
-                    className="max-h-full max-w-full object-contain drop-shadow-[0_8px_20px_rgba(244,63,94,0.4)]"
+                    className="max-h-full max-w-full object-contain drop-shadow-[0_8px_20px_rgba(244,63,94,0.4)] pointer-events-none select-none"
+                    style={{
+                      objectPosition: form.image_position || 'center center',
+                    }}
+                    draggable={false}
                   />
+                  {form.image_url && (
+                    <div className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-[9px] font-mono text-amber-300">
+                      {parsePosition(form.image_position).x}%, {parsePosition(form.image_position).y}%
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex-1 space-y-1.5 min-w-0">

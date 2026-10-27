@@ -793,9 +793,9 @@ async function viewHome() {
 
           if (hotDealBanner && (hotDealBanner.image_mode === 'full_cover' || hotDealBanner.image_mode === 'complete' || hotDealBanner.image_mode === 'full_image')) {
             return `
-        <div class="highlight-deal-card highlight-deal-card-full-cover" style="padding:0;overflow:hidden;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15)">
+        <div class="highlight-deal-card highlight-deal-card-full-cover" style="display:block;padding:0;overflow:hidden;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);aspect-ratio:1200/220;max-height:240px;width:100%">
           <a href="${dealLink}" style="display:block;width:100%;height:100%;line-height:0" title="${esc(dealTitle)}">
-            <img src="${dealImg}" alt="${esc(dealTitle)}" style="width:100%;height:auto;min-height:160px;max-height:220px;object-fit:cover;display:block" loading="lazy">
+            <img src="${dealImg}" alt="${esc(dealTitle)}" style="width:100%;height:100%;object-fit:cover;object-position:${esc(hotDealBanner?.image_position || 'center center')};display:block" loading="lazy">
           </a>
         </div>`;
           }
