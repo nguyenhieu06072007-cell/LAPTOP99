@@ -2,16 +2,13 @@
    STOREFRONT MVC VIEW COMPONENT: Common UI Components (Modal, Toast, Badges, Skeletons)
    ========================================================================== */
 
-var $ = window.$ || ((s, r = document) => r.querySelector(s));
-var $$ = window.$$ || ((s, r = document) => [...r.querySelectorAll(s)]);
-var esc = window.esc || ((s) => String(s ?? '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])));
-var val = window.val || ((id) => {
-  const e = document.getElementById(id);
-  return e ? e.value.trim() : '';
-});
-var vnd = window.vnd || ((n) => new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + ' ₫');
-var sd = window.sd || ((t) => new Date(t).toLocaleDateString('vi-VN'));
-var sdt = window.sdt || ((t) => new Date(t).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }));
+var $ = window.$ || function(s, r = document) { return r.querySelector(s); };
+var $$ = window.$$ || function(s, r = document) { return [...r.querySelectorAll(s)]; };
+var esc = window.esc || function(s) { return String(s ?? '').replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }); };
+var val = window.val || function(id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+var vnd = window.vnd || function(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + ' ₫'; };
+var sd = window.sd || function(t) { return new Date(t).toLocaleDateString('vi-VN'); };
+var sdt = window.sdt || function(t) { return new Date(t).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }); };
 
 var I = window.I || {
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
@@ -46,7 +43,10 @@ var I = window.I || {
   spark: '<path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/>',
 };
 
-var ic = window.ic || ((n, s = 17) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${(window.I || I)[n] || ''}</svg>`);
+var ic = window.ic || function(n, s) {
+  s = s || 17;
+  return '<svg class="ic" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + ((window.I || I)[n] || '') + '</svg>';
+};
 
 function pimg(p, cls = '') {
   const c1 = `hsl(${p.hue || 215}, 75%, 52%)`;
@@ -67,16 +67,11 @@ function pimg(p, cls = '') {
   return svgFallback;
 }
 
-const discPct = (p) => (p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0);
-const rate = (p) => p.rating || '5.0';
-const stars = (n) => '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n));
+var discPct = window.discPct || ((p) => (p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0));
+var rate = window.rate || ((p) => p.rating || '5.0');
+var stars = window.stars || ((n) => '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n)));
 
-const stockTxt = (p) =>
-  p.stock <= 0
-    ? '<span class="bd bad">Tạm hết hàng</span>'
-    : p.stock <= 5
-    ? `<span class="bd warn">Sắp hết (${p.stock})</span>`
-    : `<span class="bd ok">Còn hàng (${p.stock})</span>`;
+var stockTxt = window.stockTxt || ((p) => p.stock <= 0 ? '<span class="bd bad">Tạm hết hàng</span>' : p.stock <= 5 ? `<span class="bd warn">Sắp hết (${p.stock})</span>` : `<span class="bd ok">Còn hàng (${p.stock})</span>`);
 
 
 
