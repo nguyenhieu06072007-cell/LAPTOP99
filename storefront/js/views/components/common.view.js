@@ -111,7 +111,7 @@ function brandLogo(mode = 'full') {
       ${imgHtml}
       <span style="display:flex;flex-direction:column;line-height:1.05">
         <span class="brand-title" style="font-size:1.32rem;font-weight:900;letter-spacing:-0.03em;color:#FFFFFF;text-shadow:0 1px 3px rgba(0,0,0,0.35);display:inline-flex;align-items:center">
-          <span style="color:#FFFFFF">LAPTOP</span><span style="color:#FEF08A;font-weight:900;margin-left:1px;filter:drop-shadow(0 0 6px rgba(254,240,138,0.6))">99</span>
+          <span style="color:#FFFFFF">LAPTOP</span><span style="color:#C5A46D;font-weight:900;margin-left:1px;filter:drop-shadow(0 0 6px rgba(197,164,109,0.6))">99</span>
         </span>
         <span class="brand-sub-badge" style="font-size:0.54rem;font-weight:800;letter-spacing:0.1em;color:rgba(255,255,255,0.92);display:inline-flex;align-items:center;gap:4.5px;margin-top:2px">
           CHÍNH HÃNG 100% <i class="pulse-live-beacon"></i>
@@ -125,7 +125,7 @@ function brandLogo(mode = 'full') {
       ${imgHtml}
       <span style="display:flex;flex-direction:column;line-height:1.05">
         <span class="brand-title" style="font-size:1.24rem;font-weight:900;letter-spacing:-0.03em;color:#FFFFFF;display:inline-flex;align-items:center">
-          <span style="color:#FFFFFF">LAPTOP</span><span style="color:var(--brand-red);font-weight:900;margin-left:1px">99</span>
+          <span style="color:#FFFFFF">LAPTOP</span><span style="color:var(--gold-champagne, #C5A46D);font-weight:900;margin-left:1px">99</span>
         </span>
         <span class="brand-sub-badge" style="font-size:0.53rem;font-weight:800;letter-spacing:0.1em;color:#AEB4BF;display:inline-flex;align-items:center;gap:4.5px;margin-top:2px">
           CHÍNH HÃNG 100% <i class="pulse-live-beacon"></i>
@@ -138,9 +138,9 @@ function brandLogo(mode = 'full') {
     ${imgHtml}
     <span style="display:flex;flex-direction:column;line-height:1.05">
       <span class="brand-title" style="font-size:1.22rem;font-weight:900;letter-spacing:-0.03em;color:#171A21;display:inline-flex;align-items:center">
-        <span style="color:#171A21">LAPTOP</span><span style="color:var(--brand-red);font-weight:900;margin-left:1px">99</span>
+        <span style="color:#14243B">LAPTOP</span><span style="color:var(--gold-champagne, #C5A46D);font-weight:900;margin-left:1px">99</span>
       </span>
-      <span class="brand-sub-badge" style="font-size:0.54rem;font-weight:800;letter-spacing:0.12em;color:var(--brand-red);display:inline-flex;align-items:center;gap:4px;margin-top:2px">
+      <span class="brand-sub-badge" style="font-size:0.54rem;font-weight:800;letter-spacing:0.12em;color:var(--gold-dark, #80551F);display:inline-flex;align-items:center;gap:4px;margin-top:2px">
         CHÍNH HÃNG 100% <i class="pulse-live-beacon"></i>
       </span>
     </span>

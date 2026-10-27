@@ -228,7 +228,7 @@ async function viewHome() {
       badge: 'ASUS OFFICIAL CAMPAIGN · TUẦN LỄ ASUS',
       title: 'Tuần Lễ Laptop ASUS — Sắm Máy Cân Bài, Chiến Game Đỉnh Cao',
       desc: 'Từ dòng Zenbook OLED mỏng nhẹ sang trọng, Vivobook đa nhiệm cho tới chiến thần ROG Strix / TUF Gaming RTX 40-Series tần số quét 144Hz–240Hz.',
-      bg: 'linear-gradient(135deg, #171A21 0%, #25161C 50%, #BE123C 100%)',
+      bg: 'linear-gradient(135deg, #091526 0%, #101D35 50%, #1A2C4E 100%)',
       perks: ['Tặng Balo ASUS ROG + Chuột Gaming', 'Giảm thêm 500K khi thanh toán QR', 'Bảo hành chính hãng ASUS 24 tháng'],
       ctaHref: '#/products?brand=ASUS',
       realImg: resolveAssetUrl('/uploads/products/real-asus-rog.jpg'),
@@ -239,7 +239,7 @@ async function viewHome() {
       badge: 'LENOVO AI PC FEST · SMARTER TECHNOLOGY',
       title: 'Lễ Hội Laptop AI Lenovo — Đỉnh Cao ThinkPad, IdeaPad &amp; LOQ Gaming',
       desc: 'Bàn phím trứ danh, độ bền chuẩn quân đội Mỹ MIL-STD-810H và tản nhiệt ColdFront mát lạnh trên dòng Lenovo Legion / LOQ Gaming.',
-      bg: 'linear-gradient(135deg, #171A21 0%, #201E2B 50%, #E11D48 100%)',
+      bg: 'linear-gradient(135deg, #091526 0%, #101D35 50%, #243B66 100%)',
       perks: ['Tặng gói bảo hành Lenovo Premier Support', 'Giảm thêm 3% cho thành viên S-Student', 'Trả góp 0% duyệt hồ sơ 5 phút'],
       ctaHref: '#/products?brand=Lenovo',
       realImg: resolveAssetUrl('/uploads/products/real-lenovo-legion.jpg'),
@@ -250,7 +250,7 @@ async function viewHome() {
       badge: 'MSI GAMING FESTIVAL · TRUE GAMING',
       title: 'Đại Tiệc MSI Gaming — Sức Mạnh Rồng Đỏ GeForce RTX 40-Series',
       desc: 'Chiến mượt mọi tựa game AAA &amp; Esports cùng MSI Katana, Cyborg và Stealth. Tặng ngay bộ Gear Gaming chính hãng cực chất.',
-      bg: 'linear-gradient(135deg, #111318 0%, #1F171A 50%, #9F1239 100%)',
+      bg: 'linear-gradient(135deg, #091526 0%, #101D35 50%, #C5A46D 100%)',
       perks: ['Tặng Balo MSI Dragon + Chuột Gaming', 'Miễn phí vệ sinh & tra keo tản nhiệt trọn đời', 'Trợ giá lên đời Gaming 2 Triệu'],
       ctaHref: '#/products?brand=MSI',
       realImg: resolveAssetUrl('/uploads/products/real-msi-modern.jpg'),
@@ -293,8 +293,8 @@ async function viewHome() {
   // Tích hợp dữ liệu Chuyên trang Thương hiệu từ Database (Admin CMS)
   const BG_THEME_MAP = {
     dark: 'linear-gradient(135deg, #0F172A 0%, #1E293B 55%, #334155 100%)',
-    crimson: 'linear-gradient(135deg, #18090C 0%, #2A0F17 50%, #BE123C 100%)',
-    indigo: 'linear-gradient(135deg, #171A21 0%, #25161C 50%, #BE123C 100%)',
+    crimson: 'linear-gradient(135deg, #091526 0%, #101D35 50%, #C5A46D 100%)',
+    indigo: 'linear-gradient(135deg, #091526 0%, #101D35 50%, #1A2C4E 100%)',
     blue: 'linear-gradient(135deg, #0C4A6E 0%, #0284C7 55%, #1E3A8A 100%)',
     emerald: 'linear-gradient(135deg, #064E3B 0%, #059669 55%, #0F172A 100%)',
     purple: 'linear-gradient(135deg, #2E1065 0%, #7C3AED 55%, #0F172A 100%)',
@@ -729,7 +729,7 @@ async function viewHome() {
               ${curCampaign.perks.map((pk) => `<span class="bcb-perk">✓ ${esc(pk)}</span>`).join('')}
             </div>
             <div class="row" style="gap:10px">
-              <a href="${curCampaign.ctaHref}" class="btn lg" style="background:#fff;color:#BE123C;border-color:#fff;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,0.25)">
+              <a href="${curCampaign.ctaHref}" class="btn lg" style="background:linear-gradient(135deg, #C5A46D 0%, #E4C68F 100%);color:#101D35;border-color:#C5A46D;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,0.25)">
                 Xem toàn bộ Laptop ${esc(curCampaign.brand)} ${ic('arrow', 15)}
               </a>
               <button type="button" class="btn lg" style="background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.35);backdrop-filter:blur(8px)" onclick="A.openPromoPopup(true)">

@@ -102,7 +102,7 @@ async function viewCart() {
 
 function loginForm() {
   return `<div class="gap" style="gap:12px">
-    <div style="background:linear-gradient(135deg,#FFF1F2 0%,#FFE4E6 100%);border:1px solid #FECDD3;border-radius:10px;padding:10px 14px;font-size:.82rem;color:#9F1239;line-height:1.5">
+    <div style="background:var(--active-bg, #F4EAD8);border:1px solid var(--border-default, #E5E3DD);border-radius:10px;padding:10px 14px;font-size:.82rem;color:var(--gold-dark, #80551F);line-height:1.5">
       <b>Đăng nhập tài khoản:</b> Bạn có thể đăng nhập linh hoạt bằng <b>Địa chỉ Gmail/Email</b> hoặc <b>Số điện thoại</b> đã đăng ký.
     </div>
     <label class="fl2">
@@ -145,7 +145,7 @@ function regForm() {
 
 function forgotForm() {
   return `<div class="gap" style="gap:12px">
-    <div style="background:linear-gradient(135deg,#FFF1F2 0%,#FFE4E6 100%);border:1px solid #FECDD3;border-radius:10px;padding:12px 14px;font-size:.82rem;color:#9F1239;line-height:1.5">
+    <div style="background:var(--active-bg, #F4EAD8);border:1px solid var(--border-default, #E5E3DD);border-radius:10px;padding:12px 14px;font-size:.82rem;color:var(--gold-dark, #80551F);line-height:1.5">
       <b>Khôi phục mật khẩu tài khoản:</b> Nhập <b>Email (Gmail)</b> hoặc <b>Số điện thoại</b> đã đăng ký. Hệ thống sẽ gửi mã xác thực OTP 6 số (qua SMS hoặc Email) để cấp lại mật khẩu ngay lập tức.
     </div>
     <label class="fl2">
@@ -304,7 +304,7 @@ async function viewCheckout() {
             ${Object.entries(PAY)
               .map(
                 ([k, v]) => `
-              <label class="opt" style="${selectedPay === k ? 'border-color:var(--acc);background:#FFF1F2' : ''}">
+              <label class="opt" style="${selectedPay === k ? 'border-color:var(--gold-champagne, #C5A46D);background:var(--active-bg, #F4EAD8)' : ''}">
                 <input type="radio" name="pay" value="${k}" ${selectedPay === k ? 'checked' : ''} onchange="A.selectCheckoutPay('${k}')">
                 <span>
                   <b class="sm">${v}</b>
