@@ -14,5 +14,6 @@ router.use('/customers', require('./customers.routes'));
 router.use('/promotions', require('./promotions.routes'));
 router.use('/reviews', require('./reviews.routes'));
 router.use('/banners', require('./banners.routes'));
+router.use('/notifications', require('./notifications.routes'));
 
 module.exports = router;
