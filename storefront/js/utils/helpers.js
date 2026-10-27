@@ -1,5 +1,5 @@
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+var $ = (s, r = document) => r.querySelector(s);
+var $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 function sanitizeHtml(str) {
   if (!str) return '';
@@ -32,7 +32,7 @@ function resolveAssetUrl(rawUrl) {
   return '/' + clean;
 }
 
-const I = {
+var I = window.I || {
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.6 5-5.5 8-5.5s6.2 1.9 8 5.5"/>',
@@ -65,7 +65,7 @@ const I = {
   spark: '<path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/>',
 };
 
-const ic = (n, s = 17) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${I[n] || ''}</svg>`;
+var ic = window.ic || ((n, s = 17) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${(window.I || I)[n] || ''}</svg>`);
 
 function copyToClipboard(text) {
   if (navigator.clipboard) {

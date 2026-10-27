@@ -2,18 +2,18 @@
    STOREFRONT MVC VIEW COMPONENT: Common UI Components (Modal, Toast, Badges, Skeletons)
    ========================================================================== */
 
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-const val = (id) => {
+var $ = window.$ || ((s, r = document) => r.querySelector(s));
+var $$ = window.$$ || ((s, r = document) => [...r.querySelectorAll(s)]);
+var esc = window.esc || ((s) => String(s ?? '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])));
+var val = window.val || ((id) => {
   const e = document.getElementById(id);
   return e ? e.value.trim() : '';
-};
-const vnd = (n) => new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + ' ₫';
-const sd = (t) => new Date(t).toLocaleDateString('vi-VN');
-const sdt = (t) => new Date(t).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+});
+var vnd = window.vnd || ((n) => new Intl.NumberFormat('vi-VN').format(Math.round(Number(n) || 0)) + ' ₫');
+var sd = window.sd || ((t) => new Date(t).toLocaleDateString('vi-VN'));
+var sdt = window.sdt || ((t) => new Date(t).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' }));
 
-const I = {
+var I = window.I || {
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 20c1.8-3.6 5-5.5 8-5.5s6.2 1.9 8 5.5"/>',
@@ -46,7 +46,7 @@ const I = {
   spark: '<path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/>',
 };
 
-const ic = (n, s = 17) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${I[n] || ''}</svg>`;
+var ic = window.ic || ((n, s = 17) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${(window.I || I)[n] || ''}</svg>`);
 
 function pimg(p, cls = '') {
   const c1 = `hsl(${p.hue || 215}, 75%, 52%)`;
