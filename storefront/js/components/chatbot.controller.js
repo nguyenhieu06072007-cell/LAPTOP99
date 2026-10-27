@@ -1,5 +1,6 @@
 /* ==========================================================================
    STOREFRONT MVC CONTROLLER: LAPTOP99 AI Chatbot Assistant Controller
+   With 3D Robot Mascot Animation, Unread Notifications & Context Awareness
    ========================================================================== */
 
 const ChatbotController = {
@@ -16,6 +17,7 @@ const ChatbotController = {
     isTyping: false,
     currentProduct: null,
     lastFailedPrompt: null,
+    unreadCount: 0,
   },
 
   initChatbot() {
@@ -49,6 +51,20 @@ const ChatbotController = {
     }
 
     this.bindKeyboardEvents();
+    this.bindTabVisibility();
+  },
+
+  bindTabVisibility() {
+    // Tạm dừng chuyển động khi tab bị ẩn để tối ưu hiệu năng & pin
+    document.addEventListener('visibilitychange', () => {
+      const wrap = document.getElementById('chatbot-trigger-wrap');
+      if (!wrap) return;
+      if (document.hidden) {
+        wrap.classList.add('tab-paused');
+      } else {
+        wrap.classList.remove('tab-paused');
+      }
+    });
   },
 
   bindKeyboardEvents() {
@@ -116,15 +132,40 @@ const ChatbotController = {
     }
   },
 
+  showUnreadBadge(count = 1) {
+    const badge = document.getElementById('chatbot-unread-badge');
+    const countEl = document.getElementById('chatbot-unread-count');
+    if (!badge) return;
+    this.chatState.unreadCount = count;
+    if (countEl) countEl.textContent = String(count);
+    badge.style.display = 'inline-flex';
+    badge.classList.remove('bounce-once');
+    // Force reflow for clean single bounce animation
+    void badge.offsetWidth;
+    badge.classList.add('bounce-once');
+  },
+
+  clearUnreadBadge() {
+    this.chatState.unreadCount = 0;
+    const badge = document.getElementById('chatbot-unread-badge');
+    if (badge) {
+      badge.style.display = 'none';
+      badge.classList.remove('bounce-once');
+    }
+  },
+
   toggleChatbot() {
     this.initChatbot();
     const win = document.getElementById('chatbot-window');
+    const btn = document.getElementById('chatbot-trigger-btn');
     if (!win) return;
 
     this.chatState.isOpen = !this.chatState.isOpen;
     if (this.chatState.isOpen) {
       win.style.display = 'flex';
       win.classList.add('open');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+      this.clearUnreadBadge();
       this.checkCurrentProductContext();
       this.renderChatMessages();
       const input = document.getElementById('chatbot-input');
@@ -132,6 +173,7 @@ const ChatbotController = {
     } else {
       win.classList.remove('open');
       win.style.display = 'none';
+      if (btn) btn.setAttribute('aria-expanded', 'false');
     }
   },
 
@@ -151,6 +193,7 @@ const ChatbotController = {
       'Chính sách bảo hành',
     ];
     this.chatState.lastFailedPrompt = null;
+    this.clearUnreadBadge();
     try {
       sessionStorage.removeItem('laptop99_ai_chat_history');
     } catch (e) {}
@@ -197,9 +240,13 @@ const ChatbotController = {
     this.chatState.isTyping = true;
     this.renderChatMessages();
 
-    // Hiển thị trạng thái đang nhập
+    // Hiển thị trạng thái đang nhập trong Header & Body
     const typingEl = document.getElementById('chatbot-typing');
+    const subEl = document.getElementById('chatbot-header-sub');
     if (typingEl) typingEl.style.display = 'flex';
+    if (subEl) {
+      subEl.innerHTML = '<span class="chatbot-typing-pulse" aria-hidden="true">●</span> <span style="color:#C5A46D;font-weight:700">Đang trả lời...</span>';
+    }
     this.scrollChatBottom(true);
 
     try {
@@ -227,6 +274,11 @@ const ChatbotController = {
         if (res.suggestions && res.suggestions.length > 0) {
           this.chatState.suggestions = res.suggestions;
         }
+
+        // Nếu khung chat đang đóng, kích hoạt unread badge nhún 1 lần
+        if (!this.chatState.isOpen) {
+          this.showUnreadBadge(1);
+        }
       } else {
         throw new Error(res?.message || 'Không nhận được phản hồi hợp lệ');
       }
@@ -246,6 +298,9 @@ const ChatbotController = {
     } finally {
       this.chatState.isTyping = false;
       if (typingEl) typingEl.style.display = 'none';
+      if (subEl) {
+        subEl.innerHTML = '<span class="chatbot-live-dot" aria-hidden="true"></span> Trực tuyến 24/7 · Dữ liệu kho thật';
+      }
 
       // Lưu lịch sử vào sessionStorage
       try {
@@ -319,8 +374,8 @@ const ChatbotController = {
         ${
           isBot
             ? `
-          <div class="chatbot-mini-avatar" aria-hidden="true" title="LAPTOP99 AI">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C5A46D" stroke-width="2.2"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/></svg>
+          <div class="chatbot-mini-avatar" aria-hidden="true" title="LAPTOP99 AI Robot">
+            <img src="storefront/assets/chatbot-robot.webp" alt="LAPTOP99 AI" class="chatbot-msg-avatar-img" width="28" height="28">
           </div>
         `
             : ''
