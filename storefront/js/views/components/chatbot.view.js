@@ -33,8 +33,8 @@ function renderChatbotWidget() {
       <!-- Hình tượng Robot AI bấm laptop (Đúng tỉ lệ, không viền tròn cắt đầu/laptop) -->
       <div class="chatbot-robot-figure" id="chatbot-robot-figure">
         <picture class="chatbot-robot-picture">
-          <source srcset="storefront/assets/chatbot-robot.webp" type="image/webp">
-          <img src="storefront/assets/chatbot-robot.png" 
+          <source srcset="storefront/assets/chatbot-robot.webp?v=20261028_v1" type="image/webp">
+          <img src="storefront/assets/chatbot-robot.gif?v=20261028_v1" 
                alt="LAPTOP99 AI Robot Mascot đang bấm laptop tư vấn" 
                class="chatbot-robot-img" 
                id="chatbot-robot-img"
@@ -61,7 +61,7 @@ function renderChatbotWidget() {
     <div class="chatbot-header">
       <div class="chatbot-header-info">
         <div class="chatbot-avatar-wrap" aria-hidden="true">
-          <img src="storefront/assets/chatbot-robot.webp" 
+          <img src="storefront/assets/chatbot-robot.webp?v=20261028_v1" 
                alt="Avatar LAPTOP99 AI" 
                class="chatbot-header-avatar"
                width="38" 
@@ -103,7 +103,7 @@ function renderChatbotWidget() {
       </div>
       <div class="chatbot-typing" id="chatbot-typing" style="display:none" aria-label="LAPTOP99 AI đang phản hồi">
         <div class="chatbot-typing-avatar" aria-hidden="true">
-          <img src="storefront/assets/chatbot-robot.webp" alt="AI Typing" width="28" height="28">
+          <img src="storefront/assets/chatbot-robot.webp?v=20261028_v1" alt="AI Typing" width="28" height="28">
         </div>
         <div class="chatbot-typing-bubble">
           <span class="chatbot-typing-dot"></span>

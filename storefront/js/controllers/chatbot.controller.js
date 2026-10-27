@@ -375,7 +375,7 @@ const ChatbotController = {
           isBot
             ? `
           <div class="chatbot-mini-avatar" aria-hidden="true" title="LAPTOP99 AI Robot">
-            <img src="storefront/assets/chatbot-robot.webp" alt="LAPTOP99 AI" class="chatbot-msg-avatar-img" width="28" height="28">
+            <img src="storefront/assets/chatbot-robot.webp?v=20261028_v1" alt="LAPTOP99 AI" class="chatbot-msg-avatar-img" width="28" height="28">
           </div>
         `
             : ''
