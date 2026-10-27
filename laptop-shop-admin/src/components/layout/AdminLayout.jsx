@@ -97,7 +97,12 @@ export default function AdminLayout() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('open_notif') === '1';
+    }
+    return false;
+  });
   const [notificationTab, setNotificationTab] = useState('all');
   const [notifications, setNotifications] = useState([]);
   const [notifLoading, setNotifLoading] = useState(false);

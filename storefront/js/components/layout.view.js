@@ -115,22 +115,7 @@ function renderCategorySidebar(cats = [], allProducts = []) {
       brands: ['Lenovo', 'Dell', 'HP'],
       catParam: 'cat=6',
     },
-    {
-      name: 'Phụ kiện laptop',
-      sub: 'Chuột, Balo, Bàn phím, Hub sạc',
-      href: '#/products?q=phu+kien',
-      icon: 'headset',
-      brands: ['Logitech', 'Apple', 'ASUS', 'Razer'],
-      catParam: 'q=phu+kien',
-    },
-    {
-      name: 'Màn hình - PC',
-      sub: 'Màn hình 2K/4K, Mini PC đồ họa',
-      href: '#/products?q=man+hinh',
-      icon: 'scale',
-      brands: ['LG', 'Dell', 'ASUS', 'Samsung'],
-      catParam: 'q=man+hinh',
-    },
+    
     {
       name: 'Thu cũ đổi mới',
       sub: 'Định giá 3 bước trợ giá 3 Triệu',
