@@ -22,9 +22,11 @@ import {
   HiOutlineUserGroup,
   HiOutlineClipboardDocumentList,
   HiArrowRightOnRectangle,
+  HiSun,
+  HiMoon,
 } from 'react-icons/hi2';
 
-export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
+export default function Sidebar({ isMobileOpen, setIsMobileOpen, theme, toggleTheme }) {
   const { user, logout, can } = useAuth();
   const location = useLocation();
 
@@ -100,6 +102,26 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
             );
           })}
         </nav>
+
+                {/* Quick Theme Switcher in Sidebar */}
+        {toggleTheme && (
+          <div className="px-3 pt-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="w-full py-1.5 px-2.5 rounded-md text-xs font-semibold flex items-center justify-between bg-gray-800/80 hover:bg-gray-700/80 text-gray-300 hover:text-white transition border border-gray-700/60 cursor-pointer"
+              title="Đổi giao diện Sáng / Tối"
+            >
+              <span className="flex items-center gap-2">
+                {theme === 'dark' ? <HiSun className="w-4 h-4 text-amber-400" /> : <HiMoon className="w-4 h-4 text-indigo-400" />}
+                <span>Giao diện {theme === 'dark' ? 'Tối' : 'Sáng'}</span>
+              </span>
+              <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-600/30 text-blue-300">
+                {theme === 'dark' ? '🌙 Đang bật' : '☀️ Bật tối'}
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* User profile info & logout */}
         <div className="p-3 border-t border-gray-800/80 bg-[#191f28]/60 flex items-center justify-between">

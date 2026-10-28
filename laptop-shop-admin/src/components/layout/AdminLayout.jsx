@@ -352,7 +352,7 @@ export default function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-[#f3f4f6] overflow-hidden font-sans">
-      <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
+      <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} theme={theme} toggleTheme={toggleTheme} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden lg:pl-60">
         {/* Top Header Bar matching wireframe */}
@@ -505,8 +505,29 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          {/* Right utilities: Notifications & User Profile dropdown */}
-          <div className="flex items-center space-x-3">
+                    {/* Right utilities: Notifications & User Profile dropdown */}
+          <div className="flex items-center space-x-2.5">
+            {/* Dark / Light Mode Toggle Button */}
+            <button
+              type="button"
+              id="admin-theme-toggle-btn"
+              onClick={toggleTheme}
+              className="py-1.5 px-3 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md transition flex items-center text-xs font-semibold border border-gray-300 dark:border-slate-600 shadow-xs cursor-pointer select-none"
+              title={theme === 'dark' ? 'Chuyển sang Chế độ Sáng' : 'Chuyển sang Chế độ Tối'}
+              aria-label="Đổi chế độ Sáng / Tối"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <HiSun className="w-4 h-4 text-amber-400 mr-1.5" />
+                  <span className="font-bold text-amber-300">Chế độ Sáng</span>
+                </>
+              ) : (
+                <>
+                  <HiMoon className="w-4 h-4 text-indigo-600 mr-1.5" />
+                  <span className="font-bold text-gray-700">Chế độ Tối</span>
+                </>
+              )}
+            </button>
             {/* Notification Center Dropdown */}
             <div className="relative" ref={notificationRef}>
               <button
@@ -640,6 +661,19 @@ export default function AdminLayout() {
                       {user?.role || 'Admin'}
                     </span>
                   </div>
+                                    <button
+                    type="button"
+                    onClick={() => {
+                      toggleTheme();
+                      setUserDropdown(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center justify-between font-medium"
+                  >
+                    <span>Giao diện:</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                      {theme === 'dark' ? '🌙 Chế độ Tối' : '☀️ Chế độ Sáng'}
+                    </span>
+                  </button>
                   <Link
                     to="/profile"
                     onClick={() => setUserDropdown(false)}
