@@ -3,6 +3,34 @@
    ========================================================================== */
 
 const A = {
+  toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try {
+      localStorage.setItem('laptop99_theme', next);
+      localStorage.setItem('laptop99_admin_theme', next);
+    } catch(e) {}
+    A.updateThemeButton();
+    if (typeof toast === 'function') {
+      toast(next === 'dark' ? 'Đã bật Chế độ Tối (Dark Mode) sang trọng' : 'Đã bật Chế độ Sáng (Light Mode)', 'info');
+    }
+  },
+
+  updateThemeButton() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.theme-icon-light').forEach((el) => {
+      el.style.display = isDark ? 'none' : 'inline-flex';
+    });
+    document.querySelectorAll('.theme-icon-dark').forEach((el) => {
+      el.style.display = isDark ? 'inline-flex' : 'none';
+    });
+    document.querySelectorAll('.theme-btn-text').forEach((el) => {
+      el.textContent = isDark ? 'Chế độ Sáng' : 'Chế độ Tối';
+    });
+  },
+
+
   toggleMenu() {
     const d = $('#m-drawer');
     if (d) d.classList.toggle('open');
@@ -313,7 +341,13 @@ document.addEventListener('click', (e) => {
   }
 });
 
-window.addEventListener('hashchange', render);
+window.addEventListener('hashchange', () => {
+  render();
+  setTimeout(A.updateThemeButton, 50);
+});
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(A.updateThemeButton, 50);
+});
 
 // Tự động cập nhật dữ liệu mới nhất khi người dùng chuyển từ tab Admin sang tab Storefront
 document.addEventListener('visibilitychange', () => {

@@ -437,6 +437,13 @@ function storeShell(inner, r) {
 
       <!-- 4. Nút So sánh, Yêu thích, Giỏ hàng, Tài khoản (Phong cách CellphoneS gọn gàng, không tràn ngang) -->
       <div class="nr">
+                <!-- Nút chuyển Chế độ Tối / Sáng (Dark / Light Mode) -->
+        <button type="button" class="nav-act theme-toggle-btn" id="theme-toggle-btn" onclick="A.toggleTheme()" 
+                title="Chuyển chế độ Giao diện Sáng / Tối" aria-label="Chuyển chế độ Giao diện">
+          <span class="theme-icon-light" aria-hidden="true">${ic('moon', 16)}</span>
+          <span class="theme-icon-dark" aria-hidden="true" style="display:none">${ic('sun', 16)}</span>
+          <span class="lbl theme-btn-text">Giao diện</span>
+        </button>
         <a class="nav-act" href="#/compare" title="So sánh sản phẩm">
           ${ic('scale', 16)} <span class="lbl">So sánh</span>
           ${cm ? `<i class="nav-badge">${cm}</i>` : ''}
@@ -478,6 +485,14 @@ function storeShell(inner, r) {
   <!-- Mobile Navigation Drawer -->
   <div class="mobile-drawer-backdrop" id="m-drawer" onclick="A.toggleMenu()">
     <div class="mobile-drawer" onclick="event.stopPropagation()">
+      <div class="m-drawer-theme-wrap" style="padding: 12px 16px; border-bottom: 1px solid var(--line);">
+        <button type="button" class="btn outline" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="A.toggleTheme()">
+          <span class="theme-icon-light">${ic('moon', 16)}</span>
+          <span class="theme-icon-dark" style="display:none">${ic('sun', 16)}</span>
+          <span class="theme-btn-text font-bold">Chuyển Chế độ Sáng / Tối</span>
+        </button>
+      </div>
+
       <div class="row between" style="padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:12px">
         <a href="#/" class="logo" onclick="A.toggleMenu()">${brandLogo('full')}</a>
         <button class="ib" onclick="A.toggleMenu()">${ic('x', 16)}</button>

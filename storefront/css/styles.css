@@ -6098,3 +6098,271 @@ p { margin: 0; }
   }
 }
 /* End Chatbot Styles */
+
+
+/* ==========================================================================
+   LAPTOP99 ULTRA-LUXURY DARK MODE THEME SYSTEM
+   Deep Midnight Navy (#0B1323) + Champagne Gold (#D4AF37) + Platinum Silver
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --navy-primary: #0A1324;
+  --navy-dark: #050B15;
+  --navy-light: #132038;
+  --navy-hover: #1A2D4F;
+  --gold-champagne: #D4AF37;
+  --gold-light: #F3E5AB;
+  --gold-dark: #AA7C11;
+  --gold-active: #231C0D;
+  --active-bg: #231C0D;
+
+  /* Surfaces & Backgrounds */
+  --bg-main: #070D18;
+  --bg-sub: #0C1628;
+  --bg-card: #101D33;
+  --header-bg: #050912;
+  --footer-bg: #03060C;
+  --topbar-bg: #03060C;
+  --topbar-promo-bg: #03060C;
+  --border-default: #1B2B47;
+  --border-subtle: #16243D;
+  --border-dark: #24395E;
+  --border-hover: #D4AF37;
+
+  /* System Compatibility Variables */
+  --bg: #070D18;
+  --card: #101D33;
+  --card2: #14243F;
+  --line: #1B2B47;
+  --line2: #16243D;
+  --line-dark: #24395E;
+
+  /* Typography Colors */
+  --text-title: #F8FAFC;
+  --text-body: #E2E8F0;
+  --text-sub: #94A3B8;
+  --text-dark: #F8FAFC;
+  --text-dark-sub: #94A3B8;
+
+  /* Typography Short Aliases */
+  --fg: #F8FAFC;
+  --mut: #94A3B8;
+  --dim: #64748B;
+
+  /* Brand Colors */
+  --brand-red: #101D33;
+  --brand-red-hover: #1A2D4F;
+  --brand-red-light: #231C0D;
+  --brand-red-border: #D4AF37;
+
+  /* Brand Theme Variables */
+  --acc: #D4AF37;
+  --acc2: #F3E5AB;
+  --acc-light: #231C0D;
+  --acc-border: #D4AF37;
+  --promo: #F3E5AB;
+  --promo-bg: #231C0D;
+  --student-bg: #231C0D;
+  --student-fg: #F3E5AB;
+
+  /* Status Colors */
+  --ok-bg: #064E3B;
+  --info-bg: #0C4A6E;
+  --warn-bg: #451A03;
+  --bad-bg: #450A0A;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.65);
+  --shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+[data-theme="dark"] body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-body);
+}
+
+[data-theme="dark"] header.nav {
+  background: var(--header-bg) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+}
+
+[data-theme="dark"] .subnav-bar {
+  background: var(--bg-sub) !important;
+  border-bottom: 1px solid var(--border-default) !important;
+}
+
+[data-theme="dark"] .subnav-links a {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .subnav-links a.on,
+[data-theme="dark"] .subnav-links a:hover {
+  color: #D4AF37;
+  background: #14243F;
+}
+
+[data-theme="dark"] .cat-btn {
+  background: #14243F;
+  color: #F8FAFC;
+  border: 1px solid var(--border-default);
+}
+
+[data-theme="dark"] .cat-pop {
+  background: #101D33;
+  border-color: #1B2B47;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.7);
+}
+
+[data-theme="dark"] .cat-pop-item {
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] .cat-pop-item:hover {
+  background: #14243F;
+  color: #D4AF37;
+}
+
+[data-theme="dark"] .search-box-wrap form.ns {
+  background: #0C1628;
+  border-color: #1B2B47;
+}
+
+[data-theme="dark"] .search-box-wrap input#nq {
+  background: transparent;
+  color: #F8FAFC;
+}
+
+[data-theme="dark"] .search-box-wrap input#nq::placeholder {
+  color: #64748B;
+}
+
+[data-theme="dark"] .sug-dropdown {
+  background: #101D33;
+  border-color: #1B2B47;
+  color: #F8FAFC;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.75);
+}
+
+[data-theme="dark"] .sug-item:hover {
+  background: #14243F;
+}
+
+[data-theme="dark"] .nav-act {
+  color: #E2E8F0;
+  border-color: #1B2B47;
+  background: #0C1628;
+}
+
+[data-theme="dark"] .nav-act:hover {
+  background: #14243F;
+  border-color: #D4AF37;
+  color: #D4AF37;
+}
+
+[data-theme="dark"] .nav-act.theme-toggle-btn {
+  background: linear-gradient(135deg, #101D33 0%, #1A2D4F 100%);
+  border-color: #D4AF37;
+  color: #F3E5AB;
+}
+
+[data-theme="dark"] .nav-act.theme-toggle-btn:hover {
+  border-color: #F3E5AB;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+/* Product Cards & Sections in Dark Mode */
+[data-theme="dark"] .pc,
+[data-theme="dark"] .product-card,
+[data-theme="dark"] .card,
+[data-theme="dark"] .b-card,
+[data-theme="dark"] .promo-card,
+[data-theme="dark"] .showroom-card,
+[data-theme="dark"] .brand-card {
+  background: #101D33 !important;
+  border-color: #1B2B47 !important;
+}
+
+[data-theme="dark"] .pc:hover,
+[data-theme="dark"] .product-card:hover {
+  border-color: #D4AF37 !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.65), 0 0 14px rgba(212,175,55,0.2) !important;
+}
+
+[data-theme="dark"] .pc-name,
+[data-theme="dark"] .p-name,
+[data-theme="dark"] .card-title,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, [data-theme="dark"] h4 {
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark"] .pc-spec,
+[data-theme="dark"] .p-spec {
+  background: #0C1628 !important;
+  color: #94A3B8 !important;
+  border-color: #1B2B47 !important;
+}
+
+[data-theme="dark"] .price-cur,
+[data-theme="dark"] .p-price {
+  color: #E4C68F !important;
+}
+
+[data-theme="dark"] .sidebar-box,
+[data-theme="dark"] .filter-sidebar {
+  background: #101D33 !important;
+  border-color: #1B2B47 !important;
+}
+
+[data-theme="dark"] .filter-chip,
+[data-theme="dark"] .tag-btn {
+  background: #0C1628;
+  border-color: #1B2B47;
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] .filter-chip.active,
+[data-theme="dark"] .filter-chip:hover {
+  background: #14243F;
+  border-color: #D4AF37;
+  color: #D4AF37;
+}
+
+[data-theme="dark"] .mobile-drawer {
+  background: #070D18;
+  color: #E2E8F0;
+  border-right: 1px solid #1B2B47;
+}
+
+[data-theme="dark"] .modal-dialog,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .auth-box {
+  background: #101D33 !important;
+  border-color: #1B2B47 !important;
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: #0C1628 !important;
+  border-color: #1B2B47 !important;
+  color: #F8FAFC !important;
+}
+
+/* Footer in Dark Mode */
+[data-theme="dark"] footer.ft {
+  background: #03060C !important;
+  border-top: 1px solid #1B2B47;
+}
+
+/* Smooth transition between light and dark modes */
+html, body, header, .nav, .subnav-bar, .pc, .card, .sug-dropdown, input, button {
+  transition: background-color 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}

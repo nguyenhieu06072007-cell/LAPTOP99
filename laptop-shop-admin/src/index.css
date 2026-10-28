@@ -1,3 +1,138 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ==========================================================================
+   LAPTOP99 ADMIN DASHBOARD DARK THEME SYSTEM
+   Ultra-Luxury Deep Slate Navy Palette (#0B132B / #131F37 / #1E2D4D)
+   ========================================================================== */
+
+html.dark,
+.dark body {
+  background-color: #0b132b !important;
+  color: #e2e8f0;
+  color-scheme: dark;
+}
+
+/* Background overrides for cards and layouts */
+.dark .bg-gray-50,
+.dark .bg-slate-50 {
+  background-color: #0b132b !important;
+}
+
+.dark .bg-white {
+  background-color: #131f37 !important;
+  color: #f1f5f9;
+}
+
+.dark .bg-gray-100,
+.dark .bg-slate-100 {
+  background-color: #1a2846 !important;
+  color: #e2e8f0;
+}
+
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-gray-100:hover {
+  background-color: #1e2d4d !important;
+}
+
+/* Typography in dark mode */
+.dark .text-gray-900,
+.dark .text-slate-900 {
+  color: #f8fafc !important;
+}
+
+.dark .text-gray-800,
+.dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-gray-700,
+.dark .text-slate-700 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-gray-600,
+.dark .text-slate-600,
+.dark .text-gray-500,
+.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-gray-400 {
+  color: #64748b !important;
+}
+
+/* Borders in dark mode */
+.dark .border-gray-200,
+.dark .border-gray-100,
+.dark .border-gray-300,
+.dark .border-slate-200,
+.dark .border-slate-100 {
+  border-color: #1e2d4d !important;
+}
+
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e2d4d !important;
+}
+
+/* Form Controls (Inputs, Selects, Textareas) */
+.dark input[type="text"],
+.dark input[type="search"],
+.dark input[type="number"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark select,
+.dark textarea {
+  background-color: #0d172a !important;
+  border-color: #26395e !important;
+  color: #f8fafc !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Tables in dark mode */
+.dark table {
+  color: #cbd5e1;
+}
+
+.dark table thead,
+.dark table thead th {
+  background-color: #0d172a !important;
+  color: #94a3b8 !important;
+  border-color: #1e2d4d !important;
+}
+
+.dark table tbody tr {
+  border-color: #1e2d4d !important;
+}
+
+.dark table tbody tr:hover {
+  background-color: #18253f !important;
+}
+
+/* Dropdowns & Popups */
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Smooth theme transition */
+body, header, aside, main, .bg-white, .bg-gray-50, .border-gray-200 {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}

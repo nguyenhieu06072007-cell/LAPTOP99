@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Navigate, useLocation, useNavigate, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { HiBars3, HiMagnifyingGlass, HiBell, HiChevronDown, HiXMark, HiOutlineComputerDesktop, HiOutlineShoppingBag, HiOutlineShieldCheck, HiOutlineUsers } from 'react-icons/hi2';
+import { HiBars3, HiMagnifyingGlass, HiBell, HiChevronDown, HiXMark, HiOutlineComputerDesktop, HiOutlineShoppingBag, HiOutlineShieldCheck, HiOutlineUsers, HiSun, HiMoon } from 'react-icons/hi2';
 import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import api from '../../api/axios';
@@ -12,6 +12,34 @@ export default function AdminLayout() {
   const { isAuthenticated, loading, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Theme state (Dark / Light Mode)
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('laptop99_admin_theme') || localStorage.getItem('laptop99_theme');
+      if (saved) return saved;
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    } catch (e) {}
+    return 'light';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('laptop99_admin_theme', theme);
+      localStorage.setItem('laptop99_theme', theme);
+    } catch (e) {}
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   // Global Search State
   const [globalSearch, setGlobalSearch] = useState('');
