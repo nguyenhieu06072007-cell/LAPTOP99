@@ -584,7 +584,7 @@ async function viewHome() {
           return `
       <div class="festival-banner festival-banner-full-cover reveal-on-scroll">
         <a href="${fsCtaLink}" title="${fsTitle}">
-          <img src="${fsImg}" alt="${fsTitle}" loading="lazy">
+          <img src="${fsImg}" alt="${fsTitle}" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
         </a>
       </div>`;
         }
@@ -716,7 +716,7 @@ async function viewHome() {
           <!-- Chế độ 1 Ảnh Bao Trùm Toàn Bộ Chuyên Trang Thương Hiệu -->
           <div class="brand-campaign-banner-full-cover">
             <a href="${curCampaign.ctaHref || '#/products'}" title="${esc(curCampaign.title)}">
-              <img src="${esc(curCampaign.realImg)}" alt="${esc(curCampaign.brand)}" loading="lazy">
+              <img src="${esc(curCampaign.realImg)}" alt="${esc(curCampaign.brand)}" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
             </a>
           </div>
         ` : `
@@ -739,7 +739,7 @@ async function viewHome() {
           </div>
           <div class="bcb-visual">
             <div class="bcb-visual-img-wrap">
-              <img src="${esc(curCampaign.realImg || curCampaign.linkedProd?.thumbnail || displayBrandProds[0]?.thumbnail || resolveAssetUrl('/uploads/products/real-macbook-pro.jpg'))}" alt="${esc(curCampaign.brand)}" class="bcb-real-img" loading="lazy">
+              <img src="${esc(curCampaign.realImg || curCampaign.linkedProd?.thumbnail || displayBrandProds[0]?.thumbnail || resolveAssetUrl('/uploads/products/real-macbook-pro.jpg'))}" alt="${esc(curCampaign.brand)}" class="bcb-real-img" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
             </div>
             <div class="bcb-visual-info">
               <span class="bcb-visual-badge">Tâm điểm ${esc(curCampaign.brand)}</span>
@@ -795,7 +795,7 @@ async function viewHome() {
             return `
         <div class="highlight-deal-card highlight-deal-card-full-cover" style="display:block;padding:0;overflow:hidden;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.15);aspect-ratio:1200/220;max-height:240px;width:100%">
           <a href="${dealLink}" style="display:block;width:100%;height:100%;line-height:0" title="${esc(dealTitle)}">
-            <img src="${dealImg}" alt="${esc(dealTitle)}" style="width:100%;height:100%;object-fit:cover;object-position:${esc(hotDealBanner?.image_position || 'center center')};display:block" loading="lazy">
+            <img src="${dealImg}" alt="${esc(dealTitle)}" style="width:100%;height:100%;object-fit:cover;object-position:${esc(hotDealBanner?.image_position || 'center center')};display:block" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
           </a>
         </div>`;
           }
@@ -803,7 +803,7 @@ async function viewHome() {
           return `
         <div class="highlight-deal-card">
           <a href="${dealLink}" class="hdc-thumb-frame" title="${esc(dealTitle)}">
-            <img src="${dealImg}" alt="${esc(dealTitle)}" class="hdc-img" loading="lazy">
+            <img src="${dealImg}" alt="${esc(dealTitle)}" class="hdc-img" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
           </a>
           <div>
             <div class="row" style="gap:8px;align-items:center;margin-bottom:6px">
@@ -991,7 +991,7 @@ async function viewHome() {
               return `
             <article class="news-card-editorial">
               <a href="#/news?open=${n.id}" class="news-thumb-box" title="${esc(n.title)}">
-                <img src="${esc(imgUrl)}" alt="${esc(n.title)}" class="news-thumb-img" loading="lazy">
+                <img src="${esc(imgUrl)}" alt="${esc(n.title)}" class="news-thumb-img" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
                 <span class="news-tag-overlay">${esc(n.tag || 'CÔNG NGHỆ')}</span>
               </a>
               <div class="news-content-box">
