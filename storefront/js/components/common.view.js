@@ -67,7 +67,7 @@ function pimg(p, cls = '') {
 }
 
 const discPct = (p) => (p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0);
-const rate = (p) => p.rating || '5.0';
+const rate = (p) => (p.reviewCount > 0 && p.rating ? p.rating : null);
 const stars = (n) => '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n));
 
 const stockTxt = (p) =>
@@ -235,7 +235,7 @@ function pcard(p) {
       </div>
 
       <div class="pc-meta">
-        <span class="pc-rate">★ ${rate(p)} <span class="muted" style="font-weight:400">(${p.reviewCount || 12})</span></span>
+        <span class="pc-rate">${p.reviewCount > 0 && p.rating ? `★ ${p.rating} <span class="muted" style="font-weight:400">(${p.reviewCount})</span>` : '<span class="muted" style="font-weight:500;font-size:.73rem">Chưa có đánh giá</span>'}</span></span>
         <div class="row" style="gap:4px">
           <button type="button" class="pc-act-btn wish ${inW ? 'on' : ''}" style="width:24px;height:24px" title="Yêu thích" onclick="event.preventDefault();A.wish('${p.id}')">
             ${ic('heart', 12)}

@@ -107,15 +107,18 @@ const ServicesController = {
     if (n.length < 2) return toast('Vui lòng nhập họ và tên', 1);
     try {
       const res = await (typeof AuthService !== 'undefined'
-        ? AuthService.updateProfile({ full_name: n, phone: ph, address: ad })
-        : API.put('/auth/profile', { full_name: n, phone: ph, address: ad }));
-      db.session.name = res.data.full_name;
-      db.session.phone = res.data.phone;
-      db.session.addr = res.data.address;
+        ? AuthService.updateProfile({ full_name: n, name: n, phone: ph, address: ad })
+        : API.put('/auth/profile', { full_name: n, name: n, phone: ph, address: ad }));
+      const d = res.data || {};
+      db.session.name = d.full_name || d.name || n;
+      db.session.phone = d.phone !== undefined ? d.phone : ph;
+      db.session.addr = d.address !== undefined ? d.address : ad;
       save();
       toast('Đã lưu thông tin cá nhân');
       render();
-    } catch (err) {}
+    } catch (err) {
+      if (err && err.message) toast(err.message, 1);
+    }
   },
 };
 

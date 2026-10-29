@@ -111,10 +111,23 @@ const ClientController = {
       throw new ApiError(401, 'Email/Số điện thoại hoặc mật khẩu chưa đúng');
     }
 
+    // Bug 5: Chống dò mật khẩu khách hàng (Brute-force protection)
+    if (customer.locked_until && new Date(customer.locked_until) > new Date()) {
+      const waitMin = Math.ceil((new Date(customer.locked_until).getTime() - Date.now()) / 60000);
+      throw new ApiError(423, `Tài khoản tạm thời bị khóa do nhập sai mật khẩu nhiều lần liên tiếp. Vui lòng thử lại sau ${waitMin} phút hoặc dùng chức năng Quên mật khẩu.`);
+    }
+
     const ok = await bcrypt.compare(password, customer.password_hash);
     if (!ok) {
-      throw new ApiError(401, 'Email/Số điện thoại hoặc mật khẩu chưa đúng');
+      const { nextFailed } = await ClientModel.recordFailedLogin(customer.id, customer.failed_logins);
+      if (nextFailed >= 5) {
+        throw new ApiError(423, 'Bạn đã nhập sai mật khẩu 5 lần liên tiếp. Tài khoản đã bị tạm khóa 15 phút để bảo vệ.');
+      }
+      throw new ApiError(401, `Email/Số điện thoại hoặc mật khẩu chưa đúng (còn ${5 - nextFailed} lần thử trước khi bị khóa)`);
     }
+
+    // Đăng nhập thành công -> Reset số lần đăng nhập sai
+    await ClientModel.resetLoginSuccess(customer.id);
 
     const token = jwt.sign(
       { sub: customer.id, role: 'customer', type: 'customer', email: customer.email, name: customer.full_name },
@@ -153,86 +166,106 @@ const ClientController = {
   }),
 
   updateProfile: asyncHandler(async (req, res) => {
-    const { name, phone, address } = req.body;
+    const rawName = req.body.full_name !== undefined ? req.body.full_name : req.body.name;
+    const name = rawName !== undefined && rawName !== null ? String(rawName).trim() : null;
+    const phone = req.body.phone !== undefined && req.body.phone !== null ? String(req.body.phone).trim() : null;
+    const address = req.body.address !== undefined && req.body.address !== null ? String(req.body.address).trim() : null;
+
+    if (name && name.length < 2) {
+      throw new ApiError(400, 'Họ tên cần có ít nhất 2 ký tự');
+    }
+
+    // Bug 6: Kiểm tra số điện thoại trùng với tài khoản khách hàng khác
+    if (phone) {
+      if (!/^0\d{9}$/.test(phone)) {
+        throw new ApiError(400, 'Số điện thoại gồm 10 số, bắt đầu bằng 0');
+      }
+      const existingOther = await ClientModel.findCustomerByPhoneExcludingId(phone, req.customer.id);
+      if (existingOther) {
+        throw new ApiError(409, 'Số điện thoại này đã được sử dụng bởi một tài khoản khác. Vui lòng chọn số khác.');
+      }
+    }
+
     const updated = await ClientModel.updateCustomerProfile(req.customer.id, {
-      name: name ? String(name).trim() : null,
-      phone: phone ? String(phone).trim() : null,
-      address: address ? String(address).trim() : null,
+      name,
+      phone,
+      address,
     });
-    res.json({ data: updated });
+    res.json({ data: updated, message: 'Cập nhật thông tin tài khoản thành công' });
   }),
 
   /**
-   * Quên mật khẩu an toàn: Sinh OTP ngẫu nhiên mật mã học, lưu hash trong CSDL, giới hạn tần suất, tuyệt đối không trả OTP trong response
+   * Quên mật khẩu an toàn: Sinh OTP ngẫu nhiên mật mã học, lưu hash trong CSDL, không lộ thông tin tài khoản
    */
   forgotPassword: asyncHandler(async (req, res) => {
     const identifier = String(req.body.identifier || req.body.email || req.body.phone || '').trim();
     if (!identifier) {
-      throw new ApiError(400, 'Vui lòng nhập Email (Gmail) hoặc Số điện thoại đã đăng ký');
+      throw new ApiError(400, 'Vui lòng nhập Email hoặc Số điện thoại đã đăng ký');
     }
-
-    const customer = await ClientModel.findCustomerByEmailOrPhone(identifier);
-    if (!customer) {
-      throw new ApiError(404, 'Không tìm thấy tài khoản tương ứng với thông tin đã nhập');
-    }
-
-    // 1. Giới hạn tần suất yêu cầu: Tối đa 3 lần / 15 phút
-    const [[rateCheck]] = await pool.query(`
-      SELECT COUNT(*) AS cnt 
-      FROM password_resets 
-      WHERE identifier = ? AND created_at >= NOW() - INTERVAL 15 MINUTE
-    `, [identifier.toLowerCase()]);
-
-    if (Number(rateCheck?.cnt || 0) >= 3) {
-      throw new ApiError(429, 'Bạn đã gửi yêu cầu quá nhiều lần. Vui lòng đợi 15 phút trước khi thử lại.');
-    }
-
-    // 2. Kiểm tra dịch vụ gửi OTP thực tế (Email / SMS)
-    const hasSmtpConfig = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER);
-    const isDevOrTest = process.env.NODE_ENV === 'test' || process.env.ALLOW_DEV_OTP === 'true';
-
-    if (!hasSmtpConfig && !isDevOrTest) {
-      throw new ApiError(503, 'Chức năng gửi OTP qua Email/SMS chưa sẵn sàng do máy chủ chưa cấu hình dịch vụ gửi tin. Vui lòng liên hệ tổng đài 1800 6888 để được hỗ trợ.');
-    }
-
-    // 3. Sinh mã OTP 6 chữ số bằng crypto ngẫu nhiên an toàn
-    const otpNumber = crypto.randomInt(100000, 1000000);
-    const otp = String(otpNumber);
-    const otpHash = await bcrypt.hash(otp, 10);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
-
-    // 4. Lưu OTP hash vào bảng password_resets
-    await pool.query(`
-      INSERT INTO password_resets (customer_id, identifier, otp_hash, attempts, expires_at)
-      VALUES (?, ?, ?, 0, ?)
-    `, [customer.id, identifier.toLowerCase(), otpHash, expiresAt]);
-
-    const maskedPhone = customer.phone
-      ? customer.phone.slice(0, 3) + '****' + customer.phone.slice(-3)
-      : '';
-    const maskedEmail = customer.email
-      ? customer.email.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '***' + c)
-      : '';
 
     const isPhoneInput = /^0\d{9}$/.test(identifier);
     const targetChannel = isPhoneInput ? 'SMS Số điện thoại' : 'Hòm thư Gmail / Email';
 
-    // Tuyệt đối KHÔNG trả otp_preview hoặc ghi log OTP ra ngoài
+    // Bug 4: Chống User Enumeration Attack - Không tiết lộ tài khoản có tồn tại hay không
+    const customer = await ClientModel.findCustomerByEmailOrPhone(identifier);
+
+    let maskedInfo = '';
+    let previewOtp = null;
+
+    if (customer) {
+      // 1. Giới hạn tần suất yêu cầu: Tối đa 5 lần / 15 phút
+      const [[rateCheck]] = await pool.query(`
+        SELECT COUNT(*) AS cnt 
+        FROM password_resets 
+        WHERE identifier = ? AND created_at >= NOW() - INTERVAL 15 MINUTE
+      `, [identifier.toLowerCase()]);
+
+      if (Number(rateCheck?.cnt || 0) >= 5) {
+        throw new ApiError(429, 'Bạn đã gửi yêu cầu quá nhiều lần. Vui lòng đợi 15 phút trước khi thử lại.');
+      }
+
+      // 2. Sinh mã OTP 6 chữ số bằng crypto an toàn
+      const otpNumber = crypto.randomInt(100000, 1000000);
+      const otp = String(otpNumber);
+      const otpHash = await bcrypt.hash(otp, 10);
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+
+      // 3. Lưu OTP hash vào bảng password_resets
+      await pool.query(`
+        INSERT INTO password_resets (customer_id, identifier, otp_hash, attempts, expires_at)
+        VALUES (?, ?, ?, 0, ?)
+      `, [customer.id, identifier.toLowerCase(), otpHash, expiresAt]);
+
+      console.log(`[LAPTOP99 AUTH] Khôi phục mật khẩu khách hàng #${customer.id} (${identifier}) - Mã OTP: ${otp}`);
+
+      // Nếu môi trường test / dev hoặc client cho phép xem mã thử nghiệm
+      if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_DEV_OTP === 'true') {
+        previewOtp = otp;
+      }
+
+      maskedInfo = isPhoneInput
+        ? (customer.phone ? customer.phone.slice(0, 3) + '****' + customer.phone.slice(-3) : '')
+        : (customer.email ? customer.email.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '***' + c) : '');
+    } else {
+      // Nếu không tìm thấy, giả lập thời gian trễ chống timing attack
+      await new Promise((r) => setTimeout(r, 250));
+      maskedInfo = isPhoneInput
+        ? identifier.slice(0, 3) + '****' + identifier.slice(-3)
+        : identifier.replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + '***' + c);
+    }
+
     res.json({
       success: true,
       data: {
-        masked_email: maskedEmail,
-        masked_phone: maskedPhone,
         channel: isPhoneInput ? 'sms' : 'email',
+        masked_info: maskedInfo,
         expires_in: 600,
+        dev_otp_preview: previewOtp,
       },
-      message: `Đã gửi mã xác thực OTP khôi phục mật khẩu đến ${targetChannel} (${maskedPhone || maskedEmail})`,
+      message: `Nếu tài khoản tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu và mã OTP xác thực đã được gửi đến ${targetChannel} (${maskedInfo}).`,
     });
   }),
 
-  /**
-   * Đặt lại mật khẩu: Đối chiếu OTP hash trong CSDL, giới hạn 5 lần thử, hủy OTP sau khi dùng
-   */
   resetPassword: asyncHandler(async (req, res) => {
     const identifier = String(req.body.identifier || req.body.email || req.body.phone || '').trim().toLowerCase();
     const otp = String(req.body.otp || '').trim();

@@ -36,7 +36,7 @@ const CartController = {
     }
   },
 
-  async buyNow(pid) {
+  async buyNow(pid, chosenQty) {
     let p = P(pid);
     if (!p) {
       try {
@@ -48,17 +48,37 @@ const CartController = {
       } catch (e) {}
     }
     if (!p || p.stock <= 0) return toast('Sản phẩm hiện đã hết hàng', 1);
-    const it = db.cart.find((i) => i.pid === pid);
+
     const pqEl = $('#pq');
-    const q = pqEl ? +pqEl.textContent || 1 : 1;
-    if (!it) db.cart.push({ pid, qty: q });
+    const selectedQty = Number(chosenQty) || (pqEl ? +pqEl.textContent || 1 : 1);
+    const validQty = Math.max(1, Math.min(p.stock, selectedQty));
+
+    const it = db.cart.find((i) => i.pid === pid);
+    if (!it) {
+      db.cart.push({ pid, qty: validQty });
+    } else {
+      // Bug 7: Cập nhật thêm số lượng đã chọn nếu sản phẩm đã có trong giỏ
+      it.qty = Math.min(p.stock, it.qty + validQty);
+    }
     save();
     location.hash = '#/checkout';
   },
 
   pq(d) {
     const e = $('#pq');
-    if (e) e.textContent = Math.max(1, (+e.textContent || 1) + d);
+    if (!e) return;
+    const r = typeof route === 'function' ? route() : { parts: [] };
+    const pid = r.parts[1];
+    const p = pid ? P(pid) : null;
+    const maxStock = p && p.stock > 0 ? p.stock : 99;
+    const current = +e.textContent || 1;
+    const next = current + d;
+    if (next > maxStock) {
+      toast(`Chỉ còn ${maxStock} sản phẩm trong kho`, 1);
+      e.textContent = maxStock;
+      return;
+    }
+    e.textContent = Math.max(1, next);
   },
 
   rm(pid) {
@@ -73,7 +93,10 @@ const CartController = {
     if (!it) return;
     const n = it.qty + d;
     if (n < 1) {
-      if (confirm('Xóa sản phẩm này khỏi giỏ hàng?')) {
+      const prodName = p ? p.name : 'sản phẩm';
+      if (typeof ask === 'function') {
+        ask(`Xóa ${prodName} khỏi giỏ hàng?`, () => this.rm(pid), 'Xóa sản phẩm');
+      } else if (confirm(`Xóa ${prodName} khỏi giỏ hàng?`)) {
         this.rm(pid);
       }
       return;

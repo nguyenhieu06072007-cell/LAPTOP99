@@ -49,21 +49,26 @@ const ClientModel = {
       }
     }
 
-    if (q.q) {
-      where.push('(p.name LIKE ? OR p.sku LIKE ? OR p.model_name LIKE ?)');
-      const kw = `%${q.q.trim()}%`;
-      params.push(kw, kw, kw);
+    const searchKeyword = q.q || q.search || q.keyword;
+    if (searchKeyword && String(searchKeyword).trim()) {
+      where.push('(p.name LIKE ? OR p.sku LIKE ? OR p.model_name LIKE ? OR b.name LIKE ?)');
+      const kw = `%${String(searchKeyword).trim()}%`;
+      params.push(kw, kw, kw, kw);
     }
 
     if (q.price) {
-      if (q.price === 'under15') where.push('COALESCE(p.sale_price, p.price) < 15000000');
-      else if (q.price === '15to25') where.push('COALESCE(p.sale_price, p.price) BETWEEN 15000000 AND 25000000');
-      else if (q.price === '25to35') where.push('COALESCE(p.sale_price, p.price) BETWEEN 25000000 AND 35000000');
-      else if (q.price === 'over35') where.push('COALESCE(p.sale_price, p.price) > 35000000');
-      else if (q.price === 'm1') where.push('COALESCE(p.sale_price, p.price) < 15000000');
-      else if (q.price === 'm2') where.push('COALESCE(p.sale_price, p.price) BETWEEN 15000000 AND 20000000');
-      else if (q.price === 'm3') where.push('COALESCE(p.sale_price, p.price) BETWEEN 20000000 AND 30000000');
-      else if (q.price === 'm4') where.push('COALESCE(p.sale_price, p.price) > 30000000');
+      const pKey = String(q.price).toLowerCase();
+      if (pKey === 'u15' || pKey === 'under15') {
+        where.push('COALESCE(p.sale_price, p.price) < 15000000');
+      } else if (pKey === 'm1' || pKey === '15to25') {
+        where.push('COALESCE(p.sale_price, p.price) BETWEEN 15000000 AND 25000000');
+      } else if (pKey === 'm2' || pKey === '25to40' || pKey === '25to35') {
+        where.push('COALESCE(p.sale_price, p.price) BETWEEN 25000000 AND 40000000');
+      } else if (pKey === 'o40' || pKey === 'over40' || pKey === 'over35' || pKey === 'm4') {
+        where.push('COALESCE(p.sale_price, p.price) > 40000000');
+      } else if (pKey === 'm3') {
+        where.push('COALESCE(p.sale_price, p.price) BETWEEN 25000000 AND 40000000');
+      }
     }
 
     if (q.cpu) {
@@ -72,10 +77,18 @@ const ClientModel = {
     }
 
     if (q.ram) {
-      const ramNum = Number(q.ram);
+      const ramNum = Number(String(q.ram).replace(/gb/i, '').trim());
       if (ramNum) {
-        where.push('s.ram_gb >= ?');
+        where.push('s.ram_gb = ?');
         params.push(ramNum);
+      }
+    }
+
+    if (q.ssd) {
+      const ssdNum = Number(String(q.ssd).replace(/gb/i, '').trim());
+      if (ssdNum) {
+        where.push('s.storage_gb = ?');
+        params.push(ssdNum);
       }
     }
 
@@ -95,7 +108,7 @@ const ClientModel = {
     else if (q.sort === 'popular') orderBy = 'p.view_count DESC';
     else if (q.sort === 'bestseller') orderBy = 'p.sold_count DESC';
 
-    const limit = Math.min(100, Math.max(1, Number(q.limit) || 40));
+    const limit = Math.min(200, Math.max(1, Number(q.limit) || 40));
 
     const sql = `
       SELECT
@@ -109,7 +122,7 @@ const ClientModel = {
         s.gpu_model, s.gpu_type, s.screen_size_inch, s.screen_resolution, s.refresh_rate_hz,
         s.weight_kg,
         (SELECT i.url FROM product_images i WHERE i.product_id = p.id ORDER BY i.is_thumbnail DESC, i.sort_order ASC LIMIT 1) AS thumbnail,
-        (SELECT COALESCE(AVG(pr.rating), 5.0) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS avg_rating,
+        (SELECT ROUND(AVG(pr.rating), 1) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS avg_rating,
         (SELECT COUNT(*) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS review_count
       FROM products p
       JOIN brands b ON b.id = p.brand_id
@@ -142,7 +155,7 @@ const ClientModel = {
         s.gpu_model, s.gpu_type, s.vram_gb,
         s.screen_size_inch, s.screen_resolution, s.screen_panel, s.refresh_rate_hz, s.touchscreen,
         s.battery_wh, s.weight_kg, s.color, s.material, s.os,
-        (SELECT COALESCE(AVG(pr.rating), 5.0) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS avg_rating,
+        (SELECT ROUND(AVG(pr.rating), 1) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS avg_rating,
         (SELECT COUNT(*) FROM product_reviews pr WHERE pr.product_id = p.id AND pr.status = 'approved') AS review_count
       FROM products p
       JOIN brands b ON b.id = p.brand_id
@@ -190,7 +203,7 @@ const ClientModel = {
 
   async findCustomerById(id) {
     const [rows] = await pool.query(
-      'SELECT id, code, full_name, email, phone, address, tier, total_spent, order_count FROM customers WHERE id = ?',
+      'SELECT id, code, full_name, email, phone, address, tier, total_spent, order_count, failed_logins, locked_until FROM customers WHERE id = ?',
       [id],
     );
     return rows[0] || null;
@@ -198,7 +211,7 @@ const ClientModel = {
 
   async findCustomerByEmail(email) {
     const [rows] = await pool.query(
-      'SELECT id, code, full_name, email, phone, address, password_hash, tier FROM customers WHERE email = ?',
+      'SELECT id, code, full_name, email, phone, address, password_hash, tier, failed_logins, locked_until FROM customers WHERE email = ?',
       [email],
     );
     return rows[0] || null;
@@ -206,10 +219,38 @@ const ClientModel = {
 
   async findCustomerByEmailOrPhone(identifier) {
     const [rows] = await pool.query(
-      'SELECT id, code, full_name, email, phone, address, password_hash, tier FROM customers WHERE email = ? OR phone = ? LIMIT 1',
+      'SELECT id, code, full_name, email, phone, address, password_hash, tier, failed_logins, locked_until FROM customers WHERE email = ? OR phone = ? LIMIT 1',
       [identifier, identifier],
     );
     return rows[0] || null;
+  },
+
+  async findCustomerByPhoneExcludingId(phone, customerId) {
+    const [rows] = await pool.query(
+      'SELECT id, email, phone FROM customers WHERE phone = ? AND id != ? LIMIT 1',
+      [phone, customerId],
+    );
+    return rows[0] || null;
+  },
+
+  async recordFailedLogin(customerId, currentFailedLogins = 0) {
+    const nextFailed = (Number(currentFailedLogins) || 0) + 1;
+    let lockedUntil = null;
+    if (nextFailed >= 5) {
+      lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // Khoá tài khoản 15 phút chống dò mật khẩu brute-force
+    }
+    await pool.query(
+      'UPDATE customers SET failed_logins = ?, locked_until = ? WHERE id = ?',
+      [nextFailed, lockedUntil, customerId]
+    );
+    return { nextFailed, lockedUntil };
+  },
+
+  async resetLoginSuccess(customerId) {
+    await pool.query(
+      'UPDATE customers SET failed_logins = 0, locked_until = NULL WHERE id = ?',
+      [customerId]
+    );
   },
 
   async updateCustomerProfile(customerId, { name, phone, address }) {

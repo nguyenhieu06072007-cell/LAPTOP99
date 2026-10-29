@@ -13,7 +13,9 @@ async function viewProducts(r) {
   if (q.ram) params.set('ram', q.ram);
   if (q.q) params.set('q', q.q);
   if (q.sort && q.sort !== 'rate') params.set('sort', q.sort);
-  params.set('limit', '100');
+  if (q.cpu) params.set('cpu', q.cpu);
+  if (q.ssd) params.set('ssd', q.ssd);
+  params.set('limit', '200');
 
   const prodsRes = await API.get('/products?' + params.toString());
   let L = (prodsRes.data || []).map(mapProduct);
@@ -459,7 +461,7 @@ async function viewProduct(r) {
           <button type="button" class="ib" style="width:42px;height:42px;border-radius:10px;${inC ? 'background:var(--acc);color:#fff;border-color:var(--acc)' : ''}" title="So sánh cấu hình" onclick="A.cmp('${p.id}')">
             ${ic('scale', 18)}
           </button>
-          <button type="button" class="btn a lg grow" ${p.stock <= 0 ? 'disabled' : ''} onclick="A.buyNow('${p.id}')">
+          <button type="button" class="btn a lg grow" ${p.stock <= 0 ? 'disabled' : ''} onclick="A.buyNow('${p.id}',+$('#pq').textContent)">
             Mua ngay ${ic('arrow', 16)}
           </button>
           <button type="button" class="btn soft lg grow" ${p.stock <= 0 ? 'disabled' : ''} onclick="A.add('${p.id}',+$('#pq').textContent)">

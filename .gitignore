@@ -1,0 +1,10 @@
+node_modules/
+.env
+admin_token.txt
+*.log
+.chrome_*
+scratch_*
+dist/
+build/
+.DS_Store
+Thumbs.db

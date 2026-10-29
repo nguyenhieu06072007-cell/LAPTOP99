@@ -405,7 +405,7 @@ async function viewHome() {
                          alt="${esc(s.tabTitle || s.prodName || s.title)}" 
                          class="hero-bg-img ${isFullCover ? 'hero-full-cover-img' : ''}" 
                          style="object-position: ${esc(s.imagePosition || 'center center')};"
-                         loading="${idx === 0 ? 'eager' : 'lazy'}">
+                         loading="${idx === 0 ? 'eager' : 'lazy'}" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
                     ${isFullCover ? `
                       <!-- Chế độ 1 Ảnh Đơn Bao Trùm 100% Khung Banner (Tràn viền, không bị che bởi text/gradient) -->
                     ` : `
@@ -445,7 +445,7 @@ async function viewHome() {
                 <div class="hcs-sub">Đặc quyền HSSV giảm 1.000.000₫</div>
               </div>
               <div class="hcs-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-macbook-pro.jpg')}" alt="MacBook Chính Hãng VN/A" class="hcs-real-img">
+                <img src="${resolveAssetUrl('/uploads/products/real-macbook-pro.jpg')}" alt="MacBook Chính Hãng VN/A" class="hcs-real-img" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
               </div>
             </a>
 
@@ -456,7 +456,7 @@ async function viewHome() {
                 <div class="hcs-sub">Trả góp 0% · Tặng Balo + Gear</div>
               </div>
               <div class="hcs-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-asus-rog.jpg')}" alt="Laptop Gaming RTX" class="hcs-real-img">
+                <img src="${resolveAssetUrl('/uploads/products/real-asus-rog.jpg')}" alt="Laptop Gaming RTX" class="hcs-real-img" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
               </div>
             </a>
 
@@ -467,7 +467,7 @@ async function viewHome() {
                 <div class="hcs-sub">Giảm trực tiếp đến 2.000.000₫</div>
               </div>
               <div class="hcs-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-dell-inspiron.jpg')}" alt="Laptop Học Tập Sinh Viên" class="hcs-real-img">
+                <img src="${resolveAssetUrl('/uploads/products/real-dell-inspiron.jpg')}" alt="Laptop Học Tập Sinh Viên" class="hcs-real-img" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
               </div>
             </a>
           </div>
@@ -553,7 +553,7 @@ async function viewHome() {
                 <div class="mpw-sub">Đại tiệc Voucher Laptop99</div>
               </div>
               <div class="mpw-thumb">
-                <img src="${resolveAssetUrl('/uploads/products/real-lenovo-legion.jpg')}" alt="Khuyến mãi" class="mpw-img">
+                <img src="${resolveAssetUrl('/uploads/products/real-lenovo-legion.jpg')}" alt="Khuyến mãi" class="mpw-img" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
               </div>
             </a>
           </div>
@@ -602,7 +602,7 @@ async function viewHome() {
         </div>
         <div class="fb-right">
           <div class="fb-visual-wrap">
-            <img src="${fsImg}" alt="Laptop Flash Sale" class="fb-hero-img" loading="lazy">
+            <img src="${fsImg}" alt="Laptop Flash Sale" class="fb-hero-img" loading="lazy" onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+(this.getAttribute('src')||'').replace(/^\//,'');}">
             <div class="fb-hero-glow"></div>
           </div>
           <div class="fb-countdown-wrap" title="Thời gian còn lại của khung giờ Flash Sale">

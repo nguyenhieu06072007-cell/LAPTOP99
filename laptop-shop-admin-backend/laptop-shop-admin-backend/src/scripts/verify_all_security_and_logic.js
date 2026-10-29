@@ -1,11 +1,4 @@
-// Configure environment to point to live database cluster
-if (!process.env.DB_HOST || process.env.DB_HOST === '127.0.0.1') {
-  process.env.DB_HOST = 'gateway01.ap-northeast-1.prod.aws.tidbcloud.com';
-  process.env.DB_PORT = '4000';
-  process.env.DB_USER = '41FKpVPo3BeXsL5.root';
-  process.env.DB_PASSWORD = 'YXTN1SrFFAfNbLlp';
-  process.env.DB_NAME = 'laptop_shop';
-}
+require('dotenv').config();
 if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = 'a6397673d4138adfd41493bfe7a129d1033678102e85c88ffca74fc26bfe1c09d7194f45d3c56d85bebb292771fcb5b8';
 }

@@ -309,7 +309,7 @@ function renderFooter() {
           <a href="#/warranty">Tra cứu bảo hành theo S/N</a>
           <a href="#/account?tab=warranty">Sổ bảo hành điện tử của tôi</a>
           <a href="#/account?tab=rma">Chính sách đổi trả RMA 15 ngày</a>
-          <a href="#/account?tab=orders">Chính sách vận chuyển &amp; Kiểm hàng</a>
+          <a href="javascript:void(0)" onclick="A.showShippingPolicy()">Chính sách vận chuyển &amp; Kiểm hàng</a>
         </div>
         <div>
           <h4>Tổng đài &amp; Hỗ trợ</h4>

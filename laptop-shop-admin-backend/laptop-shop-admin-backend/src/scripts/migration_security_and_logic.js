@@ -1,17 +1,18 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 const config = {
-  host: 'gateway01.ap-northeast-1.prod.aws.tidbcloud.com',
-  port: 4000,
-  user: '41FKpVPo3BeXsL5.root',
-  password: 'YXTN1SrFFAfNbLlp',
-  database: 'laptop_shop',
-  ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true }
+  host: process.env.DB_HOST || '127.0.0.1',
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'laptop_shop',
+  ssl: process.env.DB_SSL === 'true' ? { minVersion: 'TLSv1.2', rejectUnauthorized: true } : undefined
 };
 
 async function runMigration() {
   const conn = await mysql.createConnection(config);
-  console.log('Connected to TiDB Cloud for migration...');
+  console.log('Connected to MySQL Database for migration...');
 
   // 1. Create password_resets table
   console.log('1. Ensuring password_resets table exists...');
