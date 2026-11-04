@@ -289,9 +289,11 @@ async function viewCheckout() {
               <input id="co-p" value="${esc(u.phone)}" placeholder="09xxxxxxxx" oninput="this.classList.remove('err');$('#err-p').textContent=''">
               <span class="field-err" id="err-p"></span>
             </label>
-            <label class="fl2 full">Địa chỉ giao hàng chi tiết (Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành) *
-              <input id="co-a" value="${esc(u.addr || '')}" placeholder="Ví dụ: Số 12 Nguyễn Trãi, Quận 1, TP. Hồ Chí Minh" oninput="this.classList.remove('err');$('#err-a').textContent=''">
-              <span class="field-err" id="err-a"></span>
+            <label class="fl2 full">
+              <span>Địa chỉ nhận hàng chi tiết <span style="color:var(--bad,#ef4444);font-weight:700">* (Bắt buộc để thanh toán)</span></span>
+              <input id="co-a" required value="${esc(u.addr || '')}" placeholder="Ví dụ: Số 123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh" oninput="this.classList.remove('err');$('#err-a').textContent=''">
+              <span class="field-err" id="err-a" style="color:var(--bad,#ef4444);font-weight:600;font-size:.78rem;margin-top:3px;display:block"></span>
+              <span class="xs muted" style="margin-top:2px">💡 Shipper Laptop99 sẽ giao máy và phụ kiện tận tay theo đúng địa chỉ này. Bắt buộc điền địa chỉ để tiếp tục đặt hàng và thanh toán.</span>
             </label>
             <label class="fl2 full">Ghi chú đơn hàng (Tùy chọn)
               <textarea id="co-note" style="min-height:64px" placeholder="Thời gian giao hàng thuận tiện, yêu cầu xuất hóa đơn VAT..."></textarea>
@@ -359,6 +361,7 @@ async function viewCheckout() {
 
 function viewDone(r) {
   const oid = r.parts[1];
+  const u = me() || {};
   const lastOrd = cache.lastOrder && cache.lastOrder.id === oid ? cache.lastOrder : null;
   const isQrPay = lastOrd ? (lastOrd.pay === 'bank' || lastOrd.pay === 'card' || String(lastOrd.pay).includes('QR') || String(lastOrd.pay).includes('Chuyển khoản')) : true;
   const amount = lastOrd ? lastOrd.total : 0;
@@ -370,8 +373,15 @@ function viewDone(r) {
       <h1 style="font-size:1.5rem">Đặt hàng thành công!</h1>
       <p class="muted sm" style="margin:10px 0 18px">Cảm ơn bạn đã mua sắm tại <b>Laptop99</b>. Mã đơn hàng của bạn là <b style="color:var(--acc)">${esc(oid)}</b>.</p>
       <div style="text-align:left;background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:18px">
-        <p class="xs muted" style="text-transform:uppercase;font-weight:700">Thông tin bảo hành &amp; Serial (S/N)</p>
-        <p class="sm" style="margin-top:6px">Hệ thống đã tự động cấp phát mã <b>Serial Number (S/N)</b> chính hãng cho sản phẩm trong đơn hàng <b class="acc">${esc(oid)}</b>${lastOrd && lastOrd.serial_number ? ` (<b style="font-family:monospace;color:#047857">${esc(lastOrd.serial_number)}</b>)` : ''}. Đơn hàng đã được đồng bộ thời gian thực lên hệ thống Quản trị Admin.</p>
+        <p class="xs muted" style="text-transform:uppercase;font-weight:700">📦 Chi tiết người nhận &amp; Địa chỉ giao hàng</p>
+        <div style="margin-top:8px;font-size:.88rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px">
+          <div>👤 <b>Người nhận:</b> ${esc((lastOrd && (lastOrd.name || lastOrd.customer_name)) || u.name)}</div>
+          <div>📞 <b>Số điện thoại:</b> ${esc((lastOrd && (lastOrd.phone || lastOrd.customer_phone)) || u.phone)}</div>
+          <div style="grid-column:1/-1">📍 <b>Địa chỉ nhận hàng:</b> <b style="color:var(--acc)">${esc((lastOrd && (lastOrd.shipping_address || lastOrd.address)) || u.addr || 'Giao hàng tận nơi')}</b></div>
+        </div>
+        <p class="sm" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+          Hệ thống đã tự động cấp phát mã <b>Serial Number (S/N)</b> chính hãng cho sản phẩm trong đơn hàng <b class="acc">${esc(oid)}</b>${lastOrd && lastOrd.serial_number ? ` (<b style="font-family:monospace;color:#047857">${esc(lastOrd.serial_number)}</b>)` : ''}. Đơn hàng đã được đồng bộ thời gian thực lên hệ thống Quản trị Admin.
+        </p>
       </div>
 
       ${
@@ -408,49 +418,183 @@ async function viewAccount(r) {
 
   if (tab === 'orders') {
     try {
-      const ordRes = await API.get('/orders/my-orders');
+      const ordRes = await (typeof OrderService !== 'undefined' ? OrderService.getMyOrders() : API.get('/orders/my-orders'));
       const L = ordRes.data || [];
       cache.myOrders = L;
       body = L.length
-        ? L.map(
-            (o) => `
-        <div class="card" style="margin-bottom:14px">
-          <div class="row between" style="padding-bottom:10px;border-bottom:1px solid var(--line)">
-            <div>
-              <b style="font-size:.95rem;color:var(--acc)">Mã đơn: ${esc(o.id)}</b>
-              <span class="dim xs" style="margin-left:8px">Ngày đặt: ${sdt(o.at)}</span>
+        ? L.map((o) => {
+            const code = o.code || o.id || 'DH-0000';
+            const orderTime = o.at || o.created_at || (o.ordered_at ? new Date(o.ordered_at).getTime() : Date.now());
+            const receiverName = o.name || o.customer_name || u.name || 'Khách hàng';
+            const receiverPhone = o.phone || o.customer_phone || u.phone || 'Chưa cập nhật';
+            const receiverAddress = o.shipping_address || o.address || u.addr || 'Chưa cập nhật địa chỉ nhận hàng';
+            const rawStatus = o.raw_status || o.status || 'pending';
+            const statusTxt = o.status_text || (rawStatus === 'confirmed' ? 'Đã xác nhận' : rawStatus === 'shipping' ? 'Đang giao hàng' : rawStatus === 'delivered' ? 'Giao thành công' : rawStatus === 'cancelled' ? 'Đã hủy' : 'Chờ xác nhận');
+            const isPaid = Boolean(o.paid || o.payment_status === 'paid');
+            const isVerifying = o.payment_verification === 'pending_verification';
+            const payMethodRaw = o.pay || o.payment_method || 'cod';
+            const payLabel = PAY[payMethodRaw] || (payMethodRaw === 'cod' ? 'Thanh toán tiền mặt khi nhận hàng (COD)' : payMethodRaw === 'bank' ? 'Chuyển khoản QR Ngân hàng (VietQR Napas 247)' : payMethodRaw === 'card' ? 'Thanh toán thẻ / Ví điện tử trực tuyến' : payMethodRaw);
+            const items = Array.isArray(o.items) && o.items.length ? o.items : [];
+            const canCancel = rawStatus === 'pending';
+            const canRma = rawStatus === 'delivered';
+            const needQrPay = !isPaid && rawStatus !== 'cancelled';
+            const stepIdx = rawStatus === 'cancelled' ? -1 : rawStatus === 'delivered' ? 3 : rawStatus === 'shipping' ? 2 : rawStatus === 'confirmed' ? 1 : 0;
+
+            const badgeHtml = rawStatus === 'delivered'
+              ? '<span class="bd ok" style="font-weight:700">✓ Giao thành công</span>'
+              : rawStatus === 'shipping'
+              ? '<span class="bd info" style="font-weight:700;background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE">🚚 Đang giao hàng</span>'
+              : rawStatus === 'confirmed'
+              ? '<span class="bd info" style="font-weight:700">✓ Đã xác nhận</span>'
+              : rawStatus === 'cancelled'
+              ? '<span class="bd bad" style="font-weight:700">✕ Đã hủy</span>'
+              : '<span class="bd warn" style="font-weight:700">⏳ Chờ xác nhận</span>';
+
+            const paymentBadge = isPaid
+              ? '<span class="bd ok" style="font-weight:700">✓ Đã thanh toán</span>'
+              : isVerifying
+              ? '<span class="bd warn" style="font-weight:700">⏳ Đang đối soát Napas 247</span>'
+              : '<span class="bd warn" style="font-weight:700">⚠️ Chưa thanh toán</span>';
+
+            return `
+        <div class="card" style="margin-bottom:18px;border:1px solid var(--border-default,#E5E3DD);border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+          <!-- Order Card Header -->
+          <div class="row between" style="padding:12px 16px;background:var(--active-bg,#F8FAFC);border-bottom:1px solid var(--line);flex-wrap:wrap;gap:8px">
+            <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:.95rem">Mã đơn: <b style="font-family:monospace;color:var(--acc);font-size:1.02rem">${esc(code)}</b></span>
+              <button type="button" class="btn sm" style="padding:2px 8px;font-size:.72rem" onclick="A.copy('${esc(code)}')" title="Sao chép mã đơn hàng">${ic('copy', 12)} Sao chép</button>
+              <span class="dim xs" style="display:inline-flex;align-items:center;gap:4px">🕒 Ngày đặt: <b>${sdt(orderTime)}</b></span>
             </div>
-            ${badge(o.status)}
+            <div>${badgeHtml}</div>
           </div>
-          <div style="padding:10px 0">
-            ${o.items
-              .map(
-                (i) => `
-              <div class="row between sm" style="margin:6px 0">
-                <span><b>${esc(i.name)}</b> × ${i.qty} ${i.serials && i.serials.length ? `<span class="bd mut" style="margin-left:6px">S/N: ${esc(i.serials.join(', '))}</span>` : ''}</span>
-                <span style="font-weight:600">${vnd((i.unit_price || 0) * i.qty)}</span>
+
+          <!-- Order Timeline Progress (if active) -->
+          ${rawStatus !== 'cancelled' ? `
+          <div style="padding:12px 16px 6px;border-bottom:1px dashed var(--line);background:#fff">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;font-size:.75rem">
+              <div style="color:${stepIdx >= 0 ? '#059669' : 'var(--mut)'};font-weight:${stepIdx >= 0 ? '700' : '500'}">
+                <div style="width:22px;height:22px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;background:${stepIdx >= 0 ? '#059669' : '#E2E8F0'};color:#fff;font-size:.7rem">✓</div>
+                1. Đã đặt hàng
               </div>
-            `,
-              )
-              .join('')}
+              <div style="color:${stepIdx >= 1 ? '#059669' : 'var(--mut)'};font-weight:${stepIdx >= 1 ? '700' : '500'}">
+                <div style="width:22px;height:22px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;background:${stepIdx >= 1 ? '#059669' : '#E2E8F0'};color:#fff;font-size:.7rem">${stepIdx >= 1 ? '✓' : '2'}</div>
+                2. Đã duyệt đơn
+              </div>
+              <div style="color:${stepIdx >= 2 ? '#059669' : 'var(--mut)'};font-weight:${stepIdx >= 2 ? '700' : '500'}">
+                <div style="width:22px;height:22px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;background:${stepIdx >= 2 ? '#059669' : '#E2E8F0'};color:#fff;font-size:.7rem">${stepIdx >= 2 ? '✓' : '3'}</div>
+                3. Đang vận chuyển
+              </div>
+              <div style="color:${stepIdx >= 3 ? '#059669' : 'var(--mut)'};font-weight:${stepIdx >= 3 ? '700' : '500'}">
+                <div style="width:22px;height:22px;border-radius:50%;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;background:${stepIdx >= 3 ? '#059669' : '#E2E8F0'};color:#fff;font-size:.7rem">${stepIdx >= 3 ? '✓' : '4'}</div>
+                4. Đã nhận máy
+              </div>
+            </div>
           </div>
-          <div class="row between" style="border-top:1px solid var(--line);padding-top:10px">
-            <span class="xs muted">Hình thức: <b>${esc(o.pay)}</b> ${o.paid ? '<span class="bd ok">Đã thanh toán</span>' : '<span class="bd warn">Chờ thanh toán</span>'}</span>
-            <span style="font-size:1.05rem;font-weight:800;color:var(--promo)">Tổng: ${vnd(o.total)}</span>
+          ` : ''}
+
+          <!-- Delivery Address & Recipient Info Block (Nổi bật & Bắt buộc theo yêu cầu) -->
+          <div style="margin:12px 16px;background:var(--active-bg,#F8FAFC);border:1px solid #E2E8F0;border-left:4px solid var(--acc);border-radius:8px;padding:12px 14px;font-size:.86rem">
+            <div class="row between" style="margin-bottom:6px">
+              <span style="font-weight:700;color:var(--acc);font-size:.82rem;text-transform:uppercase;letter-spacing:.5px">📍 Thông tin giao nhận hàng</span>
+              <span class="xs muted">Vận chuyển: Giao hàng tận nơi (Miễn phí)</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px">
+              <div>👤 <b>Người nhận:</b> <span style="font-weight:600">${esc(receiverName)}</span></div>
+              <div>📞 <b>Số điện thoại:</b> <span style="font-weight:600">${esc(receiverPhone)}</span></div>
+              <div style="grid-column:1/-1">
+                📍 <b>Địa chỉ nhận hàng:</b> <b style="color:var(--fg);font-size:.9rem">${esc(receiverAddress)}</b>
+              </div>
+              ${o.notes ? `<div style="grid-column:1/-1;font-size:.8rem;color:var(--mut);margin-top:2px">📝 <b>Ghi chú giao hàng:</b> <i>${esc(o.notes)}</i></div>` : ''}
+            </div>
           </div>
-          <div class="row" style="margin-top:10px;gap:8px">
-            ${
-              !o.paid && o.raw_status !== 'cancelled'
-                ? `<button class="btn sm" style="background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;font-weight:700" onclick="A.openBankQrModal('${esc(o.id)}', ${o.total}, '${esc(o.pay)}')">📱 Quét Mã QR Ngân Hàng (VietQR)</button>`
-                : ''
-            }
-            ${o.raw_status === 'pending' ? `<button class="btn danger sm" onclick="A.cancelMine('${o.id}')">Hủy đơn hàng</button>` : ''}
-            ${o.raw_status === 'delivered' ? `<button class="btn sm" onclick="A.rmaModal('${o.id}')">Gửi yêu cầu đổi trả (RMA)</button>` : ''}
+
+          <!-- Product Items List -->
+          <div style="padding:4px 16px 12px">
+            <p class="xs muted" style="font-weight:700;text-transform:uppercase;margin-bottom:8px">Danh sách sản phẩm trong đơn (${items.length} món)</p>
+            ${items.map((i) => {
+              const p = P(i.pid) || P(i.product_id);
+              const lineUnitPrice = Number(i.unit_price || i.price || (p ? p.price : 0));
+              const qty = Number(i.qty || i.quantity || 1);
+              const lineTotal = Number(i.line_total || (lineUnitPrice * qty));
+              const serials = Array.isArray(i.serials) && i.serials.length ? i.serials : (i.serial_number ? [i.serial_number] : (o.serial_number ? [o.serial_number] : []));
+
+              return `
+              <div class="row between" style="padding:8px 0;border-bottom:1px dashed var(--line);align-items:center;gap:12px">
+                <div class="row" style="gap:12px;align-items:center;flex:1">
+                  <div style="width:52px;height:52px;border-radius:8px;background:#F1F5F9;border:1px solid #E2E8F0;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                    ${p ? pimg(p, 'thumb-img') : `<span style="color:var(--acc)">${ic('laptop', 26)}</span>`}
+                  </div>
+                  <div>
+                    <a href="#/product/${i.pid || (p ? p.id : '')}" style="font-weight:700;font-size:.92rem;color:var(--fg);text-decoration:none">${esc(i.name || (p ? p.name : 'Laptop chính hãng'))}</a>
+                    <div class="xs muted" style="margin-top:2px">
+                      ${i.sku ? `SKU: <b>${esc(i.sku)}</b> · ` : ''}Số lượng: <b>${qty}</b>
+                      ${p ? ` · ${esc(p.cpu || '')} · ${esc(p.ram || '')}` : ''}
+                    </div>
+                    ${serials.length && serials[0] !== 'CHỜ XUẤT KHO' ? `
+                      <div style="margin-top:4px">
+                        <span class="bd" style="background:#ECFDF5;color:#047857;border:1px solid #A7F3D0;font-family:monospace;font-size:.74rem">
+                          🛡️ S/N: ${esc(serials.join(', '))}
+                        </span>
+                      </div>
+                    ` : '<div style="margin-top:4px"><span class="bd mut xs">S/N: Kích hoạt khi xuất kho</span></div>'}
+                  </div>
+                </div>
+                <div class="right" style="flex-shrink:0">
+                  <div class="xs muted">${vnd(lineUnitPrice)} × ${qty}</div>
+                  <div style="font-size:.98rem;font-weight:800;color:var(--promo)">${vnd(lineTotal)}</div>
+                </div>
+              </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Payment & Financial Summary -->
+          <div class="row between" style="padding:12px 16px;background:var(--active-bg,#F8FAFC);border-top:1px solid var(--line);align-items:center;flex-wrap:wrap;gap:10px">
+            <div>
+              <div class="xs muted">Hình thức: <b style="color:var(--fg)">${esc(payLabel)}</b></div>
+              <div style="margin-top:4px">${paymentBadge}</div>
+            </div>
+            <div class="right">
+              ${o.discount > 0 ? `<div class="xs" style="color:var(--ok)">Đã giảm giá: -${vnd(o.discount)}</div>` : ''}
+              <div class="xs muted">Phí giao hàng: <span style="color:var(--ok);font-weight:600">Miễn phí</span></div>
+              <div style="font-size:1.15rem;font-weight:800;color:var(--promo);margin-top:2px">
+                Tổng cộng: ${vnd(o.total)}
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons Footer -->
+          <div class="row between" style="padding:10px 16px;border-top:1px solid var(--line);background:#fff;flex-wrap:wrap;gap:8px">
+            <div class="row" style="gap:8px;flex-wrap:wrap">
+              ${needQrPay ? `
+                <button type="button" class="btn sm a" style="background:#1D4ED8;border-color:#1D4ED8;color:#fff;font-weight:700" onclick="A.openBankQrModal('${esc(code)}', ${o.total}, '${esc(payMethodRaw)}')">
+                  📱 Quét Mã QR Ngân Hàng (VietQR Napas 247)
+                </button>
+              ` : ''}
+              ${canCancel ? `
+                <button type="button" class="btn danger sm" onclick="A.cancelMine('${esc(code)}')">
+                  ✕ Hủy đơn hàng
+                </button>
+              ` : ''}
+              ${canRma ? `
+                <button type="button" class="btn sm" onclick="A.rmaModal('${esc(code)}')">
+                  🔄 Yêu cầu Đổi trả (RMA)
+                </button>
+                <a class="btn sm" href="#/warranty?sn=${encodeURIComponent(o.serial_number || '')}" style="color:var(--ok);border-color:var(--ok)">
+                  🛡️ Tra cứu bảo hành S/N
+                </a>
+              ` : ''}
+            </div>
+            <div>
+              <button type="button" class="btn sm" onclick="window.print()" title="In hóa đơn đơn hàng">
+                🖨️ In đơn hàng
+              </button>
+            </div>
           </div>
         </div>
-      `,
-          ).join('')
-        : '<div class="card center muted" style="padding:48px">Bạn chưa có đơn hàng nào. <a href="#/products" class="acc" style="font-weight:600">Khám phá sản phẩm ngay</a>.</div>';
+            `;
+          }).join('')
+        : '<div class="card center muted" style="padding:48px"><p style="font-size:1.05rem;margin-bottom:8px">Bạn chưa có đơn hàng nào.</p><a href="#/products" class="btn a sm" style="margin-top:6px">Khám phá sản phẩm ngay →</a></div>';
     } catch (err) {
       body = `<div class="card center bad" style="padding:40px">Không thể tải danh sách đơn hàng: ${esc(err.message)}</div>`;
     }

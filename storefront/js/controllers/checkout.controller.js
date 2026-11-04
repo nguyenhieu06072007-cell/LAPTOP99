@@ -67,10 +67,11 @@ const CheckoutController = {
   async place() {
     const u = me();
     if (!u) return A.authModal();
-    const n = val('co-n');
-    const ph = val('co-p');
-    const ad = val('co-a');
+    const n = (val('co-n') || '').trim();
+    const ph = (val('co-p') || '').trim();
+    const ad = (val('co-a') || '').trim();
     let hasErr = false;
+
     if (n.length < 2) {
       if ($('#co-n')) $('#co-n').classList.add('err');
       if ($('#err-n')) $('#err-n').textContent = 'Vui lòng nhập họ và tên người nhận (tối thiểu 2 ký tự).';
@@ -81,12 +82,21 @@ const CheckoutController = {
       if ($('#err-p')) $('#err-p').textContent = 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0.';
       hasErr = true;
     }
-    if (ad.length < 8) {
-      if ($('#co-a')) $('#co-a').classList.add('err');
-      if ($('#err-a')) $('#err-a').textContent = 'Vui lòng nhập địa chỉ giao hàng chi tiết (tối thiểu 8 ký tự).';
+    if (!ad || ad.length < 5) {
+      if ($('#co-a')) {
+        $('#co-a').classList.add('err');
+        $('#co-a').focus();
+        try { $('#co-a').scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+      }
+      if ($('#err-a')) $('#err-a').textContent = '⚠️ Bắt buộc điền địa chỉ nhận hàng cụ thể (tối thiểu 5 ký tự) để thanh toán đơn hàng!';
       hasErr = true;
     }
-    if (hasErr) return toast('Vui lòng kiểm tra lại thông tin nhận hàng', 1);
+    if (hasErr) {
+      if (!ad || ad.length < 5) {
+        return toast('⚠️ Bắt buộc điền địa chỉ nhận hàng mới được thanh toán đơn hàng!', 1);
+      }
+      return toast('Vui lòng kiểm tra lại thông tin nhận hàng', 1);
+    }
     if (!db.cart.length) return toast('Giỏ hàng của bạn đang trống', 1);
 
     const btn = $('#btn-place-order');
@@ -120,10 +130,11 @@ const CheckoutController = {
       u.addr = ad;
       save();
       toast('Đặt hàng thành công!');
-      location.hash = '#/order-done/' + o.id;
+      const orderCode = o.code || o.id;
+      location.hash = '#/order-done/' + orderCode;
       if (pay === 'bank' || pay === 'card') {
         setTimeout(() => {
-          A.openBankQrModal(o.id, o.total, pay);
+          A.openBankQrModal(orderCode, o.total || o.totalAmount, pay);
         }, 250);
       }
     } catch (err) {
@@ -146,4 +157,3 @@ const CheckoutController = {
     }
   },
 };
-
