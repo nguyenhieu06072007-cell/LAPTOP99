@@ -95,3 +95,22 @@ function copyToClipboard(text) {
     ta.remove();
   }
 }
+
+window.fmt = window.fmt || function(n) {
+  if (n == null || isNaN(n)) return '0 ₫';
+  return Number(n).toLocaleString('vi-VN') + ' ₫';
+};
+window.vnd = window.vnd || window.fmt;
+window.sd = window.sd || function(d) {
+  if (!d) return '';
+  const dt = typeof d === 'number' ? new Date(d) : new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  return `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
+};
+window.sdt = window.sdt || function(d) {
+  if (!d) return '';
+  const dt = typeof d === 'number' ? new Date(d) : new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(dt.getHours())}:${pad(dt.getMinutes())} ${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()}`;
+};

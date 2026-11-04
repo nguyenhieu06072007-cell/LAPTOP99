@@ -7,6 +7,10 @@ function fmt(n) {
   return Number(n).toLocaleString('vi-VN') + ' ₫';
 }
 
+function vnd(n) {
+  return fmt(n);
+}
+
 function sd(d) {
   if (!d) return '';
   const dt = typeof d === 'number' ? new Date(d) : new Date(d);
@@ -14,6 +18,18 @@ function sd(d) {
   return `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
 }
 
+function sdt(d) {
+  if (!d) return '';
+  const dt = typeof d === 'number' ? new Date(d) : new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(dt.getHours())}:${pad(dt.getMinutes())} ${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()}`;
+}
+
+window.fmt = fmt;
+window.vnd = vnd;
+window.sd = sd;
+window.sdt = sdt;
 window.fmtDate = sd;
 
 function stars(n) {
@@ -31,4 +47,3 @@ function stars(n) {
     '</span>'
   );
 }
-

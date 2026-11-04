@@ -57,7 +57,7 @@ const CartController = {
     if (!it) {
       db.cart.push({ pid, qty: validQty });
     } else {
-      // Bug 7: Cập nhật thêm số lượng đã chọn nếu sản phẩm đã có trong giỏ
+      // Cập nhật thêm số lượng đã chọn nếu sản phẩm đã có trong giỏ
       it.qty = Math.min(p.stock, it.qty + validQty);
     }
     save();
@@ -108,31 +108,49 @@ const CartController = {
   },
 
   async coupon() {
-    const c = val('cp').toUpperCase();
-    db.cartCoupon = c;
-    save();
-    if (c) {
-      const sub = db.cart.reduce((s, i) => {
-        const p = P(i.pid);
-        return s + (p ? p.price * i.qty : 0);
-      }, 0);
-      try {
-        const res = await (typeof PromotionsService !== 'undefined'
-          ? PromotionsService.checkCoupon(c, sub)
-          : API.post('/promotions/check', { code: c, subtotal: sub }));
-        if (res.valid) {
-          lastCouponCheck = res;
-          toast('Áp dụng thành công mã ' + c + ': giảm ' + vnd(res.discount));
-        } else {
-          lastCouponCheck = null;
-          toast(res.message || 'Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện', 1);
-        }
-      } catch (err) {
-        lastCouponCheck = null;
-      }
-    } else {
-      lastCouponCheck = null;
+    const rawVal = val('cp');
+    const c = (rawVal || '').trim().toUpperCase();
+    if (!c) {
+      db.cartCoupon = '';
+      if (typeof lastCouponCheck !== 'undefined') lastCouponCheck = null;
+      save();
+      toast('Đã bỏ mã giảm giá');
+      render();
+      return;
     }
+    const sub = db.cart.reduce((s, i) => {
+      const p = P(i.pid);
+      return s + (p ? p.price * i.qty : 0);
+    }, 0);
+    try {
+      const res = await (typeof PromotionsService !== 'undefined'
+        ? PromotionsService.checkCoupon(c, sub)
+        : API.post('/promotions/check', { code: c, subtotal: sub }));
+      if (res && res.valid) {
+        db.cartCoupon = c;
+        if (typeof lastCouponCheck !== 'undefined') lastCouponCheck = res;
+        save();
+        toast('Áp dụng thành công mã ' + c + ': giảm ' + vnd(res.discount));
+      } else {
+        db.cartCoupon = '';
+        if (typeof lastCouponCheck !== 'undefined') lastCouponCheck = null;
+        save();
+        toast((res && res.message) || 'Mã giảm giá không hợp lệ hoặc chưa đủ điều kiện', 1);
+      }
+    } catch (err) {
+      db.cartCoupon = '';
+      if (typeof lastCouponCheck !== 'undefined') lastCouponCheck = null;
+      save();
+      toast('Không thể kiểm tra mã lúc này, bạn có thể bỏ qua để thanh toán ngay', 1);
+    }
+    render();
+  },
+
+  removeCoupon() {
+    db.cartCoupon = '';
+    if (typeof lastCouponCheck !== 'undefined') lastCouponCheck = null;
+    save();
+    toast('Đã hủy áp dụng mã giảm giá');
     render();
   },
 
@@ -142,4 +160,3 @@ const CartController = {
     render();
   },
 };
-
