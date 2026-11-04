@@ -3,6 +3,26 @@ const DAY = 86400000;
    CART, CHECKOUT, ORDER SUCCESS & CUSTOMER ACCOUNT VIEWS (MVC)
    ========================================================================== */
 
+// Helper functions guaranteed to exist across all views
+var fmt = window.fmt || function(n) {
+  if (n == null || isNaN(n)) return '0 ₫';
+  return Number(n).toLocaleString('vi-VN') + ' ₫';
+};
+var vnd = window.vnd || fmt;
+var sd = window.sd || function(d) {
+  if (!d) return '';
+  const dt = typeof d === 'number' ? new Date(d) : new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  return `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
+};
+var sdt = window.sdt || function(d) {
+  if (!d) return '';
+  const dt = typeof d === 'number' ? new Date(d) : new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(dt.getHours())}:${pad(dt.getMinutes())} ${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()}`;
+};
+
 function cartLines(edit = true) {
   return db.cart
     .map((i) => {
@@ -40,14 +60,22 @@ function cartLines(edit = true) {
 }
 
 function sumBox(c, btn) {
+  const hasCoupon = Boolean(db.cartCoupon);
+  const isValidPromo = Boolean(c.promo && c.promo.valid);
   return `<div class="card sum">
     <h3 style="font-size:1.1rem;padding-bottom:10px;border-bottom:1px solid var(--line)">Chi tiết thanh toán</h3>
     <div class="row" style="gap:6px;flex-wrap:nowrap">
-      <input id="cp" placeholder="Nhập mã giảm giá (VD: SUMMER2026)" value="${esc(db.cartCoupon)}" style="text-transform:uppercase">
+      <input id="cp" placeholder="Mã giảm giá (Tùy chọn - nếu có)" value="${esc(db.cartCoupon)}" style="text-transform:uppercase">
       <button type="button" class="btn a sm" onclick="A.coupon()">Áp dụng</button>
+      ${hasCoupon ? `<button type="button" class="btn sm" onclick="A.removeCoupon()" title="Hủy mã" style="padding:4px 8px;background:var(--active-bg,#F1F5F9);color:var(--mut,#64748B);border:1px solid var(--border-default,#CBD5E1);cursor:pointer">✕ Bỏ</button>` : ''}
     </div>
-    ${db.cartCoupon && (!c.promo || !c.promo.valid) ? '<p class="xs" style="color:var(--bad);font-weight:500">Mã giảm giá chưa hợp lệ hoặc chưa đủ điều kiện.</p>' : ''}
-    ${c.promo && c.promo.valid ? `<p class="xs" style="color:var(--ok);font-weight:600">✓ Đã áp dụng mã ${esc(c.promo.code)}</p>` : ''}
+    ${hasCoupon && !isValidPromo ? `
+      <div style="margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:6px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:6px 10px">
+        <span class="xs" style="color:#DC2626;font-weight:500">Mã chưa đủ điều kiện áp dụng</span>
+        <button type="button" class="btn sm" onclick="A.removeCoupon()" style="padding:2px 8px;font-size:.72rem;background:#DC2626;color:#fff;border:none;border-radius:4px;cursor:pointer">✕ Bỏ mã để thanh toán</button>
+      </div>
+    ` : ''}
+    ${isValidPromo ? `<p class="xs" style="color:var(--ok);font-weight:600">✓ Đã áp dụng mã ${esc(c.promo.code)} (-${vnd(c.disc)})</p>` : ''}
     <div class="l"><span class="muted">Tạm tính (${db.cart.reduce((s, i) => s + i.qty, 0)} sản phẩm)</span><span style="font-weight:600">${vnd(c.sub)}</span></div>
     ${c.disc ? `<div class="l"><span class="muted">Giảm giá khuyến mãi (${esc(db.cartCoupon)})</span><span style="color:var(--ok);font-weight:700">-${vnd(c.disc)}</span></div>` : ''}
     ${c.ti ? `<div class="l"><span class="muted">Trừ tiền Thu cũ đổi mới</span><span style="color:var(--ok);font-weight:700">-${vnd(c.ti)}</span></div>` : ''}
@@ -371,9 +399,9 @@ async function viewCheckout() {
 function viewDone(r) {
   const oid = r.parts[1];
   const u = me() || {};
-  const lastOrd = cache.lastOrder && cache.lastOrder.id === oid ? cache.lastOrder : null;
+  const lastOrd = cache.lastOrder && (cache.lastOrder.id === oid || cache.lastOrder.code === oid) ? cache.lastOrder : null;
   const isQrPay = lastOrd ? (lastOrd.pay === 'bank' || lastOrd.pay === 'card' || String(lastOrd.pay).includes('QR') || String(lastOrd.pay).includes('Chuyển khoản')) : true;
-  const amount = lastOrd ? lastOrd.total : 0;
+  const amount = lastOrd ? (lastOrd.total || lastOrd.totalAmount || 0) : 0;
   const memo = `LAPTOP99 ${oid}`;
 
   return `<div class="wrap" style="max-width:780px;padding:32px 16px">
@@ -402,7 +430,7 @@ function viewDone(r) {
       }
 
       <div class="row" style="justify-content:center;gap:10px">
-        <a class="btn a" href="#/account">Xem chi tiết đơn hàng</a>
+        <a class="btn a" href="#/account?tab=orders">Xem chi tiết đơn hàng</a>
         <a class="btn" href="#/products">Tiếp tục mua sắm</a>
       </div>
     </div>
@@ -427,11 +455,36 @@ async function viewAccount(r) {
 
   if (tab === 'orders') {
     try {
-      const ordRes = await (typeof OrderService !== 'undefined' ? OrderService.getMyOrders() : API.get('/orders/my-orders'));
-      const L = ordRes.data || [];
-      cache.myOrders = L;
-      body = L.length
-        ? L.map((o) => {
+      let L = [];
+      try {
+        const ordRes = await (typeof OrderService !== 'undefined' ? OrderService.getMyOrders() : API.get('/orders/my-orders'));
+        if (ordRes && Array.isArray(ordRes.data)) L = ordRes.data;
+      } catch (e) {
+        console.warn('API getMyOrders failed, using local orders', e);
+      }
+
+      const localOrders = Array.isArray(db.orders) ? db.orders : [];
+      if (cache.lastOrder && !localOrders.some((x) => (x.code || x.id) === (cache.lastOrder.code || cache.lastOrder.id))) {
+        localOrders.unshift(cache.lastOrder);
+        db.orders = localOrders;
+        save();
+      }
+
+      const map = new Map();
+      for (const ord of [...localOrders, ...L]) {
+        const key = ord.code || ord.id;
+        if (key && !map.has(key)) map.set(key, ord);
+      }
+      const combined = Array.from(map.values());
+      combined.sort((a, b) => {
+        const ta = a.at || a.created_at || (a.ordered_at ? new Date(a.ordered_at).getTime() : 0);
+        const tb = b.at || b.created_at || (b.ordered_at ? new Date(b.ordered_at).getTime() : 0);
+        return tb - ta;
+      });
+      cache.myOrders = combined;
+
+      body = combined.length
+        ? combined.map((o) => {
             const code = o.code || o.id || 'DH-0000';
             const orderTime = o.at || o.created_at || (o.ordered_at ? new Date(o.ordered_at).getTime() : Date.now());
             const receiverName = o.name || o.customer_name || u.name || 'Khách hàng';
@@ -448,6 +501,7 @@ async function viewAccount(r) {
             const canRma = rawStatus === 'delivered';
             const needQrPay = !isPaid && rawStatus !== 'cancelled';
             const stepIdx = rawStatus === 'cancelled' ? -1 : rawStatus === 'delivered' ? 3 : rawStatus === 'shipping' ? 2 : rawStatus === 'confirmed' ? 1 : 0;
+            const orderTotal = Number(o.total || o.totalAmount || o.total_amount || 0);
 
             const badgeHtml = rawStatus === 'delivered'
               ? '<span class="bd ok" style="font-weight:700">✓ Giao thành công</span>'
@@ -567,7 +621,7 @@ async function viewAccount(r) {
               ${o.discount > 0 ? `<div class="xs" style="color:var(--ok)">Đã giảm giá: -${vnd(o.discount)}</div>` : ''}
               <div class="xs muted">Phí giao hàng: <span style="color:var(--ok);font-weight:600">Miễn phí</span></div>
               <div style="font-size:1.15rem;font-weight:800;color:var(--promo);margin-top:2px">
-                Tổng cộng: ${vnd(o.total)}
+                Tổng cộng: ${vnd(orderTotal)}
               </div>
             </div>
           </div>
@@ -576,7 +630,7 @@ async function viewAccount(r) {
           <div class="row between" style="padding:10px 16px;border-top:1px solid var(--line);background:#fff;flex-wrap:wrap;gap:8px">
             <div class="row" style="gap:8px;flex-wrap:wrap">
               ${needQrPay ? `
-                <button type="button" class="btn sm a" style="background:#1D4ED8;border-color:#1D4ED8;color:#fff;font-weight:700" onclick="A.openBankQrModal('${esc(code)}', ${o.total}, '${esc(payMethodRaw)}')">
+                <button type="button" class="btn sm a" style="background:#1D4ED8;border-color:#1D4ED8;color:#fff;font-weight:700" onclick="A.openBankQrModal('${esc(code)}', ${orderTotal}, '${esc(payMethodRaw)}')">
                   📱 Quét Mã QR Ngân Hàng (VietQR Napas 247)
                 </button>
               ` : ''}
@@ -611,16 +665,24 @@ async function viewAccount(r) {
 
   if (tab === 'warranty') {
     try {
-      const ordRes = await API.get('/orders/my-orders');
+      let L = [];
+      try {
+        const ordRes = await API.get('/orders/my-orders');
+        if (ordRes && Array.isArray(ordRes.data)) L = ordRes.data;
+      } catch (e) {}
+      const allOrders = [...(Array.isArray(db.orders) ? db.orders : []), ...L];
       const list = [];
-      (ordRes.data || []).forEach((o) => {
-        if (o.raw_status !== 'cancelled') {
+      allOrders.forEach((o) => {
+        if (o.raw_status !== 'cancelled' && Array.isArray(o.items)) {
           o.items.forEach((it) => {
             const sList = it.serials || (o.serial_number ? [o.serial_number] : []);
             sList.forEach((sn) => {
-              const months = it.warranty_months || 12;
-              const end = o.at + months * 30.44 * DAY;
-              list.push({ sn, name: it.name, at: o.at, end, ok: end > Date.now() });
+              if (sn && sn !== 'CHỜ XUẤT KHO') {
+                const months = it.warranty_months || 12;
+                const orderTime = o.at || o.created_at || Date.now();
+                const end = orderTime + months * 30.44 * DAY;
+                list.push({ sn, name: it.name, at: orderTime, end, ok: end > Date.now() });
+              }
             });
           });
         }
@@ -643,7 +705,7 @@ async function viewAccount(r) {
   if (tab === 'rma') {
     try {
       const rmaRes = await API.get('/rma/my-requests');
-      const L = rmaRes.data || [];
+      const L = (rmaRes && rmaRes.data) || [];
       body = L.length
         ? L.map(
             (x) =>
@@ -658,7 +720,7 @@ async function viewAccount(r) {
   if (tab === 'tradein') {
     try {
       const tiRes = await API.get('/trade-in/my-requests');
-      const L = tiRes.data || [];
+      const L = (tiRes && tiRes.data) || [];
       body =
         `<div class="row between" style="margin-bottom:14px"><span class="muted sm">Danh sách máy cũ bạn đã gửi yêu cầu định giá</span><a class="btn a sm" href="#/tradein">+ Đăng ký định giá máy mới</a></div>` +
         (L.length
@@ -703,4 +765,3 @@ async function viewAccount(r) {
     ${body}
   </div>`;
 }
-

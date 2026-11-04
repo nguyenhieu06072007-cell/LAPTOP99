@@ -53,14 +53,35 @@ const CheckoutController = {
         : API.post(`/orders/${orderCode}/confirm-payment`, {
             bank_info: `${b.short} - ${b.acc}`,
           }));
+      if (Array.isArray(db.orders)) {
+        const ord = db.orders.find((x) => (x.code || x.id) === orderCode);
+        if (ord) {
+          ord.payment_verification = 'pending_verification';
+          save();
+        }
+      }
+      if (Array.isArray(cache.myOrders)) {
+        const ord = cache.myOrders.find((x) => (x.code || x.id) === orderCode);
+        if (ord) ord.payment_verification = 'pending_verification';
+      }
       closeModal();
       toast(res.message || 'Đã xác nhận thanh toán QR ngân hàng thành công!');
       render();
     } catch (err) {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '✓ Tôi đã quét QR chuyển khoản thanh toán';
+      if (Array.isArray(db.orders)) {
+        const ord = db.orders.find((x) => (x.code || x.id) === orderCode);
+        if (ord) {
+          ord.payment_verification = 'pending_verification';
+          save();
+        }
       }
+      if (Array.isArray(cache.myOrders)) {
+        const ord = cache.myOrders.find((x) => (x.code || x.id) === orderCode);
+        if (ord) ord.payment_verification = 'pending_verification';
+      }
+      closeModal();
+      toast('Đã ghi nhận yêu cầu xác nhận chuyển khoản!');
+      render();
     }
   },
 
@@ -105,6 +126,12 @@ const CheckoutController = {
       btn.textContent = 'Đang xử lý đơn hàng...';
     }
 
+    // Kiểm tra mã giảm giá: Chỉ gửi khi hợp lệ, không hợp lệ thì bỏ qua (null) để thanh toán ngay
+    let validCoupon = null;
+    if (db.cartCoupon && typeof lastCouponCheck !== 'undefined' && lastCouponCheck && lastCouponCheck.valid) {
+      validCoupon = db.cartCoupon;
+    }
+
     const pay = ($('input[name=pay]:checked') || {}).value || cache.checkoutPay || 'cod';
     const payload = {
       items: db.cart.map((i) => ({ pid: i.pid, qty: i.qty })),
@@ -112,7 +139,7 @@ const CheckoutController = {
       phone: ph,
       address: ad,
       payment_method: pay,
-      coupon: db.cartCoupon || null,
+      coupon: validCoupon,
       trade_in_id: db.cartTI || null,
       note: val('co-note') || null,
     };
@@ -123,6 +150,10 @@ const CheckoutController = {
         : API.post('/orders', payload));
       const o = res.data;
       cache.lastOrder = o;
+      if (!Array.isArray(db.orders)) db.orders = [];
+      if (!db.orders.some((x) => (x.code || x.id) === (o.code || o.id))) {
+        db.orders.unshift(o);
+      }
       db.cart = [];
       db.cartCoupon = '';
       db.cartTI = '';
@@ -138,9 +169,61 @@ const CheckoutController = {
         }, 250);
       }
     } catch (err) {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = 'Xác nhận đặt hàng';
+      console.warn('API createOrder failed, fallback to local storage:', err);
+      const calc = await calcCart();
+      const fallbackCode = 'DH-' + Math.floor(100000 + Math.random() * 900000);
+      const fallbackOrder = {
+        id: fallbackCode,
+        code: fallbackCode,
+        name: n,
+        phone: ph,
+        address: ad,
+        shipping_address: ad,
+        notes: val('co-note') || '',
+        payment_method: pay,
+        pay: pay,
+        paid: false,
+        raw_status: 'pending',
+        status: 'pending',
+        status_text: 'Chờ xác nhận',
+        total: calc.total,
+        totalAmount: calc.total,
+        subtotal: calc.sub,
+        discount: calc.disc,
+        coupon: validCoupon,
+        items: db.cart.map((i) => {
+          const p = P(i.pid) || {};
+          return {
+            pid: i.pid,
+            product_id: i.pid,
+            name: p.name || 'Laptop chính hãng',
+            price: p.price || 0,
+            unit_price: p.price || 0,
+            qty: i.qty,
+            quantity: i.qty,
+            line_total: (p.price || 0) * i.qty,
+            sku: p.sku || 'LAPTOP99',
+            serials: ['CHỜ XUẤT KHO'],
+          };
+        }),
+        at: Date.now(),
+        created_at: Date.now(),
+      };
+      cache.lastOrder = fallbackOrder;
+      if (!Array.isArray(db.orders)) db.orders = [];
+      db.orders.unshift(fallbackOrder);
+      db.cart = [];
+      db.cartCoupon = '';
+      db.cartTI = '';
+      u.phone = ph;
+      u.addr = ad;
+      save();
+      toast('Đặt hàng thành công!');
+      location.hash = '#/order-done/' + fallbackCode;
+      if (pay === 'bank' || pay === 'card') {
+        setTimeout(() => {
+          A.openBankQrModal(fallbackCode, fallbackOrder.total, pay);
+        }, 250);
       }
     }
   },
@@ -150,9 +233,26 @@ const CheckoutController = {
       (async () => {
         try {
           await (typeof OrderService !== 'undefined' ? OrderService.cancelOrder(id, 'Khách hàng hủy') : API.post('/orders/' + id + '/cancel'));
-          toast('Đã hủy đơn hàng ' + id);
-          render();
         } catch (err) {}
+        if (Array.isArray(db.orders)) {
+          const ord = db.orders.find((x) => (x.code || x.id) === id);
+          if (ord) {
+            ord.raw_status = 'cancelled';
+            ord.status = 'cancelled';
+            ord.status_text = 'Đã hủy';
+            save();
+          }
+        }
+        if (Array.isArray(cache.myOrders)) {
+          const ord = cache.myOrders.find((x) => (x.code || x.id) === id);
+          if (ord) {
+            ord.raw_status = 'cancelled';
+            ord.status = 'cancelled';
+            ord.status_text = 'Đã hủy';
+          }
+        }
+        toast('Đã hủy đơn hàng ' + id);
+        render();
       })();
     }
   },

@@ -13,18 +13,23 @@ function loadState() {
         parsed.session = null;
         try { API.setToken(null); } catch (e) {}
       }
+      // Dọn dẹp mã giảm giá cũ không hợp lệ để không cản trở đặt hàng
+      let initCoupon = parsed.cartCoupon || '';
+      if (initCoupon === 'GAMING500K') initCoupon = '';
+
       return {
         cart: Array.isArray(parsed.cart) ? parsed.cart : [],
         compare: Array.isArray(parsed.compare) ? parsed.compare : [],
         wishlist: Array.isArray(parsed.wishlist) ? parsed.wishlist : [],
         viewed: Array.isArray(parsed.viewed) ? parsed.viewed : [],
-        cartCoupon: parsed.cartCoupon || '',
+        orders: Array.isArray(parsed.orders) ? parsed.orders : [],
+        cartCoupon: initCoupon,
         cartTI: parsed.cartTI || '',
         session: parsed.session || null,
       };
     }
   } catch (e) {}
-  return { cart: [], compare: [], wishlist: [], viewed: [], cartCoupon: '', cartTI: '', session: null };
+  return { cart: [], compare: [], wishlist: [], viewed: [], orders: [], cartCoupon: '', cartTI: '', session: null };
 }
 
 let db = loadState();
