@@ -28,7 +28,9 @@ const checkoutSchema = z.object({
   })).min(1, 'Giỏ hàng đang trống'),
   name: z.string().trim().min(2, 'Vui lòng nhập họ tên người nhận'),
   phone: z.string().trim().regex(/^0\d{9}$/, 'Số điện thoại gồm 10 số, bắt đầu bằng 0'),
-  address: z.string().trim().min(8, 'Vui lòng nhập địa chỉ nhận hàng đầy đủ'),
+  address: z.string({ required_error: 'Bắt buộc điền địa chỉ nhận hàng để thanh toán' })
+    .trim()
+    .min(5, 'Bắt buộc điền địa chỉ nhận hàng chi tiết (tối thiểu 5 ký tự) để thanh toán đơn hàng'),
   payment_method: z.string().default('cod'),
   coupon: z.string().trim().optional().nullish(),
   trade_in_id: z.union([z.number(), z.string()]).optional().nullish().transform((v) => {
@@ -357,11 +359,21 @@ const ClientController = {
         payment_status: o.payment_status,
         payment_verification: o.payment_verification_status || 'none',
         payment_method: o.payment_method,
+        raw_status: o.status,
+        status_raw: o.status,
+        paid: o.payment_status === 'paid',
+        pay: o.payment_method,
         created_at: new Date(o.ordered_at).getTime(),
+        at: new Date(o.ordered_at).getTime(),
         address: o.shipping_address,
+        shipping_address: o.shipping_address,
         phone: o.customer_phone,
+        customer_phone: o.customer_phone,
         name: o.customer_name,
+        customer_name: o.customer_name,
         serial_number: o.serial_number,
+        discount: Number(o.discount_amount || 0),
+        notes: o.notes,
       };
     });
     res.json({ data: mapped });
