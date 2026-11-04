@@ -92,7 +92,36 @@ const AuthController = {
   async login() {
     const ident = val('lg-e').trim();
     const p = ($('#lg-p') || {}).value || '';
-    if (!ident || !p) return toast('Vui lòng nhập đầy đủ Email/Số điện thoại và Mật khẩu', 1);
+    const errBox = $('#lg-err');
+    const errTxt = $('#lg-err-txt');
+    const inpE = $('#lg-e');
+    const inpP = $('#lg-p');
+
+    const showErr = (msg) => {
+      if (errBox && errTxt) {
+        errTxt.textContent = msg;
+        errBox.style.display = 'flex';
+      }
+      if (inpE) inpE.classList.add('err');
+      if (inpP) inpP.classList.add('err');
+      toast(msg, 1);
+    };
+
+    if (!ident) {
+      showErr('Vui lòng nhập Email hoặc Số điện thoại để đăng nhập.');
+      if (inpE) inpE.focus();
+      return;
+    }
+    if (!p) {
+      showErr('Vui lòng nhập mật khẩu tài khoản.');
+      if (inpP) inpP.focus();
+      return;
+    }
+
+    if (errBox) errBox.style.display = 'none';
+    if (inpE) inpE.classList.remove('err');
+    if (inpP) inpP.classList.remove('err');
+
     const btn = $('#btn-login');
     if (btn) {
       btn.disabled = true;
@@ -116,6 +145,13 @@ const AuthController = {
       toast('Đăng nhập thành công');
       render();
     } catch (err) {
+      const msg = err.message || 'Tài khoản hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!';
+      showErr(msg);
+      if (inpP) {
+        inpP.focus();
+        try { inpP.select(); } catch (e) {}
+      }
+    } finally {
       if (btn) {
         btn.disabled = false;
         btn.textContent = 'Đăng nhập';
@@ -124,14 +160,28 @@ const AuthController = {
   },
 
   async register() {
-    const n = val('rg-n');
-    const e = val('rg-e').toLowerCase();
-    const ph = val('rg-ph');
+    const n = val('rg-n').trim();
+    const e = val('rg-e').toLowerCase().trim();
+    const ph = val('rg-ph').trim();
     const p = ($('#rg-p') || {}).value || '';
-    if (n.length < 2) return toast('Vui lòng nhập họ và tên', 1);
-    if (!/^\S+@\S+\.\S+$/.test(e)) return toast('Địa chỉ Email chưa đúng định dạng', 1);
-    if (!/^0\d{9}$/.test(ph)) return toast('Số điện thoại gồm 10 chữ số, bắt đầu bằng số 0', 1);
-    if (p.length < 6) return toast('Mật khẩu cần tối thiểu 6 ký tự', 1);
+    const errBox = $('#rg-err');
+    const errTxt = $('#rg-err-txt');
+
+    const showErr = (msg) => {
+      if (errBox && errTxt) {
+        errTxt.textContent = msg;
+        errBox.style.display = 'flex';
+      }
+      toast(msg, 1);
+    };
+
+    if (n.length < 2) return showErr('Vui lòng nhập họ và tên (tối thiểu 2 ký tự)');
+    if (!/^\S+@\S+\.\S+$/.test(e)) return showErr('Địa chỉ Email không đúng định dạng');
+    if (!/^0\d{9}$/.test(ph)) return showErr('Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0');
+    if (p.length < 6) return showErr('Mật khẩu cần tối thiểu 6 ký tự');
+
+    if (errBox) errBox.style.display = 'none';
+
     const btn = $('#btn-reg');
     if (btn) {
       btn.disabled = true;
@@ -155,6 +205,8 @@ const AuthController = {
       toast('Tạo tài khoản thành công');
       render();
     } catch (err) {
+      showErr(err.message || 'Đăng ký không thành công. Vui lòng thử lại!');
+    } finally {
       if (btn) {
         btn.disabled = false;
         btn.textContent = 'Đăng ký tài khoản';
@@ -172,4 +224,3 @@ const AuthController = {
     render();
   },
 };
-
