@@ -2,7 +2,7 @@
    STOREFRONT MVC VIEW COMPONENT: Product Card, Image Renderer & Brand Badges
    ========================================================================== */
 
-const vnd = fmt;
+var vnd = window.vnd || fmt;
 const discPct = (p) => (p.old > p.price ? Math.round((1 - p.price / p.old) * 100) : 0);
 const rate = (p) => (p.reviewCount > 0 && p.rating ? p.rating : null);
 
