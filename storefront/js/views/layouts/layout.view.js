@@ -380,7 +380,7 @@ function renderContactWidget() {
 }
 
 function storeShell(inner, r) {
-  const cc = db.cart.reduce((s, i) => s + i.qty, 0);
+  const cc = (db && Array.isArray(db.cart) ? db.cart : []).reduce((s, i) => s + (i.qty || 0), 0);
   const cm = (db.compare || []).length;
   const cw = (db.wishlist || []).length;
   const u = me();

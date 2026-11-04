@@ -122,6 +122,7 @@ let lastPath = null;
 let renderSeq = 0;
 
 async function render() {
+  window.__APP_MOUNTED__ = true;
   const mySeq = ++renderSeq;
   const r = route();
   if (r.parts[0] === 'admin' || r.parts[0] === 'banners') {
