@@ -108,7 +108,7 @@ function loginForm() {
     </div>
     <label class="fl2">
       <span>Email (Gmail) hoặc Số điện thoại</span>
-      <input id="lg-e" type="text" autocomplete="username" placeholder="Nhập Gmail (user@gmail.com) hoặc SĐT (09xxxxxxxx)">
+      <input id="lg-e" type="text" autocomplete="username" placeholder="Nhập Gmail (user@gmail.com) hoặc SĐT (09xxxxxxxx)" oninput="if($('#lg-err')){$('#lg-err').style.display='none';this.classList.remove('err');$('#lg-p').classList.remove('err')}">
     </label>
     <label class="fl2">
       <span class="row between" style="width:100%">
@@ -116,10 +116,15 @@ function loginForm() {
         <a class="acc xs" style="font-weight:700" href="javascript:void(0)" onclick="A.authModal('forgot')">Quên mật khẩu?</a>
       </span>
       <div style="position:relative">
-        <input id="lg-p" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu">
+        <input id="lg-p" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" oninput="if($('#lg-err')){$('#lg-err').style.display='none';this.classList.remove('err');$('#lg-e').classList.remove('err')}">
         <button type="button" onclick="const i=$('#lg-p');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mut)" title="Hiện/Ẩn mật khẩu">${ic('eye', 16)}</button>
       </div>
     </label>
+    <!-- Thông báo lỗi khi đăng nhập sai tài khoản hoặc mật khẩu (theo yêu cầu) -->
+    <div id="lg-err" style="display:none;margin-top:2px;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:8px;padding:10px 12px;color:#B91C1C;font-size:.84rem;line-height:1.45;align-items:flex-start;gap:8px">
+      <span style="font-size:1.1rem;line-height:1;flex-shrink:0">⚠️</span>
+      <span id="lg-err-txt" style="font-weight:600"></span>
+    </div>
     <button type="button" id="btn-login" class="btn a lg block" onclick="A.login()">Đăng nhập</button>
     <div class="row between sm muted" style="padding-top:4px;border-top:1px dashed var(--line)">
       <span>Chưa có tài khoản? <a class="acc" style="font-weight:700" href="javascript:void(0)" onclick="A.authModal('reg')">Đăng ký mới</a></span>
@@ -130,15 +135,19 @@ function loginForm() {
 
 function regForm() {
   return `<div class="gap" style="gap:12px">
-    <label class="fl2">Họ và tên<input id="rg-n" autocomplete="name" placeholder="Nguyễn Văn A"></label>
-    <label class="fl2">Địa chỉ Email (Gmail)<input id="rg-e" type="email" autocomplete="email" placeholder="nguyen@gmail.com"></label>
-    <label class="fl2">Số điện thoại (10 số)<input id="rg-ph" type="tel" autocomplete="tel" placeholder="0901234567"></label>
+    <label class="fl2">Họ và tên<input id="rg-n" autocomplete="name" placeholder="Nguyễn Văn A" oninput="if($('#rg-err'))$('#rg-err').style.display='none'"></label>
+    <label class="fl2">Địa chỉ Email (Gmail)<input id="rg-e" type="email" autocomplete="email" placeholder="nguyen@gmail.com" oninput="if($('#rg-err'))$('#rg-err').style.display='none'"></label>
+    <label class="fl2">Số điện thoại (10 số)<input id="rg-ph" type="tel" autocomplete="tel" placeholder="0901234567" oninput="if($('#rg-err'))$('#rg-err').style.display='none'"></label>
     <label class="fl2">Mật khẩu (tối thiểu 6 ký tự)
       <div style="position:relative">
-        <input id="rg-p" type="password" autocomplete="new-password" placeholder="••••••">
+        <input id="rg-p" type="password" autocomplete="new-password" placeholder="••••••" oninput="if($('#rg-err'))$('#rg-err').style.display='none'">
         <button type="button" onclick="const i=$('#rg-p');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--mut)" title="Hiện/Ẩn mật khẩu">${ic('eye', 16)}</button>
       </div>
     </label>
+    <div id="rg-err" style="display:none;margin-top:2px;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:8px;padding:10px 12px;color:#B91C1C;font-size:.84rem;line-height:1.45;align-items:flex-start;gap:8px">
+      <span style="font-size:1.1rem;line-height:1;flex-shrink:0">⚠️</span>
+      <span id="rg-err-txt" style="font-weight:600"></span>
+    </div>
     <button type="button" id="btn-reg" class="btn a lg block" onclick="A.register()">Đăng ký tài khoản</button>
     <p class="sm muted center">Đã có tài khoản? <a class="acc" style="font-weight:700" href="javascript:void(0)" onclick="A.authModal()">Đăng nhập</a></p>
   </div>`;
