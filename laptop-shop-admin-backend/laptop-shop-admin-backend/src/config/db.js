@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 const env = require('./env');
 
-const isRemote = env.DB_HOST && env.DB_HOST !== 'localhost' && env.DB_HOST !== '127.0.0.1';
+const useSsl = env.DB_SSL === 'true' || (env.DB_SSL !== 'false' && env.DB_HOST && !['localhost', '127.0.0.1', 'mysql', 'db'].includes(env.DB_HOST));
 
 const pool = mysql.createPool({
   host: env.DB_HOST,
@@ -13,7 +13,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   decimalNumbers: true, // DECIMAL (giá tiền) trả về dạng number thay vì string
-  ssl: isRemote ? { minVersion: 'TLSv1.2', rejectUnauthorized: true } : undefined,
+  ssl: useSsl ? { minVersion: 'TLSv1.2', rejectUnauthorized: true } : undefined,
 });
 
 /** Chạy fn(conn) trong 1 transaction; lỗi => rollback. */

@@ -9,6 +9,7 @@ module.exports = {
   DB_USER: e.DB_USER || 'root',
   DB_PASSWORD: e.DB_PASSWORD || '',
   DB_NAME: e.DB_NAME || 'laptop_shop',
+  DB_SSL: e.DB_SSL || 'auto',
   JWT_SECRET: e.JWT_SECRET || '',
   JWT_EXPIRES_IN: e.JWT_EXPIRES_IN || '8h',
   MAX_FAILED_LOGINS: Number(e.MAX_FAILED_LOGINS) || 5,
