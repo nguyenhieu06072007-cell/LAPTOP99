@@ -18,5 +18,13 @@ const OrderService = {
   async confirmPayment(code) {
     return await API.post(`/orders/${code}/confirm-payment`, {}, false);
   },
+
+  async getPaymentStatus(code) {
+    return await API.get(`/orders/${code}/payment-status`, false);
+  },
+
+  async simulatePaid(code, details = {}) {
+    return await API.post(`/orders/${code}/simulate-auto-paid`, details, false);
+  },
 };
 

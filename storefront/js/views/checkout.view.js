@@ -210,16 +210,51 @@ function forgotForm() {
 }
 
 function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
+  const ord =
+    (Array.isArray(db.orders) && db.orders.find((x) => (x.code || x.id) === orderCode)) ||
+    (cache.lastOrder && (cache.lastOrder.code === orderCode || cache.lastOrder.id === orderCode)
+      ? cache.lastOrder
+      : null);
+  const isPaid =
+    ord &&
+    (ord.paid === true || ord.payment_status === 'paid' || ord.payment_verification_status === 'verified');
+
+  if (isPaid) {
+    return `<div id="vietqr-box" style="margin-top:12px;background:linear-gradient(135deg,#ECFDF5 0%,#D1FAE5 100%);border:2px solid #10B981;border-radius:14px;padding:22px;text-align:center;box-shadow:0 8px 24px rgba(16,185,129,0.15)">
+      <div style="width:60px;height:60px;border-radius:50%;background:#10B981;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;margin-bottom:12px;box-shadow:0 4px 14px rgba(16,185,129,0.4)">
+        ✓
+      </div>
+      <h3 style="font-size:1.25rem;font-weight:800;color:#065F46;margin-bottom:6px">XÁC NHẬN THANH TOÁN TỰ ĐỘNG THÀNH CÔNG!</h3>
+      <p style="color:#047857;font-size:.9rem;margin-bottom:12px">
+        Hệ thống đã nhận được <b>${vnd(amount)}</b> vào tài khoản <b>MB Bank 6306072007 (NGUYEN VAN HIEU)</b>.
+      </p>
+      <div style="display:inline-block;background:#fff;border:1px solid #A7F3D0;border-radius:8px;padding:7px 16px;font-size:.84rem;color:#065F46;font-weight:700">
+        Trạng thái: ĐÃ THANH TOÁN TOÀN BỘ · Đơn hàng đang được chuẩn bị đóng gói &amp; xuất kho
+      </div>
+    </div>`;
+  }
+
   const bankKey = cache.qrBank || 'MB';
   const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.MB;
   const qrUrl = buildVietQrUrl(bankKey, amount, memo);
+
+  if (orderCode && typeof setTimeout !== 'undefined') {
+    setTimeout(() => {
+      if (typeof A !== 'undefined' && A.startPaymentAutoPolling) {
+        A.startPaymentAutoPolling(orderCode, amount);
+      }
+    }, 150);
+  }
+
   return `<div id="vietqr-box" style="margin-top:12px;background:linear-gradient(180deg,#F8FAFC 0%,#EFF6FF 100%);border:1.5px solid #93C5FD;border-radius:14px;padding:16px">
-    <div class="row between" style="margin-bottom:10px;gap:8px">
-      <div>
-        <span style="display:inline-flex;align-items:center;gap:6px;background:#1D4ED8;color:#fff;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:99px;text-transform:uppercase">VietQR · Napas 247 Chính Thức</span>
-        <h4 style="font-size:.98rem;margin-top:6px;color:#0F172A">Quét Mã QR Ngân Hàng Thanh Toán Tự Động</h4>
+    <div class="row between" style="margin-bottom:10px;gap:8px;flex-wrap:wrap">
+      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;gap:6px;background:#1D4ED8;color:#fff;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:99px;text-transform:uppercase">VietQR · Napas 247</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;background:#DCFCE7;color:#166534;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px">
+          <span style="width:7px;height:7px;background:#22C55E;border-radius:50%;display:inline-block"></span> Tự động ghi nhận tiền vào MB Bank 24/7
+        </span>
       </div>
-      <div class="xs muted right">Mở App Ngân hàng bất kỳ hoặc Ví MoMo / ZaloPay / VNPay để quét</div>
+      <div class="xs muted right">Mở App MB Bank / App Ngân hàng bất kỳ hoặc Ví MoMo để quét</div>
     </div>
 
     <div class="row" style="gap:6px;margin-bottom:12px;flex-wrap:wrap">
@@ -247,7 +282,7 @@ function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
         <div class="row between" style="padding-bottom:6px;border-bottom:1px dashed var(--line)">
           <span class="muted">Số tài khoản:</span>
           <span class="row" style="gap:6px">
-            <b style="font-size:.96rem;color:#0F172A;font-family:monospace">${esc(b.acc)}</b>
+            <b style="font-size:1.05rem;color:#0F172A;font-family:monospace;letter-spacing:1px">${esc(b.acc)}</b>
             <button type="button" class="btn sm" style="padding:2px 8px;font-size:.72rem" onclick="A.copy('${esc(b.acc)}')">Sao chép</button>
           </span>
         </div>
@@ -268,8 +303,9 @@ function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
         <p class="xs muted" style="margin-top:4px">💡 Khi quét mã QR trên ứng dụng ngân hàng, <b>Số tiền</b> và <b>Nội dung chuyển khoản</b> sẽ được điền tự động chính xác 100%.</p>
         ${
           orderCode
-            ? `<div class="row" style="margin-top:6px;gap:8px">
-                <button type="button" id="btn-confirm-qr" class="btn a block" style="background:#059669;border-color:#059669" onclick="A.confirmQrPayment('${esc(orderCode)}')">✓ Tôi đã quét QR chuyển khoản thanh toán</button>
+            ? `<div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
+                <button type="button" id="btn-confirm-qr" class="btn a" style="background:#059669;border-color:#059669;font-weight:700;flex:1" onclick="A.confirmQrPayment('${esc(orderCode)}')">✓ Tôi đã chuyển khoản xong</button>
+                <button type="button" id="btn-simulate-pay" class="btn secondary" style="background:#EFF6FF;color:#1D4ED8;border:1.5px solid #BFDBFE;font-weight:700;font-size:.82rem" onclick="A.simulatePaid('${esc(orderCode)}', ${Math.round(amount || 0)})" title="Mô phỏng tiền thật đã vào tài khoản MBBank">⚡ Giả lập Quét QR Thành công (Test Demo)</button>
               </div>`
             : ''
         }

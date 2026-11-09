@@ -398,6 +398,30 @@ const ClientController = {
     });
   }),
 
+  getOrderPaymentStatus: asyncHandler(async (req, res) => {
+    const code = req.params.code;
+    const result = await ClientModel.getOrderPaymentStatus(code);
+    res.json({
+      success: true,
+      data: result,
+    });
+  }),
+
+  simulateAutoPaid: asyncHandler(async (req, res) => {
+    const code = req.params.code;
+    const result = await ClientModel.simulateOrderAutoPaid(code, req.body || {});
+    res.json({
+      success: true,
+      message: result.message,
+      data: result,
+    });
+  }),
+
+  handlePaymentWebhook: asyncHandler(async (req, res) => {
+    const result = await ClientModel.handlePaymentWebhook(req.body || {});
+    res.json(result);
+  }),
+
   /**
    * Tra cứu bảo hành chính xác theo tháng lịch, chỉ áp dụng cho đơn đã giao thành công
    */

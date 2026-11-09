@@ -303,6 +303,100 @@ const ClientModel = {
   },
 
   /**
+   * Tra cứu trạng thái thanh toán thời gian thực của đơn hàng (phục vụ Polling)
+   */
+  async getOrderPaymentStatus(orderCode) {
+    const [[order]] = await pool.query(
+      'SELECT id, code, total_amount, status, payment_status, payment_verification_status, updated_at FROM orders WHERE code = ? OR id = ?',
+      [orderCode, orderCode],
+    );
+    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+    return {
+      code: order.code,
+      paid: order.payment_status === 'paid' || order.payment_verification_status === 'verified',
+      payment_status: order.payment_status,
+      verification_status: order.payment_verification_status,
+      total_amount: order.total_amount,
+      updated_at: order.updated_at,
+    };
+  },
+
+  /**
+   * Tự động xác nhận thanh toán đơn hàng (Simulator / Webhook)
+   */
+  async simulateOrderAutoPaid(orderCode, bankInfo = {}) {
+    const [[order]] = await pool.query(
+      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE code = ? OR id = ?',
+      [orderCode, orderCode],
+    );
+    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+
+    const bankStr = bankInfo.bank || 'MBBANK';
+    const accStr = bankInfo.account || '6306072007';
+    const holderStr = bankInfo.holder || 'NGUYEN VAN HIEU';
+    const updatedNote = [
+      order.notes,
+      `[TỰ ĐỘNG XÁC NHẬN THANH TOÁN ${bankStr} - STK: ${accStr} (${holderStr}) - Khớp số tiền ${order.total_amount}đ]`,
+    ].filter(Boolean).join(' | ');
+
+    await pool.query(
+      "UPDATE orders SET payment_status = 'paid', payment_verification_status = 'verified', status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END, net_received = total_amount, notes = ?, updated_at = NOW() WHERE id = ?",
+      [updatedNote, order.id],
+    );
+
+    return {
+      code: order.code,
+      paid: true,
+      payment_status: 'paid',
+      verification_status: 'verified',
+      message: `Đã xác nhận thanh toán tự động thành công vào tài khoản ${bankStr} ${accStr} (${holderStr})`,
+    };
+  },
+
+  /**
+   * Xử lý Webhook biến động số dư từ cổng thanh toán (SePay / Casso)
+   */
+  async handlePaymentWebhook(payload = {}) {
+    const content = String(payload.content || payload.description || payload.memo || '').trim();
+    const amount = Number(payload.amount || payload.transferAmount || 0);
+
+    const match = content.match(/(?:LAPTOP99\s+)?(DH-[A-Za-z0-9\-]+|DH[A-Za-z0-9\-]+|\d+)/i);
+    const orderCode = match ? match[1] : null;
+
+    if (!orderCode) {
+      return { success: false, message: 'Không tìm thấy mã đơn hàng trong nội dung chuyển khoản' };
+    }
+
+    const [[order]] = await pool.query(
+      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE code = ? OR id = ?',
+      [orderCode, orderCode],
+    );
+
+    if (!order) {
+      return { success: false, message: `Không tìm thấy đơn hàng tương ứng với mã ${orderCode}` };
+    }
+
+    if (order.payment_status === 'paid') {
+      return { success: true, message: 'Đơn hàng này đã được thanh toán trước đó' };
+    }
+
+    const noteAdd = `[WEBHOOK TỰ ĐỘNG: Đã nhận ${amount}đ từ MBBank ${payload.accountNumber || '6306072007'} - Ref: ${payload.referenceCode || payload.id || 'N/A'}]`;
+    const updatedNote = [order.notes, noteAdd].filter(Boolean).join(' | ');
+
+    await pool.query(
+      "UPDATE orders SET payment_status = 'paid', payment_verification_status = 'verified', status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END, net_received = ?, notes = ?, updated_at = NOW() WHERE id = ?",
+      [amount || order.total_amount, updatedNote, order.id],
+    );
+
+    return {
+      success: true,
+      order_code: order.code,
+      amount,
+      message: 'Xác nhận thanh toán tự động qua Webhook thành công',
+    };
+  },
+
+  /**
    * Tạo đơn hàng trực tuyến an toàn: Khóa tồn kho, đối soát mã giảm giá, khấu trừ phiếu thu cũ chuẩn backend
    */
   async createOrder(customer, body) {

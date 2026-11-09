@@ -85,6 +85,118 @@ const CheckoutController = {
     }
   },
 
+  _paymentPollTimer: null,
+
+  startPaymentAutoPolling(orderCode, amount) {
+    if (!orderCode) return;
+    if (this._paymentPollTimer) clearInterval(this._paymentPollTimer);
+
+    let attempts = 0;
+    this._paymentPollTimer = setInterval(async () => {
+      attempts++;
+      if (attempts > 120) {
+        clearInterval(this._paymentPollTimer);
+        this._paymentPollTimer = null;
+        return;
+      }
+
+      // 1. Kiểm tra đơn hàng trong db.orders và cache
+      const ord =
+        (Array.isArray(db.orders) && db.orders.find((x) => (x.code || x.id) === orderCode)) ||
+        (cache.lastOrder && (cache.lastOrder.code === orderCode || cache.lastOrder.id === orderCode)
+          ? cache.lastOrder
+          : null);
+
+      if (ord && (ord.paid === true || ord.payment_status === 'paid')) {
+        clearInterval(this._paymentPollTimer);
+        this._paymentPollTimer = null;
+        this.onPaymentSuccess(orderCode, amount);
+        return;
+      }
+
+      // 2. Poll API backend
+      try {
+        const res = await API.get(`/orders/${orderCode}/payment-status`, true);
+        if (res && res.data && (res.data.paid || res.data.payment_status === 'paid')) {
+          clearInterval(this._paymentPollTimer);
+          this._paymentPollTimer = null;
+          this.applyPaidState(orderCode, amount);
+          this.onPaymentSuccess(orderCode, amount);
+        }
+      } catch (e) {
+        // Im lặng khi polling thất bại
+      }
+    }, 3000);
+  },
+
+  applyPaidState(orderCode, amount) {
+    if (Array.isArray(db.orders)) {
+      const ord = db.orders.find((x) => (x.code || x.id) === orderCode);
+      if (ord) {
+        ord.paid = true;
+        ord.payment_status = 'paid';
+        ord.payment_verification_status = 'verified';
+        ord.paid_at = new Date().toISOString();
+        ord.status = 'confirmed';
+        ord.status_text = 'Đã thanh toán & Đã xác nhận';
+      }
+    }
+    if (cache.lastOrder && (cache.lastOrder.code === orderCode || cache.lastOrder.id === orderCode)) {
+      cache.lastOrder.paid = true;
+      cache.lastOrder.payment_status = 'paid';
+      cache.lastOrder.payment_verification_status = 'verified';
+      cache.lastOrder.paid_at = new Date().toISOString();
+      cache.lastOrder.status = 'confirmed';
+      cache.lastOrder.status_text = 'Đã thanh toán & Đã xác nhận';
+    }
+    if (Array.isArray(cache.myOrders)) {
+      const ord = cache.myOrders.find((x) => (x.code || x.id) === orderCode);
+      if (ord) {
+        ord.paid = true;
+        ord.payment_status = 'paid';
+        ord.payment_verification_status = 'verified';
+        ord.paid_at = new Date().toISOString();
+        ord.status = 'confirmed';
+        ord.status_text = 'Đã thanh toán & Đã xác nhận';
+      }
+    }
+    save();
+  },
+
+  onPaymentSuccess(orderCode, amount) {
+    const box = $('#vietqr-box');
+    if (box) {
+      box.outerHTML = renderBankQrBox(amount, `LAPTOP99 ${orderCode}`, orderCode);
+    }
+    toast('🎉 Giao dịch thành công! Tiền đã vào tài khoản MBBANK 6306072007 (NGUYEN VAN HIEU)', 'ok');
+    setTimeout(() => {
+      render();
+    }, 1200);
+  },
+
+  async simulatePaid(orderCode, amount) {
+    if (!orderCode) return;
+    const btn = document.getElementById('btn-simulate-pay');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Đang xác nhận biến động số dư MB...';
+    }
+
+    try {
+      await API.post(`/orders/${orderCode}/simulate-auto-paid`, {
+        amount,
+        bank: 'MBBANK',
+        account: '6306072007',
+        holder: 'NGUYEN VAN HIEU',
+      });
+    } catch (e) {
+      console.log('Simulate paid fallback locally:', e);
+    }
+
+    this.applyPaidState(orderCode, amount);
+    this.onPaymentSuccess(orderCode, amount);
+  },
+
   async place() {
     const u = me();
     if (!u) return A.authModal();
