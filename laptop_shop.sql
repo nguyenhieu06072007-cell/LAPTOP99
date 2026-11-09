@@ -25,12 +25,13 @@ CREATE TABLE `roles` (
 
 INSERT INTO `roles` (`id`, `name`, `description`, `permissions`, `badge_color`, `display_name`) VALUES
   (1, 'super_admin', 'Toàn quyền điều hành hệ thống, quản lý tài khoản, cấu hình bảo mật và xem toàn bộ dữ liệu tài chính.', '["*"]', 'purple', 'Super Admin (Quản trị tối cao)'),
-  (2, 'product_manager', 'Quản lý sản phẩm, hãng, danh mục, kho', NULL, 'blue', NULL),
-  (3, 'data_entry', 'Nhập liệu: thêm/sửa sản phẩm, không được xóa', NULL, 'blue', NULL),
-  (4, 'accountant', 'Kiểm soát giá vốn, biên lợi nhuận, đối soát cổng thanh toán trực tuyến.', '["cost:read","report:read","finance:read","finance:reconcile","order:read:all","inventory:read","product:read"]', 'emerald', 'Kế toán & Tài chính'),
-  (30002, 'sales_manager', 'Quản lý toàn bộ đơn hàng, duyệt chiết khấu/khuyến mãi, phân công nhân viên sale và xem báo cáo bán hàng.', '["order:read:all","order:write","order:discount:approve","order:cancel","product:read","customer:read","customer:write","promotion:read","promotion:write","report:sales"]', 'indigo', 'Trưởng phòng Kinh doanh'),
-  (30003, 'sales_executive', 'Tạo và xử lý đơn hàng cá nhân, tư vấn khách hàng, tra cứu thông số máy.', '["order:read:own","order:write","product:read","customer:read","customer:write","promotion:read"]', 'blue', 'Nhân viên Bán hàng (Sale)'),
-  (30004, 'warehouse_manager', 'Quản lý xuất nhập tồn, quét mã Serial/IMEI vật lý, kiểm định nhập hàng.', '["inventory:read","inventory:write","inventory:serial:manage","import:batch","product:read"]', 'amber', 'Thủ kho (Kho vận & S/N)');
+  (2, 'product_manager', 'Quản lý danh mục laptop, thông số kỹ thuật, cấu hình, hình ảnh và giá bán.', '["product:read","product:write","product:delete","catalog:write","inventory:read","cost:read","report:read","media:upload","import:batch"]', 'teal', 'Quản lý Sản phẩm & Danh mục'),
+  (3, 'data_entry', 'Nhập liệu: thêm/sửa cấu hình máy, mô tả, upload ảnh, không có quyền xóa.', '["product:read","product:write","catalog:write","inventory:read","media:upload"]', 'slate', 'Nhân viên Nhập liệu'),
+  (4, 'accountant', 'Kiểm soát giá vốn, biên lợi nhuận, đối soát dòng tiền và doanh thu bán hàng.', '["cost:read","report:read","report:sales","finance:read","finance:reconcile","order:read:all","inventory:read","product:read"]', 'emerald', 'Kế toán & Tài chính'),
+  (30002, 'sales_manager', 'Quản lý toàn bộ đơn hàng, duyệt chiết khấu/khuyến mãi, phân công nhân viên sale và xem báo cáo bán hàng.', '["order:read:all","order:write","order:discount:approve","order:cancel","order:print","product:read","customer:read","customer:write","promotion:read","promotion:write","report:sales","report:read"]', 'indigo', 'Trưởng phòng Kinh doanh'),
+  (30003, 'sales_executive', 'Tạo và xử lý đơn hàng cá nhân, tư vấn khách hàng, tra cứu thông số máy. Ẩn giá vốn và doanh số tổng.', '["order:read:own","order:write","order:print","product:read","customer:read","customer:write","promotion:read"]', 'blue', 'Nhân viên Bán hàng (Sale)'),
+  (30004, 'warehouse_manager', 'Quản lý xuất nhập tồn, quét mã Serial/IMEI, kiểm định nhập hàng theo lô Excel. Ẩn giá vốn & doanh số.', '["inventory:read","inventory:write","inventory:serial:manage","import:batch","product:read","warranty:read"]', 'amber', 'Thủ kho (Kho vận & S/N)'),
+  (30005, 'technical_warranty', 'Tiếp nhận bảo hành Serial/IMEI hãng, kiểm định kỹ thuật đổi trả (RMA) và định giá thu cũ đổi mới.', '["warranty:read","warranty:write","rma:manage","tradein:estimate","product:read","inventory:serial:read"]', 'cyan', 'Kỹ thuật viên & Bảo hành (RMA)');
 
 -- ---------------------------------------------------------------------
 -- Table: users
@@ -59,12 +60,14 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=60002;
 
 INSERT INTO `users` (`id`, `role_id`, `full_name`, `email`, `password_hash`, `phone`, `status`, `failed_logins`, `locked_until`, `last_login_at`, `created_at`, `updated_at`, `branch`, `data_visibility`, `custom_permissions`) VALUES
-  (1, 1, 'Quản trị viên', 'admin@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', NULL, 'active', 0, NULL, '2026-10-28 23:26:28', '2026-10-24 01:43:49', '2026-10-28 23:26:27', 'Toàn hệ thống (HQ)', 'all', NULL),
-  (30002, 3, 'Nhan vien Nhap lieu', 'entry@laptopshop.vn', '$2a$10$dzDSmdWq5Rruc1.FpX2.0uGxreAlCpUV3.HLfXoBivp4cwq/ImhwW', NULL, 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Chi nhánh Q1', 'branch', NULL),
-  (30003, 30003, 'Nhan vien Sale 01', 'sales@laptopshop.vn', '$2a$10$dzDSmdWq5Rruc1.FpX2.0uGxreAlCpUV3.HLfXoBivp4cwq/ImhwW', NULL, 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Chi nhánh Q1', 'branch', NULL),
-  (30004, 30002, 'Truong phong Sales', 'salesmgr@laptopshop.vn', '$2a$10$dzDSmdWq5Rruc1.FpX2.0uGxreAlCpUV3.HLfXoBivp4cwq/ImhwW', NULL, 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Chi nhánh Q1', 'branch', NULL),
-  (30005, 4, 'Ke toan truong', 'accountant@laptopshop.vn', '$2a$10$dzDSmdWq5Rruc1.FpX2.0uGxreAlCpUV3.HLfXoBivp4cwq/ImhwW', NULL, 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Chi nhánh Q1', 'branch', NULL),
-  (30006, 30004, 'Thu kho truong', 'warehouse@laptopshop.vn', '$2a$10$dzDSmdWq5Rruc1.FpX2.0uGxreAlCpUV3.HLfXoBivp4cwq/ImhwW', NULL, 'active', 0, NULL, NULL, '2026-10-25 10:21:06', '2026-10-25 10:21:06', 'Chi nhánh Q1', 'branch', NULL);
+  (1, 1, 'Quản trị viên Tối cao', 'admin@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', '0901234567', 'active', 0, NULL, '2026-10-28 23:26:28', '2026-10-24 01:43:49', '2026-10-28 23:26:27', 'Toàn hệ thống (HQ)', 'all', NULL),
+  (2, 2, 'Nguyễn Vũ Hoàng (Product Mgr)', 'product@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', '0908889999', 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Toàn hệ thống (HQ)', 'all', NULL),
+  (30002, 3, 'Lê Thị Thuỷ (Nhập liệu)', 'entry@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', '0912345678', 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Chi nhánh Q1', 'branch', NULL),
+  (30003, 30003, 'Nguyễn Văn Hùng (Sale)', 'sales@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', '0981122334', 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Chi nhánh Q1', 'own', NULL),
+  (30004, 30002, 'Trần Minh Tuấn (Trưởng phòng Sale)', 'salesmgr@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', '0978899001', 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Chi nhánh Q1', 'branch', NULL),
+  (30005, 4, 'Phạm Thuỳ Linh (Kế toán)', 'accountant@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', '0913344556', 'active', 0, NULL, NULL, '2026-10-25 10:21:05', '2026-10-25 10:21:05', 'Toàn hệ thống (HQ)', 'all', NULL),
+  (30006, 30004, 'Trần Minh Đức (Thủ kho)', 'warehouse@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', '0972233445', 'active', 0, NULL, NULL, '2026-10-25 10:21:06', '2026-10-25 10:21:06', 'Chi nhánh Q1', 'branch', NULL),
+  (30007, 30005, 'Hoàng Văn Kỹ (Bảo hành RMA)', 'kythuat@laptopshop.vn', '$2a$10$DaBGElPqPW1AcVchQsrDHeVyi3TMyCmQ3zxtDkS4l5CML0RQ206gy', '0933445566', 'active', 0, NULL, NULL, '2026-10-25 10:21:06', '2026-10-25 10:21:06', 'Toàn hệ thống (HQ)', 'all', NULL);
 
 -- ---------------------------------------------------------------------
 -- Table: brands

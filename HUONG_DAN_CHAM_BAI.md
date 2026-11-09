@@ -46,7 +46,21 @@ Thầy/Cô chỉ cần vào thư mục dự án và nhấp đúp vào file:
 * **Mật khẩu:** `Admin@123456`
 * *(Có đầy đủ các quyền: Quản lý đơn hàng Kanban, Nhập kho Batch Import, Khách hàng, Bảo hành S/N, Thu cũ đổi mới, Doanh thu).*
 
-### 2. Tài khoản Khách hàng mua sắm:
+### 2. Bảng tài khoản thử nghiệm Phân quyền chi tiết (RBAC Multi-Role):
+*(Tất cả tài khoản đều sử dụng chung mật khẩu: `Admin@123456`. Trên giao diện Đăng nhập có sẵn **thanh nút bấm 1 chạm** để Thầy/Cô chuyển đổi vai trò ngay lập tức)*:
+
+| Vai trò (Role) | Email đăng nhập | Quyền hạn & Giới hạn hiển thị trên giao diện |
+| :--- | :--- | :--- |
+| **👑 Super Admin** | `admin@laptopshop.vn` | Toàn quyền 100%: Quản trị tài khoản nhân viên, Phân quyền ma trận, Xem nhật ký Audit trail, Toàn bộ Doanh thu. |
+| **💼 Trưởng phòng Sale** | `salesmgr@laptopshop.vn` | Xem & quản lý toàn bộ đơn hàng, Duyệt chiết khấu / voucher, Phân công nhân viên sale, Xem khách hàng. |
+| **🛒 Nhân viên Sale** | `sales@laptopshop.vn` | Xem đơn hàng, tạo đơn mới, tư vấn máy. **Ẩn hoàn toàn cột Giá vốn/Giá nhập và Doanh thu tổng**. |
+| **📦 Thủ kho** | `warehouse@laptopshop.vn` | Quản lý xuất nhập tồn, Quét Serial/IMEI, Nhập hàng lô bằng file Excel. **Ẩn menu Doanh thu & Báo cáo tài chính**. |
+| **💰 Kế toán & Tài chính** | `accountant@laptopshop.vn` | Xem báo cáo tài chính, Kiểm soát **giá vốn nhập**, Đối soát thanh toán, Xem đơn hàng. **Không có quyền sửa sản phẩm hay quản trị nhân viên**. |
+| **💻 Quản lý Sản phẩm** | `product@laptopshop.vn` | Toàn quyền Thêm/Sửa/Xóa laptop, cấu hình CPU/RAM/VGA, Quản lý Thương hiệu & Danh mục, Upload ảnh WebP. |
+| **📝 Nhân viên Nhập liệu** | `entry@laptopshop.vn` | Chỉ được Thêm/Sửa thông số máy và upload ảnh, **Bị chặn quyền Xóa sản phẩm và Không xem được tài chính**. |
+| **🔧 Kỹ thuật viên & RMA** | `kythuat@laptopshop.vn` | Tra cứu bảo hành Serial/IMEI hãng, Kiểm định đổi trả RMA 30 ngày, Định giá thu cũ đổi mới. |
+
+### 3. Tài khoản Khách hàng mua sắm:
 * **Địa chỉ:** `http://localhost:3000` (hoặc mở trực tiếp file `index.html`)
 * **Email:** `khach@demo.vn` *(hoặc `nguyenhieu06072007@gmail.com`)*
 * **Mật khẩu:** `123456`
@@ -59,3 +73,4 @@ Khi chấm xong, Thầy/Cô gõ lệnh sau để giải phóng tài nguyên:
 ```bash
 docker compose down
 ```
+

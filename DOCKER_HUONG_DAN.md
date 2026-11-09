@@ -45,8 +45,13 @@ Sau khi lệnh chạy xong (khoảng 30 giây đến 1 phút cho lần đầu ti
 
 2. **Trang Quản trị viên (Admin Dashboard):**
    - Địa chỉ: `http://localhost:5173`
-   - Tài khoản đăng nhập: `admin@laptopshop.vn`
-   - Mật khẩu: `Admin@123456`
+   - Tài khoản đăng nhập mẫu:
+     * **Super Admin (Toàn quyền):** `admin@laptopshop.vn` / Mật khẩu: `Admin@123456`
+     * **Trưởng phòng Sale:** `salesmgr@laptopshop.vn` / Mật khẩu: `Admin@123456`
+     * **Nhân viên Sale (Ẩn giá vốn):** `sales@laptopshop.vn` / Mật khẩu: `Admin@123456`
+     * **Thủ kho (Chỉ thấy kho & S/N):** `warehouse@laptopshop.vn` / Mật khẩu: `Admin@123456`
+     * **Kế toán (Xem giá vốn & đối soát):** `accountant@laptopshop.vn` / Mật khẩu: `Admin@123456`
+     * *(Trên trang Đăng nhập có thanh chọn vai trò 1 chạm để test nhanh)*
 
 3. **Backend REST API:**
    - Địa chỉ: `http://localhost:4000/api`
@@ -97,3 +102,4 @@ Nhóm có thể đưa trực tiếp nội dung dưới đây vào mục **"Tri�
   - **Multi-stage Build:** Tách riêng môi trường build (Node.js) và môi trường chạy (Nginx Alpine) cho Frontend Admin giúp giảm dung lượng image từ ~800MB xuống dưới ~30MB.
   - **Database Auto-seeding:** Tích hợp cơ chế tự động nạp lược đồ và dữ liệu mẫu `laptop_shop.sql` qua thư mục chuẩn `/docker-entrypoint-initdb.d/` của MySQL 8.0.
   - **Internal Network Isolation:** Các container giao tiếp an toàn qua mạng ảo `laptop99_network` riêng biệt, không để lộ thông tin mật khẩu ra ngoài.
+
