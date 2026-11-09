@@ -401,7 +401,7 @@ async function viewProduct(r) {
             ${p.images
               .map(
                 (im, idx) => `
-              <img src="${esc(im.url)}" alt="${esc(im.alt_text || p.name)}" class="pd-thumb-img ${idx === 0 ? 'on' : ''}" onclick="A.switchPdImg(${idx}, '${esc(im.url)}')">
+              <img src="${esc(im.url)}" alt="${esc(im.alt_text || p.name)}" class="pd-thumb-img ${idx === 0 ? 'on' : ''}" onclick="A.switchPdImg(${idx}, '${esc(im.url)}')" onerror="if(!this.dataset.retried&&this.src.indexOf('onrender.com')!==-1){this.dataset.retried='1';this.src='https://laptop99.vercel.app/'+this.src.replace(/^https?:\\/\\/[^\\/]+\\//,'');}else if(!this.dataset.retried&&this.src.indexOf('onrender.com')===-1){this.dataset.retried='1';this.src='https://laptop99-ejug.onrender.com/'+this.getAttribute('src').replace(/^\\//,'');}">
             `,
               )
               .join('')}
@@ -572,6 +572,176 @@ async function viewProduct(r) {
   </div>`;
 }
 
+function renderAIComparisonAnalysis(L) {
+  if (!L || L.length < 2) return '';
+
+  const analysis = L.map((p) => {
+    const rawGpu = (p.gpu || '').toLowerCase();
+    const rawCpu = (p.cpu || '').toLowerCase();
+    const rawRam = parseInt(p.ram, 10) || 16;
+    const rawWeight = parseFloat(p.weight) || 1.8;
+    const isGamingGpu = rawGpu.includes('rtx') || rawGpu.includes('gtx') || rawGpu.includes('rx') || rawGpu.includes('radeon');
+    const isDedicated = isGamingGpu;
+
+    let gamingScore = 55;
+    if (rawGpu.includes('4070') || rawGpu.includes('4080')) gamingScore = 96;
+    else if (rawGpu.includes('4060')) gamingScore = 89;
+    else if (rawGpu.includes('4050') || rawGpu.includes('3050')) gamingScore = 78;
+    else if (p.brand === 'Apple') gamingScore = 75;
+    else if (rawGpu.includes('arc') || rawGpu.includes('iris')) gamingScore = 60;
+
+    let workScore = 70;
+    if (rawRam >= 32) workScore += 18;
+    else if (rawRam >= 16) workScore += 12;
+    if (rawCpu.includes('ultra') || rawCpu.includes('i7') || rawCpu.includes('i9') || rawCpu.includes('ryzen 7') || rawCpu.includes('m3') || rawCpu.includes('m2')) workScore += 10;
+    workScore = Math.min(99, workScore);
+
+    let mobilityScore = 70;
+    if (rawWeight <= 1.25) mobilityScore = 98;
+    else if (rawWeight <= 1.45) mobilityScore = 90;
+    else if (rawWeight <= 1.75) mobilityScore = 80;
+    else if (rawWeight <= 2.1) mobilityScore = 68;
+    else mobilityScore = 55;
+
+    const rawScreen = (p.screen || '').toLowerCase();
+    let displayScore = 75;
+    if (rawScreen.includes('oled') || rawScreen.includes('retina') || rawScreen.includes('2.8k') || rawScreen.includes('3k')) displayScore = 96;
+    else if (rawScreen.includes('144hz') || rawScreen.includes('165hz') || rawScreen.includes('120hz') || rawScreen.includes('fhd+')) displayScore = 88;
+
+    const pros = [];
+    const cons = [];
+
+    if (isDedicated) pros.push(`Card đồ họa rời ${p.gpu || 'mạnh mẽ'}, chơi mượt game 3D & render video`);
+    else if (p.brand === 'Apple') pros.push('Hệ điều hành macOS tối ưu cực kỳ mượt mà, thời lượng pin cả ngày');
+    else pros.push('Tiết kiệm điện năng, máy chạy mát mẻ và yên tĩnh');
+
+    if (rawRam >= 16) pros.push(`RAM ${rawRam}GB thoải mái đa nhiệm hơn 30 tabs Chrome`);
+    else cons.push('RAM 8GB có thể bị tràn bộ nhớ khi mở nhiều ứng dụng nặng');
+
+    if (rawWeight <= 1.4) pros.push(`Trọng lượng siêu nhẹ chỉ ${p.weight}, rất tiện mang đi học/đi làm`);
+    else if (rawWeight >= 2.0) cons.push(`Máy nặng ${p.weight}, củ sạc lớn khi mang balo đường dài`);
+
+    if (rawScreen.includes('120hz') || rawScreen.includes('144hz') || rawScreen.includes('165hz')) {
+      pros.push(`Màn hình tần số quét cao ${p.screen}, cuộn lướt siêu mượt`);
+    }
+
+    if (!isDedicated && (p.cat === '2' || (p.catName || '').toLowerCase().includes('gaming'))) {
+      cons.push('Không có card rời, khó chơi các tựa game AAA hạng nặng');
+    }
+
+    return {
+      product: p,
+      gamingScore,
+      workScore,
+      mobilityScore,
+      displayScore,
+      pros: pros.slice(0, 3),
+      cons: cons.length ? cons.slice(0, 2) : ['Giá niêm yết có thể biến động theo thời điểm'],
+    };
+  });
+
+  let bestGaming = analysis[0];
+  let bestMobility = analysis[0];
+  let bestPrice = analysis[0];
+
+  for (const a of analysis) {
+    if (a.gamingScore > bestGaming.gamingScore) bestGaming = a;
+    if (a.mobilityScore > bestMobility.mobilityScore) bestMobility = a;
+    if (a.product.price < bestPrice.product.price) bestPrice = a;
+  }
+
+  return `
+    <div class="card" style="margin-bottom:20px;border:1.5px solid #3b82f6;background:linear-gradient(180deg, rgba(59,130,246,0.04) 0%, rgba(255,255,255,0) 100%);padding:20px 22px;border-radius:14px;box-shadow:0 4px 20px rgba(59,130,246,0.08)">
+      <div class="row between" style="margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div class="row" style="gap:10px;align-items:center">
+          <div style="width:38px;height:38px;border-radius:10px;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 4px 12px rgba(37,99,235,0.3)">
+            🤖
+          </div>
+          <div>
+            <div style="font-size:1.05rem;font-weight:800;color:var(--fg);display:flex;align-items:center;gap:8px">
+              <span>LAPTOP99 AI Engine · Đánh Giá &amp; So Sánh Chuyên Sâu</span>
+              <span class="bd ok" style="font-size:10px;padding:2px 7px;font-weight:700">Live AI Analysis</span>
+            </div>
+            <div class="muted sm" style="font-size:12px;margin-top:2px">Thuật toán AI tự động phân tích cấu hình phần cứng, đối chiếu điểm hiệu năng và chỉ ra ưu/nhược điểm thực tế.</div>
+          </div>
+        </div>
+        <button class="btn sm" onclick="A.openChat('Hãy so sánh chi tiết ưu nhược điểm giữa ${L.map((p) => p.name).join(' và ')} cho tôi')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-weight:700">
+          💬 Hỏi thêm Trợ lý AI
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;margin-bottom:18px">
+        ${analysis.map((a) => `
+          <div style="background:var(--bg-card, #fff);border:1px solid var(--border);border-radius:12px;padding:16px">
+            <div style="font-weight:800;font-size:.92rem;color:var(--fg);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px">${esc(a.product.name)}</span>
+              <span style="color:var(--promo);font-size:.9rem">${vnd(a.product.price)}</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:11px">
+              <div>
+                <div class="row between muted" style="margin-bottom:3px">
+                  <span>🎮 Gaming &amp; Đồ họa 3D</span>
+                  <b style="color:var(--fg)">${a.gamingScore}/100</b>
+                </div>
+                <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${a.gamingScore}%;background:${a.gamingScore > 80 ? '#10b981' : a.gamingScore > 65 ? '#3b82f6' : '#f59e0b'};border-radius:99px"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="row between muted" style="margin-bottom:3px">
+                  <span>💼 Đa nhiệm &amp; Lập trình</span>
+                  <b style="color:var(--fg)">${a.workScore}/100</b>
+                </div>
+                <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${a.workScore}%;background:${a.workScore > 80 ? '#10b981' : '#3b82f6'};border-radius:99px"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="row between muted" style="margin-bottom:3px">
+                  <span>🚀 Tính di động &amp; Pin</span>
+                  <b style="color:var(--fg)">${a.mobilityScore}/100</b>
+                </div>
+                <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${a.mobilityScore}%;background:${a.mobilityScore > 80 ? '#10b981' : a.mobilityScore > 65 ? '#3b82f6' : '#f59e0b'};border-radius:99px"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="row between muted" style="margin-bottom:3px">
+                  <span>🖥️ Màn hình &amp; Hiển thị</span>
+                  <b style="color:var(--fg)">${a.displayScore}/100</b>
+                </div>
+                <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${a.displayScore}%;background:#8b5cf6;border-radius:99px"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:6px;font-size:11px">
+              ${a.pros.map((pr) => `<div style="color:#059669;display:flex;align-items:flex-start;gap:6px"><span>✓</span><span>${esc(pr)}</span></div>`).join('')}
+              ${a.cons.map((cn) => `<div style="color:#dc2626;display:flex;align-items:flex-start;gap:6px"><span>✕</span><span>${esc(cn)}</span></div>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;font-size:12px;line-height:1.6;color:#334155">
+        <div style="font-weight:800;color:#0f172a;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <span style="color:#eab308">💡</span> <b>KẾT LUẬN &amp; TƯ VẤN CHỌN MUA TỪ AI:</b>
+        </div>
+        <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px">
+          <li><b>Nếu bạn ưu tiên Chơi Game / Dựng đồ họa 3D / Kỹ thuật:</b> Nên chọn <b>${esc(bestGaming.product.name)}</b> nhờ trang bị GPU và hiệu năng đồ họa dẫn đầu (${bestGaming.gamingScore} điểm).</li>
+          <li><b>Nếu bạn là Sinh viên / Dân văn phòng hay di chuyển:</b> Nên chọn <b>${esc(bestMobility.product.name)}</b> để tối ưu độ mỏng nhẹ (${bestMobility.product.weight}) và thời lượng pin (${bestMobility.mobilityScore} điểm).</li>
+          <li><b>Lựa chọn tiết kiệm chi phí nhất:</b> <b>${esc(bestPrice.product.name)}</b> với mức giá chỉ ${vnd(bestPrice.product.price)}, rất phù hợp với ngân sách vừa phải.</li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
 async function viewCompare() {
   const pids = db.compare || [];
   if (!pids.length) {
@@ -627,6 +797,7 @@ async function viewCompare() {
         <button class="btn sm danger" onclick="db.compare=[];save();render()">Xóa tất cả</button>
       </div>
     </div>
+    ${renderAIComparisonAnalysis(L)}
     <div class="card tw" style="padding:0;overflow:hidden">
       <table class="tbl" style="min-width:640px">
         <tr>
