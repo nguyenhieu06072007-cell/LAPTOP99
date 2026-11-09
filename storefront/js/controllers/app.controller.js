@@ -372,10 +372,12 @@ if (API.getToken() && db.session) {
         save();
       }
     })
-    .catch(() => {
-      API.setToken(null);
-      db.session = null;
-      save();
+    .catch((err) => {
+      if (err && err.status === 401) {
+        API.setToken(null);
+        db.session = null;
+        save();
+      }
     });
 }
 

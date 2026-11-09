@@ -2,7 +2,17 @@
    SERVICE LAYER (MVC): API Service communicating with Backend REST API
    ========================================================================== */
 const API = {
-  BASE_URL: localStorage.getItem('LAPTOP99_API_URL') || 'https://laptop99-ejug.onrender.com/api/client',
+  BASE_URL: (function() {
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('LAPTOP99_API_URL')) {
+        return localStorage.getItem('LAPTOP99_API_URL');
+      }
+      if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        return 'http://localhost:4000/api/client';
+      }
+    } catch(e) {}
+    return 'https://laptop99-ejug.onrender.com/api/client';
+  })(),
   TOKEN_KEY: 'laptop99_client_token',
 
   getToken() {
@@ -25,12 +35,17 @@ const API = {
       headers['Authorization'] = 'Bearer ' + token;
     }
 
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), options.timeout || 12000) : null;
+
     try {
       const res = await fetch(url, {
         cache: 'no-cache',
+        signal: controller ? controller.signal : undefined,
         ...options,
         headers,
       });
+      if (timeoutId) clearTimeout(timeoutId);
 
       let data = null;
       const contentType = res.headers.get('content-type') || '';
