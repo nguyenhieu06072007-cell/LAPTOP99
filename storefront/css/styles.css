@@ -1955,6 +1955,38 @@ p { margin: 0; }
   transition: transform var(--dur-norm) var(--ease-out);
 }
 .pc:hover .pc-img-box img.prod-real-img { transform: scale(1.04); }
+
+/* Compare Image Box Frame (Fix phông ảnh so sánh gọn gàng) */
+.cmp-img-box {
+  width: 140px;
+  height: 110px;
+  max-width: 100%;
+  margin: 0 auto 10px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border-default, #E2E8F0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+.cmp-img-box img.prod-real-img,
+.cmp-img-box img,
+img.cmp-img {
+  max-width: 100% !important;
+  max-height: 94px !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
+  transition: transform 0.2s ease;
+}
+.cmp-img-box:hover img {
+  transform: scale(1.05);
+}
 .pc-badge-tl {
   position: absolute;
   top: 8px;

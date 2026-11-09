@@ -177,6 +177,22 @@ const ChatbotController = {
     }
   },
 
+  openChat(prompt = '') {
+    this.initChatbot();
+    if (!this.chatState.isOpen) {
+      this.toggleChatbot();
+    }
+    if (prompt) {
+      setTimeout(() => {
+        const input = document.getElementById('chatbot-input');
+        if (input) {
+          input.value = prompt;
+          this.submitChatMessage();
+        }
+      }, 250);
+    }
+  },
+
   resetChatbot() {
     this.chatState.messages = [
       {
