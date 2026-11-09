@@ -35,7 +35,7 @@ const CheckoutController = {
     modal(
       mHead('Cổng Thanh Toán Mã QR Ngân Hàng (VietQR Napas 247)', `Đơn hàng: ${orderCode} · Tự động điền số tiền & nội dung`) +
         renderBankQrBox(amount, memo, orderCode),
-      true,
+      false,
     );
   },
 

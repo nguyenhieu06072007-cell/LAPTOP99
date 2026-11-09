@@ -111,7 +111,8 @@ function modal(html, sm) {
   m.className = 'open';
   const isPromo = typeof html === 'string' && html.includes('promo-popup');
   const isEntryPopup = typeof html === 'string' && html.includes('entry-popup-container');
-  m.innerHTML = `<div class="mb ${sm ? 'sm' : ''} ${isPromo ? 'mb-promo' : ''} ${isEntryPopup ? 'mb-entry-popup' : ''}" onclick="event.stopPropagation()">${html}</div>`;
+  const isQr = typeof html === 'string' && (html.includes('vietqr-box') || html.includes('vietqr-img') || html.includes('Cổng Thanh Toán Mã QR'));
+  m.innerHTML = `<div class="mb ${sm && !isQr ? 'sm' : ''} ${isQr ? 'mb-qr' : ''} ${isPromo ? 'mb-promo' : ''} ${isEntryPopup ? 'mb-entry-popup' : ''}" onclick="event.stopPropagation()">${html}</div>`;
   m.onclick = closeModal;
 }
 

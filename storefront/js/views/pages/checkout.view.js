@@ -265,47 +265,47 @@ function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
         .join('')}
     </div>
 
-    <div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:center;background:#fff;border:1px solid #DBEAFE;border-radius:12px;padding:14px">
-      <div class="center" style="background:#fff;padding:8px;border:1px solid #E2E8F0;border-radius:10px">
-        <img id="vietqr-img" src="${esc(qrUrl)}" alt="Mã QR Ngân hàng VietQR ${esc(b.short)}" style="width:100%;max-width:200px;height:auto;display:block;margin:0 auto;border-radius:6px">
-        <span class="xs muted" style="display:block;margin-top:6px;font-weight:600">Mã QR động chuẩn Napas 247</span>
+    <div class="vietqr-grid-box" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;background:#fff;border:1px solid #DBEAFE;border-radius:12px;padding:16px;box-sizing:border-box">
+      <div class="vietqr-qr-col" style="flex:0 0 210px;max-width:210px;margin:0 auto;text-align:center;background:#ffffff;padding:10px;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04);box-sizing:border-box">
+        <img id="vietqr-img" src="${esc(qrUrl)}" alt="Mã QR Ngân hàng VietQR ${esc(b.short)}" style="width:100%;max-width:190px;height:auto;display:block;margin:0 auto;border-radius:6px">
+        <span class="xs muted" style="display:block;margin-top:6px;font-weight:600;font-size:11px">Mã QR động chuẩn Napas 247</span>
       </div>
-      <div class="gap" style="gap:8px;font-size:.84rem">
-        <div class="row between" style="padding-bottom:6px;border-bottom:1px dashed var(--line)">
-          <span class="muted">Ngân hàng thụ hưởng:</span>
-          <b style="color:#1D4ED8">${esc(b.name)}</b>
+      <div class="vietqr-info-col" style="flex:1 1 290px;min-width:260px;display:flex;flex-direction:column;gap:8px;font-size:.85rem;box-sizing:border-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px dashed var(--line);flex-wrap:wrap">
+          <span class="muted" style="font-size:12px">Ngân hàng thụ hưởng:</span>
+          <b style="color:#1D4ED8;font-size:13px;text-align:right">${esc(b.name)}</b>
         </div>
-        <div class="row between" style="padding-bottom:6px;border-bottom:1px dashed var(--line)">
-          <span class="muted">Chủ tài khoản:</span>
-          <b>${esc(b.holder)}</b>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px dashed var(--line);flex-wrap:wrap">
+          <span class="muted" style="font-size:12px">Chủ tài khoản:</span>
+          <b style="font-size:13px;text-align:right">${esc(b.holder)}</b>
         </div>
-        <div class="row between" style="padding-bottom:6px;border-bottom:1px dashed var(--line)">
-          <span class="muted">Số tài khoản:</span>
-          <span class="row" style="gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px dashed var(--line);flex-wrap:wrap">
+          <span class="muted" style="font-size:12px">Số tài khoản:</span>
+          <span class="row" style="gap:6px;align-items:center">
             <b style="font-size:1.05rem;color:#0F172A;font-family:monospace;letter-spacing:1px">${esc(b.acc)}</b>
             <button type="button" class="btn sm" style="padding:2px 8px;font-size:.72rem" onclick="A.copy('${esc(b.acc)}')">Sao chép</button>
           </span>
         </div>
-        <div class="row between" style="padding-bottom:6px;border-bottom:1px dashed var(--line)">
-          <span class="muted">Số tiền chuyển khoản:</span>
-          <span class="row" style="gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px dashed var(--line);flex-wrap:wrap">
+          <span class="muted" style="font-size:12px">Số tiền chuyển khoản:</span>
+          <span class="row" style="gap:6px;align-items:center">
             <b style="font-size:1.05rem;color:var(--promo)">${vnd(amount)}</b>
             <button type="button" class="btn sm" style="padding:2px 8px;font-size:.72rem" onclick="A.copy('${Math.round(amount || 0)}')">Sao chép</button>
           </span>
         </div>
-        <div class="row between">
-          <span class="muted">Nội dung chuyển khoản:</span>
-          <span class="row" style="gap:6px">
-            <b style="color:#047857;background:#ECFDF5;padding:2px 8px;border-radius:6px;font-family:monospace">${esc(memo)}</b>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="muted" style="font-size:12px">Nội dung chuyển khoản:</span>
+          <span class="row" style="gap:6px;align-items:center">
+            <b style="color:#047857;background:#ECFDF5;padding:3px 8px;border-radius:6px;font-family:monospace;font-size:12px">${esc(memo)}</b>
             <button type="button" class="btn sm" style="padding:2px 8px;font-size:.72rem" onclick="A.copy('${esc(memo)}')">Sao chép</button>
           </span>
         </div>
-        <p class="xs muted" style="margin-top:4px">💡 Khi quét mã QR trên ứng dụng ngân hàng, <b>Số tiền</b> và <b>Nội dung chuyển khoản</b> sẽ được điền tự động chính xác 100%.</p>
+        <p class="xs muted" style="margin-top:4px;line-height:1.4">💡 Khi quét mã QR trên ứng dụng ngân hàng, <b>Số tiền</b> và <b>Nội dung chuyển khoản</b> sẽ được điền tự động chính xác 100%.</p>
         ${
           orderCode
-            ? `<div class="row" style="margin-top:8px;gap:8px;flex-wrap:wrap">
-                <button type="button" id="btn-confirm-qr" class="btn a" style="background:#059669;border-color:#059669;font-weight:700;flex:1" onclick="A.confirmQrPayment('${esc(orderCode)}')">✓ Tôi đã chuyển khoản xong</button>
-                <button type="button" id="btn-simulate-pay" class="btn secondary" style="background:#EFF6FF;color:#1D4ED8;border:1.5px solid #BFDBFE;font-weight:700;font-size:.82rem" onclick="A.simulatePaid('${esc(orderCode)}', ${Math.round(amount || 0)})" title="Mô phỏng tiền thật đã vào tài khoản MBBank">⚡ Giả lập Quét QR Thành công (Test Demo)</button>
+            ? `<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                <button type="button" id="btn-confirm-qr" class="btn a" style="background:#059669;border-color:#059669;font-weight:700;flex:1 1 180px;padding:8px 14px;font-size:13px" onclick="A.confirmQrPayment('${esc(orderCode)}')">✓ Tôi đã chuyển khoản xong</button>
+                <button type="button" id="btn-simulate-pay" class="btn secondary" style="background:#EFF6FF;color:#1D4ED8;border:1.5px solid #BFDBFE;font-weight:700;font-size:12px;flex:1 1 180px;padding:8px 12px" onclick="A.simulatePaid('${esc(orderCode)}', ${Math.round(amount || 0)})" title="Mô phỏng tiền thật đã vào tài khoản MBBank">⚡ Giả lập Quét QR Thành công (Test Demo)</button>
               </div>`
             : ''
         }
