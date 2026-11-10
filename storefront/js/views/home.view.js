@@ -4,8 +4,8 @@
 
 async function viewHome() {
   const [cats, prodsRes, promoRes, newsRes, bannersRes] = await Promise.all([
-    ensureCategories(),
-    API.get('/products?limit=60&sort=pop'),
+    ensureCategories().catch(() => []),
+    API.get('/products?limit=60&sort=pop', true).catch(() => ({ data: [] })),
     API.get('/promotions', true).catch(() => ({ data: [] })),
     API.get('/news', true).catch(() => ({ data: [] })),
     API.get('/banners?t=' + Date.now(), true).catch(() => ({ data: [] })),

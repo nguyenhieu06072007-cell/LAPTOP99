@@ -20,7 +20,7 @@ const PromotionsService = {
   },
 
   async lookupWarranty(serial) {
-    return await API.get(`/warranty?serial=${encodeURIComponent(serial)}`, false);
+    return await API.get(`/warranty?sn=${encodeURIComponent(serial)}`, false);
   },
 
   async submitReview(payload) {

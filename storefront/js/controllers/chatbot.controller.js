@@ -302,15 +302,25 @@ const ChatbotController = {
       console.warn('[LAPTOP99 AI] API chat warning:', err.message);
       this.chatState.lastFailedPrompt = text;
 
-      this.chatState.messages.push({
-        sender: 'bot',
-        isError: true,
-        text:
-          '⚠️ **Đã xảy ra sự cố kết nối máy chủ.**\n\n' +
-          'Quý khách vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau giây lát. Em rất xin lỗi vì sự bất tiện này!',
-        products: [],
-        time: this.formatChatTime(new Date()),
-      });
+      const fallbackReply = this.generateLocalFallback(text);
+      if (fallbackReply) {
+        this.chatState.messages.push({
+          sender: 'bot',
+          text: fallbackReply,
+          products: [],
+          time: this.formatChatTime(new Date()),
+        });
+      } else {
+        this.chatState.messages.push({
+          sender: 'bot',
+          isError: true,
+          text:
+            '⚠️ **Đã xảy ra sự cố kết nối máy chủ.**\n\n' +
+            'Quý khách vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau giây lát. Em rất xin lỗi vì sự bất tiện này!',
+          products: [],
+          time: this.formatChatTime(new Date()),
+        });
+      }
     } finally {
       this.chatState.isTyping = false;
       if (typingEl) typingEl.style.display = 'none';
@@ -325,6 +335,26 @@ const ChatbotController = {
 
       this.renderChatMessages();
     }
+  },
+
+  generateLocalFallback(text) {
+    const q = (text || '').toLowerCase();
+    if (q.includes('bảo hành') || q.includes('warranty') || q.includes('s/n') || q.includes('serial')) {
+      return 'LAPTOP99 áp dụng chính sách **bảo hành điện tử chính hãng 12 – 24 tháng theo số Serial (S/N)** trên từng máy. Quý khách có thể kiểm tra trực tiếp tại mục [Tra cứu bảo hành](#/warranty) ạ! 🛡️';
+    }
+    if (q.includes('thanh toán') || q.includes('chuyển khoản') || q.includes('stk') || q.includes('mbbank') || q.includes('ngân hàng')) {
+      return 'Hệ thống hỗ trợ thanh toán qua **VietQR Napas 247 tự động** vào tài khoản **MB Bank 6306072007 (Chủ TK: NGUYEN VAN HIEU)** hoặc thanh toán COD khi nhận hàng ạ! 💳';
+    }
+    if (q.includes('so sánh') || q.includes('compare')) {
+      return 'Bạn có thể bấm vào **biểu tượng chiếc cân ⚖️** trên các mẫu laptop để vào trang **[So sánh cấu hình chuyên sâu](#/compare)**. Trí tuệ nhân tạo AI sẽ tự động phân tích và khuyên chọn mẫu tối ưu theo nhu cầu của bạn!';
+    }
+    if (q.includes('đổi trả') || q.includes('rma')) {
+      return 'LAPTOP99 hỗ trợ chính sách **1 đổi 1 trong vòng 15 ngày** nếu máy có lỗi phần cứng từ nhà sản xuất. Quý khách có thể gửi yêu cầu RMA trực tiếp trong mục Quản lý tài khoản ạ!';
+    }
+    if (q.includes('thu cũ') || q.includes('trade-in') || q.includes('đổi máy')) {
+      return 'LAPTOP99 có chương trình **Thu cũ đổi mới (Trade-in)** trợ giá lên đến 2.000.000đ. Bạn có thể định giá máy cũ online ngay tại mục [Thu cũ đổi mới](#/tradein)! 🔄';
+    }
+    return null;
   },
 
   renderChatMessages() {

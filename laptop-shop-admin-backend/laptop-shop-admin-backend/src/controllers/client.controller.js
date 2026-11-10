@@ -426,7 +426,7 @@ const ClientController = {
    * Tra cứu bảo hành chính xác theo tháng lịch, chỉ áp dụng cho đơn đã giao thành công
    */
   lookupWarranty: asyncHandler(async (req, res) => {
-    const sn = String(req.query.sn || '').trim().toUpperCase();
+    const sn = String(req.query.sn || req.query.serial || '').trim().toUpperCase();
     if (!sn) throw new ApiError(400, 'Vui lòng cung cấp số Serial S/N');
 
     const order = await ClientModel.findOrderBySerial(sn);

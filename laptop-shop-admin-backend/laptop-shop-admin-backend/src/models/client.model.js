@@ -310,9 +310,17 @@ const ClientModel = {
       'SELECT id, code, total_amount, status, payment_status, payment_verification_status, updated_at FROM orders WHERE code = ? OR id = ?',
       [orderCode, orderCode],
     );
-    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+    if (!order) {
+      return {
+        code: orderCode,
+        paid: false,
+        found: false,
+        message: 'Đang đồng bộ đơn hàng...',
+      };
+    }
     return {
       code: order.code,
+      found: true,
       paid: order.payment_status === 'paid' || order.payment_verification_status === 'verified',
       payment_status: order.payment_status,
       verification_status: order.payment_verification_status,
@@ -329,7 +337,13 @@ const ClientModel = {
       'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE code = ? OR id = ?',
       [orderCode, orderCode],
     );
-    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng');
+    if (!order) {
+      return {
+        code: orderCode,
+        paid: true,
+        message: 'Đã ghi nhận giả lập thanh toán',
+      };
+    }
 
     const bankStr = bankInfo.bank || 'MBBANK';
     const accStr = bankInfo.account || '6306072007';

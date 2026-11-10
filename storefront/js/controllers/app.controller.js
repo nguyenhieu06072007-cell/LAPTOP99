@@ -45,6 +45,10 @@ const A = {
   ...ChatbotController,
 };
 
+if (typeof window !== 'undefined') {
+  window.A = A;
+}
+
 async function storeRoute(r) {
   const m = {
     '': viewHome,
