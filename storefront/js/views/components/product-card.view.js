@@ -99,6 +99,7 @@ function brandLogo(mode = 'full') {
 }
 
 function pcard(p) {
+  if (!p) return '';
   const d = discPct(p);
   const inC = (db.compare || []).includes(p.id);
   const inW = (db.wishlist || []).includes(p.id);

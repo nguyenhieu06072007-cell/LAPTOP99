@@ -125,6 +125,18 @@ function finishRouteProgress() {
 let lastPath = null;
 let renderSeq = 0;
 
+window.__RESCUE_MOUNT__ = async function() {
+  window.__APP_MOUNTED__ = true;
+  const r = route();
+  try {
+    const inner = await viewHome();
+    const appEl = document.getElementById('app');
+    if (appEl) appEl.innerHTML = storeShell(inner, r);
+  } catch(e) {
+    location.reload(true);
+  }
+};
+
 async function render() {
   window.__APP_MOUNTED__ = true;
   const mySeq = ++renderSeq;
@@ -138,8 +150,8 @@ async function render() {
   const isNewPage = !lastPath || lastPath !== r.path;
 
   // Cleanup active timers before re-render
-  A.pauseHero();
-  A.pauseTrust();
+  if (A && typeof A.pauseHero === 'function') A.pauseHero();
+  if (A && typeof A.pauseTrust === 'function') A.pauseTrust();
 
   if (isNewPage) {
     startRouteProgress();
@@ -151,13 +163,20 @@ async function render() {
 
   // Nếu tải trang lần đầu, render khung skeleton ngay lập tức tránh màn hình trắng
   if (!lastPath) {
-    $('#app').innerHTML = storeShell(
-      `<div class="wrap" style="padding:20px 16px 60px">
-        <div class="skel" style="height:28px;width:240px;margin-bottom:16px"></div>
-        ${renderSkeletonGrid(4)}
-      </div>`,
-      r,
-    );
+    try {
+      const appEl = document.getElementById('app');
+      if (appEl) {
+        appEl.innerHTML = storeShell(
+          `<div class="wrap" style="padding:20px 16px 60px">
+            <div class="skel" style="height:28px;width:240px;margin-bottom:16px"></div>
+            ${typeof renderSkeletonGrid === 'function' ? renderSkeletonGrid(4) : ''}
+          </div>`,
+          r,
+        );
+      }
+    } catch (e) {
+      console.warn('[Storefront] Skeleton render warn:', e);
+    }
   }
 
   try {
