@@ -127,13 +127,15 @@ let renderSeq = 0;
 
 window.__RESCUE_MOUNT__ = async function() {
   window.__APP_MOUNTED__ = true;
-  const r = route();
+  const r = typeof route === 'function' ? route() : { path: '/', parts: [''], q: {} };
   try {
     const inner = await viewHome();
     const appEl = document.getElementById('app');
-    if (appEl) appEl.innerHTML = storeShell(inner, r);
+    if (appEl && typeof storeShell === 'function') {
+      appEl.innerHTML = storeShell(inner, r);
+    }
   } catch(e) {
-    location.reload(true);
+    console.warn('[RescueMount] Error handled cleanly:', e);
   }
 };
 

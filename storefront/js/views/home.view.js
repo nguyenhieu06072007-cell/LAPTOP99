@@ -10,14 +10,14 @@ async function viewHome() {
   } catch(e) {}
 
   const hasCache = Boolean(rawList && Array.isArray(rawList) && rawList.length > 0);
-  const fetchTimeout = hasCache ? 1500 : 2500;
+  const fetchTimeout = hasCache ? 800 : 1200;
 
   const [cats, prodsRes, promoRes, newsRes, bannersRes] = await Promise.all([
     ensureCategories().catch(() => []),
-    API.request('/products?limit=60&sort=pop', { timeout: fetchTimeout }).catch(() => ({ data: [] })),
-    API.request('/promotions', { timeout: fetchTimeout }).catch(() => ({ data: [] })),
-    API.request('/news', { timeout: fetchTimeout }).catch(() => ({ data: [] })),
-    API.request('/banners?t=' + Date.now(), { timeout: fetchTimeout }).catch(() => ({ data: [] })),
+    API.request('/products?limit=60&sort=pop', { method: 'GET', silent: true, timeout: fetchTimeout }).catch(() => ({ data: [] })),
+    API.request('/promotions', { method: 'GET', silent: true, timeout: fetchTimeout }).catch(() => ({ data: [] })),
+    API.request('/news', { method: 'GET', silent: true, timeout: fetchTimeout }).catch(() => ({ data: [] })),
+    API.request('/banners?t=' + Date.now(), { method: 'GET', silent: true, timeout: fetchTimeout }).catch(() => ({ data: [] })),
   ]);
 
   if (prodsRes && Array.isArray(prodsRes.data) && prodsRes.data.length) {
@@ -29,22 +29,22 @@ async function viewHome() {
 
   let all = (rawList || []).map(mapProduct).filter(Boolean);
   if (!all.length) {
-    // Fallback tức thì nếu Render đang khởi động lần đầu
     all = [
       mapProduct({ id: 1, name: 'MacBook Air M3 13.6 inch (8-Core CPU / 8-Core GPU / 16GB / 256GB SSD)', brand: 'Apple', category_id: 3, price: 27990000, sale_price: 26490000, stock_quantity: 15, thumbnail: '/uploads/products/real-macbook-pro.jpg', cpu_model: 'Apple M3', ram_gb: 16, storage_gb: 256, screen_size_inch: 13.6, refresh_rate_hz: 60, weight_kg: 1.24 }),
       mapProduct({ id: 2, name: 'Laptop ASUS ROG Strix G16 G614JVR i9-14900HX 16GB 1TB RTX 4060 240Hz', brand: 'ASUS', category_id: 2, price: 42990000, sale_price: 39490000, stock_quantity: 8, thumbnail: '/uploads/products/real-asus-rog.jpg', cpu_model: 'Intel Core i9-14900HX', ram_gb: 16, storage_gb: 1024, screen_size_inch: 16, refresh_rate_hz: 240, weight_kg: 2.5 }),
       mapProduct({ id: 3, name: 'Laptop Lenovo Legion 5 16IRX9 i7-14650HX 16GB 512GB RTX 4060 165Hz', brand: 'Lenovo', category_id: 2, price: 34990000, sale_price: 32490000, stock_quantity: 12, thumbnail: '/uploads/products/real-lenovo-legion.jpg', cpu_model: 'Intel Core i7-14650HX', ram_gb: 16, storage_gb: 512, screen_size_inch: 16, refresh_rate_hz: 165, weight_kg: 2.3 }),
       mapProduct({ id: 4, name: 'Laptop Dell Inspiron 14 5440 i5-1334U 16GB 512GB 14 inch FHD+', brand: 'Dell', category_id: 1, price: 18990000, sale_price: 16990000, stock_quantity: 20, thumbnail: '/uploads/products/real-dell-inspiron.jpg', cpu_model: 'Intel Core i5-1334U', ram_gb: 16, storage_gb: 512, screen_size_inch: 14, refresh_rate_hz: 60, weight_kg: 1.54 }),
-      mapProduct({ id: 5, name: 'Laptop Acer Aspire Lite 14 i3-1215U 8GB 512GB 14 inch WUXGA', brand: 'Acer', category_id: 5, price: 11490000, sale_price: 9990000, stock_quantity: 25, thumbnail: '/uploads/products/real-dell-inspiron.jpg', cpu_model: 'Intel Core i3-1215U', ram_gb: 8, storage_gb: 512, screen_size_inch: 14, refresh_rate_hz: 60, weight_kg: 1.45 })
+      mapProduct({ id: 5, name: 'Laptop Acer Aspire Lite 14 i3-1215U 8GB 512GB 14 inch WUXGA', brand: 'Acer', category_id: 5, price: 11490000, sale_price: 9990000, stock_quantity: 25, thumbnail: '/uploads/products/real-dell-inspiron.jpg', cpu_model: 'Intel Core i3-1215U', ram_gb: 8, storage_gb: 512, screen_size_inch: 14, refresh_rate_hz: 60, weight_kg: 1.45 }),
+      mapProduct({ id: 6, name: 'Laptop HP Envy x360 14-fc0088TU Ultra 7-155U 16GB 512GB 2.8K OLED Cảm ứng', brand: 'HP', category_id: 3, price: 28990000, sale_price: 26990000, stock_quantity: 10, thumbnail: '/uploads/products/real-dell-inspiron.jpg', cpu_model: 'Intel Core Ultra 7 155U', ram_gb: 16, storage_gb: 512, screen_size_inch: 14, refresh_rate_hz: 120, weight_kg: 1.39 })
     ].filter(Boolean);
   }
 
   cache.products = all;
-  const promos = promoRes.data || [];
+  const promos = (promoRes && promoRes.data) || [];
   cache.promos = promos;
-  const news = (newsRes.data || []).slice(0, 6);
+  const news = ((newsRes && newsRes.data) || []).slice(0, 6);
   cache.news = news;
-  const dbBanners = bannersRes.data || [];
+  const dbBanners = (bannersRes && bannersRes.data) || [];
   cache.banners = dbBanners;
 
   // Phân nhóm sản phẩm thực tế từ CSDL MySQL

@@ -25,6 +25,9 @@ const API = {
   },
 
   async request(path, options = {}) {
+    const isGet = !options.method || options.method === 'GET';
+    const isSilent = options.silent !== undefined ? Boolean(options.silent) : isGet;
+
     const url = this.BASE_URL + path;
     const headers = {
       'Content-Type': 'application/json',
@@ -55,7 +58,7 @@ const API = {
 
       if (!res.ok) {
         const msg = (data && data.error && data.error.message) || (data && data.message) || ('Lỗi máy chủ (' + res.status + ')');
-        if (!options.silent && typeof toast === 'function') toast(msg, 1);
+        if (!isSilent && typeof toast === 'function') toast(msg, 1);
         const err = new Error(msg);
         err.status = res.status;
         err.data = data;
@@ -66,7 +69,7 @@ const API = {
     } catch (err) {
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
         const netMsg = 'Không kết nối được máy chủ (' + this.BASE_URL + ')';
-        if (!options.silent && typeof toast === 'function') toast(netMsg, 1);
+        if (!isSilent && typeof toast === 'function') toast(netMsg, 1);
         throw new Error(netMsg);
       }
       throw err;

@@ -814,13 +814,18 @@ const ClientModel = {
   },
 
   async getPublishedNews() {
-    const [rows] = await pool.query(`
-      SELECT id, title, tag, source_name, external_url, image_url, body, is_published, created_at
-      FROM news
-      WHERE is_published = 1
-      ORDER BY created_at DESC
-    `);
-    return rows;
+    try {
+      const [rows] = await pool.query(`
+        SELECT id, title, tag, source_name, external_url, image_url, body, is_published, created_at
+        FROM news
+        WHERE is_published = 1
+        ORDER BY created_at DESC
+      `);
+      return rows;
+    } catch (err) {
+      console.warn('[ClientModel] news table query error, returning empty list:', err.message);
+      return [];
+    }
   },
 };
 
