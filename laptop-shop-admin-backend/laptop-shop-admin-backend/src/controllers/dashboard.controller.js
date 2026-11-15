@@ -6,11 +6,12 @@ const DashboardController = {
   getDashboard: asyncHandler(async (req, res) => {
     const withCost = can(req.user.role, 'cost:read');
     const range = req.query.range || '30d';
+    const branch = req.query.branch || '';
+    const category_id = req.query.category_id || '';
 
-    const data = await DashboardModel.getDashboardData({ range, withCost });
+    const data = await DashboardModel.getDashboardData({ range, branch, category_id, withCost });
     res.json({ data });
   }),
 };
 
 module.exports = DashboardController;
-
