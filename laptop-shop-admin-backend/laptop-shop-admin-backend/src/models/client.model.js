@@ -267,8 +267,9 @@ const ClientModel = {
   },
 
   /**
-   * Khách xác nhận thanh toán VietQR Napas 247:
-   * Tự động duyệt thanh toán và chuyển đơn hàng sang trạng thái 'confirmed' (Đã duyệt đơn, chuẩn bị giao)
+   * Khách tự bấm xác nhận đã chuyển khoản VietQR:
+   * Chuyển trạng thái đơn sang 'pending_verification' (Chờ kế toán đối soát sao kê MB Bank),
+   * KHÔNG tự động duyệt xuất kho để phòng chống gian lận (Anti-fraud) khi tiền chưa vào tài khoản.
    */
   async confirmCustomerOrderPayment(customerId, orderCode, bankInfo = '') {
     const [[order]] = await pool.query(
@@ -284,24 +285,24 @@ const ClientModel = {
     const updatedNote = [
       order.notes,
       bankInfo
-        ? `[TỰ ĐỘNG XÁC NHẬN THANH TOÁN VIETQR: ${bankInfo} - Hệ thống tự động khớp lệnh Napas 24/7]`
-        : '[TỰ ĐỘNG XÁC NHẬN THANH TOÁN VIETQR: Đã nhận tiền vào MB Bank 6306072007 (NGUYEN VAN HIEU)]',
+        ? `[KHÁCH HÀNG BÁO ĐÃ CHUYỂN KHOẢN: ${bankInfo} - Đang chờ kế toán đối soát sao kê ngân hàng]`
+        : '[KHÁCH HÀNG BÁO ĐÃ CHUYỂN KHOẢN: Đang chờ kế toán đối soát biến động số dư MB Bank 6306072007 (NGUYEN VAN HIEU)]',
     ]
       .filter(Boolean)
       .join(' | ');
 
     await pool.query(
-      "UPDATE orders SET payment_status = 'paid', payment_verification_status = 'verified', status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END, net_received = ?, notes = ?, updated_at = NOW() WHERE id = ?",
-      [order.total_amount, updatedNote, order.id],
+      "UPDATE orders SET payment_status = 'pending_verification', payment_verification_status = 'pending_verification', notes = ?, updated_at = NOW() WHERE id = ?",
+      [updatedNote, order.id],
     );
 
     return {
       code: order.code,
-      paid: true,
-      payment_status: 'paid',
-      verification_status: 'verified',
-      status: order.status === 'pending' ? 'confirmed' : order.status,
-      message: 'Xác nhận thanh toán VietQR thành công! Đơn hàng đã được duyệt tự động và chuyển sang bước Đã duyệt đơn chuẩn bị giao.',
+      paid: false,
+      payment_status: 'pending_verification',
+      verification_status: 'pending_verification',
+      status: order.status,
+      message: 'Đã ghi nhận thông báo chuyển khoản! Kế toán Laptop99 đang đối soát sao kê ngân hàng và sẽ duyệt đơn trong 5-15 phút.',
     };
   },
 

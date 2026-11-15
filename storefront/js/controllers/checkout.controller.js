@@ -43,19 +43,10 @@ const CheckoutController = {
     const btn = $('#btn-confirm-qr');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = 'Đang xác nhận thanh toán...';
+      btn.textContent = 'Đang gửi thông báo cho kế toán...';
     }
     const bankKey = cache.qrBank || 'MB';
     const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.MB;
-
-    // Tìm tổng tiền đơn hàng để cập nhật trạng thái
-    const ordObj =
-      (Array.isArray(db.orders) && db.orders.find((x) => (x.code || x.id) === orderCode)) ||
-      (cache.lastOrder && (cache.lastOrder.code === orderCode || cache.lastOrder.id === orderCode)
-        ? cache.lastOrder
-        : null) ||
-      (Array.isArray(cache.myOrders) && cache.myOrders.find((x) => (x.code || x.id) === orderCode));
-    const targetAmount = ordObj ? (ordObj.total || ordObj.totalAmount || ordObj.total_amount || 0) : 0;
 
     try {
       await (typeof OrderService !== 'undefined'
@@ -67,12 +58,28 @@ const CheckoutController = {
       console.warn('Backend confirm payment fallback locally:', err);
     }
 
-    // Tự động chuyển ngay sang trạng thái ĐÃ DUYỆT ĐƠN (Chuẩn bị giao)
-    this.applyPaidState(orderCode, targetAmount);
+    // Nghiệp vụ bảo vệ tiền hàng (Anti-fraud): Ghi nhận khách báo đã chuyển khoản, chờ kế toán đối soát sao kê
+    this.applyPendingVerificationState(orderCode);
     closeModal();
-    this.onPaymentSuccess(orderCode, targetAmount);
-    toast('✓ Thanh toán thành công! Đơn hàng đã được duyệt tự động và chuyển sang bước Đã duyệt đơn chuẩn bị giao.', 'ok');
+    toast('📋 Đã ghi nhận thông báo chuyển khoản! Kế toán Laptop99 đang đối soát sao kê MB Bank và sẽ duyệt đơn trong 5-15 phút.', 'info');
     render();
+  },
+
+  applyPendingVerificationState(orderCode) {
+    const updateOrd = (ord) => {
+      if (!ord) return;
+      ord.paid = false;
+      ord.payment_status = 'pending_verification';
+      ord.payment_verification_status = 'pending_verification';
+      ord.payment_verification = 'pending_verification';
+      ord.raw_status = ord.raw_status || 'pending';
+      ord.status = ord.status || 'pending';
+      ord.status_text = 'Chờ kế toán đối soát';
+    };
+    if (Array.isArray(db.orders)) updateOrd(db.orders.find((x) => (x.code || x.id) === orderCode));
+    if (cache.lastOrder && (cache.lastOrder.code === orderCode || cache.lastOrder.id === orderCode)) updateOrd(cache.lastOrder);
+    if (Array.isArray(cache.myOrders)) updateOrd(cache.myOrders.find((x) => (x.code || x.id) === orderCode));
+    save();
   },
 
   _paymentPollTimer: null,

@@ -234,6 +234,31 @@ function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
     </div>`;
   }
 
+  const isVerifying =
+    ord &&
+    !isPaid &&
+    (ord.payment_verification === 'pending_verification' ||
+      ord.payment_verification_status === 'pending_verification' ||
+      ord.payment_status === 'pending_verification');
+
+  if (isVerifying) {
+    return `<div id="vietqr-box" style="margin-top:12px;background:linear-gradient(135deg,#FEF3C7 0%,#FDE68A 100%);border:2px solid #F59E0B;border-radius:14px;padding:22px;text-align:center;box-shadow:0 8px 24px rgba(245,158,11,0.15)">
+      <div style="width:56px;height:56px;border-radius:50%;background:#F59E0B;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;margin-bottom:12px;box-shadow:0 4px 14px rgba(245,158,11,0.4)">
+        ⏳
+      </div>
+      <h3 style="font-size:1.2rem;font-weight:800;color:#92400E;margin-bottom:6px">ĐANG CHỜ KẾ TOÁN ĐỐI SOÁT SAO KÊ NGÂN HÀNG</h3>
+      <p style="color:#B45309;font-size:.88rem;margin-bottom:14px;line-height:1.5">
+        Hệ thống đã nhận được thông báo chuyển khoản <b>${vnd(amount)}</b> của bạn.<br>
+        Kế toán viên đang đối soát biến động số dư tài khoản <b>MB Bank 6306072007 (NGUYEN VAN HIEU)</b>.<br>
+        Đơn hàng sẽ tự động chuyển sang <b>Đã duyệt đơn (Chuẩn bị giao)</b> ngay khi tiền nổi vào tài khoản (thường trong 5-15 phút).
+      </p>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button type="button" class="btn sm" style="background:#fff;border:1px solid #D97706;color:#92400E;font-weight:700" onclick="A.openBankQrModal('${esc(orderCode)}', ${Math.round(amount || 0)})">📱 Xem lại mã VietQR</button>
+        <button type="button" id="btn-simulate-pay" class="btn secondary" style="background:#1D4ED8;color:#fff;border:none;font-weight:700;font-size:12px;padding:8px 14px" onclick="A.simulatePaid('${esc(orderCode)}', ${Math.round(amount || 0)})" title="Mô phỏng ngân hàng bắn Webhook nhận được tiền thật">⚡ Giả lập Quét QR Thành công (Webhook)</button>
+      </div>
+    </div>`;
+  }
+
   const bankKey = cache.qrBank || 'MB';
   const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.MB;
   const qrUrl = buildVietQrUrl(bankKey, amount, memo);
