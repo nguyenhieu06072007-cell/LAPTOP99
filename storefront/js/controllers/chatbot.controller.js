@@ -9,10 +9,12 @@ const ChatbotController = {
     isInitialized: false,
     messages: [],
     suggestions: [
-      'Tư vấn laptop dưới 20 triệu',
-      'Laptop học lập trình',
-      'So sánh hai sản phẩm',
-      'Chính sách bảo hành',
+      '🎯 Tư vấn laptop dưới 20 triệu',
+      '💻 Laptop học lập trình & CNTT',
+      '🎮 Laptop Gaming & Đồ họa',
+      '⚖️ So sánh MacBook vs Windows',
+      '🛡️ Chính sách bảo hành & đổi trả',
+      '🔄 Thu cũ đổi mới trợ giá cao',
     ],
     isTyping: false,
     currentProduct: null,
@@ -32,6 +34,15 @@ const ChatbotController = {
       }
     } catch (e) {}
 
+    const defaultPrompts = [
+      '🎯 Tư vấn laptop dưới 20 triệu',
+      '💻 Laptop học lập trình & CNTT',
+      '🎮 Laptop Gaming & Đồ họa',
+      '⚖️ So sánh MacBook vs Windows',
+      '🛡️ Chính sách bảo hành & đổi trả',
+      '🔄 Thu cũ đổi mới trợ giá cao',
+    ];
+
     // Lời chào mở đầu chuẩn mực nếu phiên hội thoại mới
     if (!this.chatState.messages || this.chatState.messages.length === 0) {
       this.chatState.messages = [
@@ -44,10 +55,14 @@ const ChatbotController = {
             '- ⚖️ **So sánh trực tiếp 2–3 máy** theo bảng thông số thực tế từ kho\n' +
             '- 📦 **Tra cứu đơn hàng** & chính sách bảo hành S/N, đổi trả 15 ngày\n\n' +
             'Bạn đang quan tâm đến dòng máy hoặc mức giá nào ạ?',
+          suggestions: defaultPrompts,
           products: [],
           time: this.formatChatTime(new Date()),
         },
       ];
+    } else if (this.chatState.messages.length === 1 && this.chatState.messages[0].sender === 'bot') {
+      // Đảm bảo tin chào ban đầu luôn có gợi ý câu hỏi hiển thị trực tiếp
+      this.chatState.messages[0].suggestions = defaultPrompts;
     }
 
     this.bindKeyboardEvents();
@@ -194,20 +209,24 @@ const ChatbotController = {
   },
 
   resetChatbot() {
+    const defaultPrompts = [
+      '🎯 Tư vấn laptop dưới 20 triệu',
+      '💻 Laptop học lập trình & CNTT',
+      '🎮 Laptop Gaming & Đồ họa',
+      '⚖️ So sánh MacBook vs Windows',
+      '🛡️ Chính sách bảo hành & đổi trả',
+      '🔄 Thu cũ đổi mới trợ giá cao',
+    ];
     this.chatState.messages = [
       {
         sender: 'bot',
         text: 'Đoạn trò chuyện đã được làm mới! ✨ Em có thể giúp gì cho Quý khách về cấu hình laptop, ngân sách hoặc đơn hàng hôm nay?',
+        suggestions: defaultPrompts,
         products: [],
         time: this.formatChatTime(new Date()),
       },
     ];
-    this.chatState.suggestions = [
-      'Tư vấn laptop dưới 20 triệu',
-      'Laptop học lập trình',
-      'So sánh hai sản phẩm',
-      'Chính sách bảo hành',
-    ];
+    this.chatState.suggestions = defaultPrompts;
     this.chatState.lastFailedPrompt = null;
     this.clearUnreadBadge();
     try {
@@ -281,14 +300,16 @@ const ChatbotController = {
       );
 
       if (res && res.success) {
+        const nextSuggestions = (res.suggestions && res.suggestions.length > 0) ? res.suggestions : null;
         this.chatState.messages.push({
           sender: 'bot',
           text: res.reply,
           products: res.products || [],
+          suggestions: nextSuggestions,
           time: this.formatChatTime(new Date()),
         });
-        if (res.suggestions && res.suggestions.length > 0) {
-          this.chatState.suggestions = res.suggestions;
+        if (nextSuggestions) {
+          this.chatState.suggestions = nextSuggestions;
         }
 
         // Nếu khung chat đang đóng, kích hoạt unread badge nhún 1 lần
@@ -308,6 +329,12 @@ const ChatbotController = {
           sender: 'bot',
           text: fallbackReply,
           products: [],
+          suggestions: [
+            '🎯 Tư vấn laptop dưới 20 triệu',
+            '💻 Laptop học lập trình & CNTT',
+            '🎮 Laptop Gaming & Đồ họa',
+            '⚖️ So sánh MacBook vs Windows',
+          ],
           time: this.formatChatTime(new Date()),
         });
       } else {
@@ -363,7 +390,9 @@ const ChatbotController = {
     if (!container) return;
 
     let html = '';
-    this.chatState.messages.forEach((msg) => {
+    const lastBotIndex = this.chatState.messages.map((m) => m.sender).lastIndexOf('bot');
+
+    this.chatState.messages.forEach((msg, idx) => {
       const isBot = msg.sender === 'bot';
       const formattedText = this.formatMarkdown(msg.text);
 
@@ -405,6 +434,33 @@ const ChatbotController = {
         </div>`;
       }
 
+      // Render danh sách câu hỏi gợi ý nhanh trực tiếp trong đoạn chat (In-chat Suggestion Buttons)
+      let suggestionsHtml = '';
+      const promptList = (msg.suggestions && msg.suggestions.length > 0)
+        ? msg.suggestions
+        : (isBot && idx === lastBotIndex && this.chatState.suggestions && this.chatState.suggestions.length > 0)
+          ? this.chatState.suggestions
+          : null;
+
+      if (isBot && promptList && promptList.length > 0) {
+        suggestionsHtml = `
+          <div class="chatbot-inchat-suggestions">
+            <div class="chatbot-inchat-title">
+              <span class="inchat-title-icon">💡</span>
+              <span>Gợi ý câu hỏi nhanh (nhấn để hỏi ngay):</span>
+            </div>
+            <div class="chatbot-inchat-grid">
+              ${promptList.map((s) => `
+                <button type="button" class="chatbot-inchat-btn" onclick="A.selectQuickPrompt('${esc(s)}')">
+                  <span class="inchat-btn-dot">⚡</span>
+                  <span class="inchat-btn-label">${esc(s)}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
       // Nút thử lại nếu tin nhắn bị lỗi
       let retryHtml = '';
       if (msg.isError && this.chatState.lastFailedPrompt) {
@@ -430,6 +486,7 @@ const ChatbotController = {
           <div class="chatbot-bubble">
             <div class="chatbot-bubble-text">${formattedText}</div>
             ${productsHtml}
+            ${suggestionsHtml}
             ${retryHtml}
           </div>
           <span class="chatbot-time">${msg.time || ''}</span>
@@ -439,24 +496,10 @@ const ChatbotController = {
 
     container.innerHTML = html;
 
-    // Render các nút gợi ý câu hỏi 1 chạm
+    // Luôn ẩn hoàn toàn thanh cuộn ngang cũ
     if (quickWrap) {
-      if (this.chatState.suggestions && this.chatState.suggestions.length > 0) {
-        quickWrap.innerHTML = `
-          <div class="chatbot-quick-scroll">
-            ${this.chatState.suggestions
-              .map(
-                (s) => `
-              <button type="button" class="chatbot-quick-pill" onclick="A.selectQuickPrompt('${esc(s)}')">${esc(s)}</button>
-            `,
-              )
-              .join('')}
-          </div>
-        `;
-        quickWrap.style.display = 'block';
-      } else {
-        quickWrap.style.display = 'none';
-      }
+      quickWrap.innerHTML = '';
+      quickWrap.style.display = 'none';
     }
 
     this.scrollChatBottom();

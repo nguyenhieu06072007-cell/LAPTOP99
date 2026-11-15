@@ -5920,41 +5920,82 @@ img.cmp-img {
   color: #FFFFFF;
 }
 
-/* Quick Prompts Row */
+/* In-Chat Quick Prompt Suggestions (Hiển thị ngay trong đoạn chat, bỏ thanh ngang cuộn) */
 .chatbot-quick-wrap {
-  padding: 8px 12px;
-  background: #FFFFFF;
-  border-top: 1px solid #E5E3DD;
+  display: none !important;
 }
 
-.chatbot-quick-scroll {
+.chatbot-inchat-suggestions {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(226, 232, 240, 0.95);
+  width: 100%;
+}
+
+.chatbot-inchat-title {
   display: flex;
+  align-items: center;
   gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
-
-.chatbot-quick-scroll::-webkit-scrollbar { display: none; }
-
-.chatbot-quick-pill {
-  white-space: nowrap;
-  background: #F7F6F2;
-  border: 1px solid #E5E3DD;
-  color: #14243B;
   font-size: 0.74rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all 0.14s ease;
-  flex-shrink: 0;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+  letter-spacing: -0.2px;
 }
 
-.chatbot-quick-pill:hover {
-  background: #F4EAD8;
-  border-color: #C5A46D;
-  color: #80551F;
+.chatbot-inchat-title .inchat-title-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.chatbot-inchat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chatbot-inchat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #1E293B;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 6px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.16s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  user-select: none;
+  font-family: inherit;
+}
+
+.chatbot-inchat-btn .inchat-btn-dot {
+  font-size: 0.72rem;
+  color: #DC2626;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.chatbot-inchat-btn .inchat-btn-label {
+  display: inline-block;
+}
+
+.chatbot-inchat-btn:hover {
+  background: #FEF2F2;
+  border-color: #DC2626;
+  color: #DC2626;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.12);
+}
+
+.chatbot-inchat-btn:active {
+  transform: translateY(0);
+  background: #FEE2E2;
 }
 
 /* Footer Input */

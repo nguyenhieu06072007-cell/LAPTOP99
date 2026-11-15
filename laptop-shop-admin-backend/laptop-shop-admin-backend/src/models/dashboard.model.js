@@ -64,6 +64,9 @@ const DashboardModel = {
     } else if (range === 'year') {
       dateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 365 DAY)';
       prevDateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 730 DAY) AND ordered_at < DATE_SUB(NOW(), INTERVAL 365 DAY)';
+    } else if (range === 'all') {
+      dateFilter = '1=1';
+      prevDateFilter = '1=1';
     } else {
       // 30 days
       dateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
@@ -130,8 +133,8 @@ const DashboardModel = {
       // 2.1 Thống kê đơn hàng chính
       const [[os]] = await pool.query(`
         SELECT
-          COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS total_revenue,
-          COALESCE(SUM(CASE WHEN status = 'delivered' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS delivered_revenue,
+          COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status IN ('paid', 'pending_verification') THEN total_amount ELSE 0 END), 0) AS total_revenue,
+          COALESCE(SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END), 0) AS delivered_revenue,
           COALESCE(SUM(CASE WHEN status != 'cancelled' THEN 1 ELSE 0 END), 0) AS total_orders,
           COALESCE(SUM(status = 'pending'), 0) AS new_orders
         FROM orders
@@ -236,14 +239,14 @@ const DashboardModel = {
           });
         }
         revenueTimeline = days;
-      } else if (range === 'year') {
+      } else if (range === 'year' || range === 'all') {
         const [monthly] = await pool.query(`
           SELECT 
             DATE_FORMAT(ordered_at, 'T%m') as month_label,
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE ordered_at >= DATE_SUB(NOW(), INTERVAL 365 DAY) AND status != 'cancelled' AND payment_status = 'paid'
+          WHERE ${dateFilter} AND status != 'cancelled' AND payment_status IN ('paid', 'pending_verification')
           GROUP BY month_label
           ORDER BY month_label ASC
         `);

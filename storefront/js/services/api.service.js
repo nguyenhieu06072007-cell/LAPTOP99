@@ -76,7 +76,7 @@ const API = {
     }
   },
 
-  get(path, silent = false) {
+  get(path, silent = true) {
     return this.request(path, { method: 'GET', silent });
   },
 

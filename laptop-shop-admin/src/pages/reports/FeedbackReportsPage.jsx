@@ -419,6 +419,7 @@ export default function FeedbackReportsPage() {
               { id: '30d', label: '30 ngày' },
               { id: 'quarter', label: 'Quý này' },
               { id: 'year', label: 'Cả năm' },
+              { id: 'all', label: 'Toàn thời gian' },
             ].map((t) => (
               <button
                 key={t.id}
