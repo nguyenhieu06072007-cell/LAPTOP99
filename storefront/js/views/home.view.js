@@ -3,21 +3,25 @@
    ========================================================================== */
 
 async function viewHome() {
+  let rawList = null;
+  try {
+    const cached = localStorage.getItem('laptop99_cached_prods');
+    if (cached) rawList = JSON.parse(cached);
+  } catch(e) {}
+
+  const hasCache = Boolean(rawList && Array.isArray(rawList) && rawList.length > 0);
+  const fetchTimeout = hasCache ? 1500 : 2500;
+
   const [cats, prodsRes, promoRes, newsRes, bannersRes] = await Promise.all([
     ensureCategories().catch(() => []),
-    API.get('/products?limit=60&sort=pop', true).catch(() => ({ data: [] })),
-    API.get('/promotions', true).catch(() => ({ data: [] })),
-    API.get('/news', true).catch(() => ({ data: [] })),
-    API.get('/banners?t=' + Date.now(), true).catch(() => ({ data: [] })),
+    API.request('/products?limit=60&sort=pop', { timeout: fetchTimeout }).catch(() => ({ data: [] })),
+    API.request('/promotions', { timeout: fetchTimeout }).catch(() => ({ data: [] })),
+    API.request('/news', { timeout: fetchTimeout }).catch(() => ({ data: [] })),
+    API.request('/banners?t=' + Date.now(), { timeout: fetchTimeout }).catch(() => ({ data: [] })),
   ]);
 
-  let rawList = (prodsRes && Array.isArray(prodsRes.data) && prodsRes.data.length) ? prodsRes.data : null;
-  if (!rawList) {
-    try {
-      const cached = localStorage.getItem('laptop99_cached_prods');
-      if (cached) rawList = JSON.parse(cached);
-    } catch(e) {}
-  } else {
+  if (prodsRes && Array.isArray(prodsRes.data) && prodsRes.data.length) {
+    rawList = prodsRes.data;
     try {
       localStorage.setItem('laptop99_cached_prods', JSON.stringify(rawList));
     } catch(e) {}

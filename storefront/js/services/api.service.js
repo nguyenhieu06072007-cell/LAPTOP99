@@ -36,7 +36,7 @@ const API = {
     }
 
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timeoutId = controller ? setTimeout(() => controller.abort(), options.timeout || 4500) : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), options.timeout || 2500) : null;
 
     try {
       const res = await fetch(url, {
