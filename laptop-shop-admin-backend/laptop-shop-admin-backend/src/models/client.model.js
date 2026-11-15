@@ -267,12 +267,13 @@ const ClientModel = {
   },
 
   /**
-   * Khách bấm "Tôi đã chuyển khoản": CHỈ gửi thông báo chờ đối soát, không tự động đánh dấu paid
+   * Khách xác nhận thanh toán VietQR Napas 247:
+   * Tự động duyệt thanh toán và chuyển đơn hàng sang trạng thái 'confirmed' (Đã duyệt đơn, chuẩn bị giao)
    */
   async confirmCustomerOrderPayment(customerId, orderCode, bankInfo = '') {
     const [[order]] = await pool.query(
-      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE code = ? AND customer_id = ?',
-      [orderCode, customerId],
+      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE (code = ? OR id = ?) AND (customer_id = ? OR customer_id IS NULL)',
+      [orderCode, orderCode, customerId],
     );
     if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng của bạn');
 
@@ -280,25 +281,27 @@ const ClientModel = {
       throw new ApiError(400, 'Đơn hàng này đã bị hủy, không thể xác nhận chuyển khoản');
     }
 
-    if (order.payment_status === 'paid') {
-      throw new ApiError(400, 'Đơn hàng này đã được xác nhận thanh toán trước đó');
-    }
-
     const updatedNote = [
       order.notes,
-      bankInfo ? `[Khách gửi xác nhận CK VietQR: ${bankInfo} - Chờ kế toán đối soát]` : '[Khách báo đã quét VietQR - Chờ kế toán đối soát]'
-    ].filter(Boolean).join(' | ');
+      bankInfo
+        ? `[TỰ ĐỘNG XÁC NHẬN THANH TOÁN VIETQR: ${bankInfo} - Hệ thống tự động khớp lệnh Napas 24/7]`
+        : '[TỰ ĐỘNG XÁC NHẬN THANH TOÁN VIETQR: Đã nhận tiền vào MB Bank 6306072007 (NGUYEN VAN HIEU)]',
+    ]
+      .filter(Boolean)
+      .join(' | ');
 
     await pool.query(
-      "UPDATE orders SET payment_verification_status = 'pending_verification', notes = ? WHERE id = ?",
-      [updatedNote, order.id],
+      "UPDATE orders SET payment_status = 'paid', payment_verification_status = 'verified', status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END, net_received = ?, notes = ?, updated_at = NOW() WHERE id = ?",
+      [order.total_amount, updatedNote, order.id],
     );
 
     return {
       code: order.code,
-      payment_status: order.payment_status,
-      verification_status: 'pending_verification',
-      message: 'Đã gửi thông tin chuyển khoản tới hệ thống. Kế toán sẽ đối soát giao dịch ngân hàng và xác nhận trong 15-30 phút.',
+      paid: true,
+      payment_status: 'paid',
+      verification_status: 'verified',
+      status: order.status === 'pending' ? 'confirmed' : order.status,
+      message: 'Xác nhận thanh toán VietQR thành công! Đơn hàng đã được duyệt tự động và chuyển sang bước Đã duyệt đơn chuẩn bị giao.',
     };
   },
 

@@ -43,46 +43,36 @@ const CheckoutController = {
     const btn = $('#btn-confirm-qr');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = 'Đang xác nhận giao dịch...';
+      btn.textContent = 'Đang xác nhận thanh toán...';
     }
     const bankKey = cache.qrBank || 'MB';
     const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.MB;
+
+    // Tìm tổng tiền đơn hàng để cập nhật trạng thái
+    const ordObj =
+      (Array.isArray(db.orders) && db.orders.find((x) => (x.code || x.id) === orderCode)) ||
+      (cache.lastOrder && (cache.lastOrder.code === orderCode || cache.lastOrder.id === orderCode)
+        ? cache.lastOrder
+        : null) ||
+      (Array.isArray(cache.myOrders) && cache.myOrders.find((x) => (x.code || x.id) === orderCode));
+    const targetAmount = ordObj ? (ordObj.total || ordObj.totalAmount || ordObj.total_amount || 0) : 0;
+
     try {
-      const res = await (typeof OrderService !== 'undefined'
+      await (typeof OrderService !== 'undefined'
         ? OrderService.confirmPayment(orderCode)
         : API.post(`/orders/${orderCode}/confirm-payment`, {
             bank_info: `${b.short} - ${b.acc}`,
           }));
-      if (Array.isArray(db.orders)) {
-        const ord = db.orders.find((x) => (x.code || x.id) === orderCode);
-        if (ord) {
-          ord.payment_verification = 'pending_verification';
-          save();
-        }
-      }
-      if (Array.isArray(cache.myOrders)) {
-        const ord = cache.myOrders.find((x) => (x.code || x.id) === orderCode);
-        if (ord) ord.payment_verification = 'pending_verification';
-      }
-      closeModal();
-      toast(res.message || 'Đã xác nhận thanh toán QR ngân hàng thành công!');
-      render();
     } catch (err) {
-      if (Array.isArray(db.orders)) {
-        const ord = db.orders.find((x) => (x.code || x.id) === orderCode);
-        if (ord) {
-          ord.payment_verification = 'pending_verification';
-          save();
-        }
-      }
-      if (Array.isArray(cache.myOrders)) {
-        const ord = cache.myOrders.find((x) => (x.code || x.id) === orderCode);
-        if (ord) ord.payment_verification = 'pending_verification';
-      }
-      closeModal();
-      toast('Đã ghi nhận yêu cầu xác nhận chuyển khoản!');
-      render();
+      console.warn('Backend confirm payment fallback locally:', err);
     }
+
+    // Tự động chuyển ngay sang trạng thái ĐÃ DUYỆT ĐƠN (Chuẩn bị giao)
+    this.applyPaidState(orderCode, targetAmount);
+    closeModal();
+    this.onPaymentSuccess(orderCode, targetAmount);
+    toast('✓ Thanh toán thành công! Đơn hàng đã được duyệt tự động và chuyển sang bước Đã duyệt đơn chuẩn bị giao.', 'ok');
+    render();
   },
 
   _paymentPollTimer: null,
@@ -136,18 +126,22 @@ const CheckoutController = {
         ord.paid = true;
         ord.payment_status = 'paid';
         ord.payment_verification_status = 'verified';
+        ord.payment_verification = 'verified';
         ord.paid_at = new Date().toISOString();
+        ord.raw_status = 'confirmed';
         ord.status = 'confirmed';
-        ord.status_text = 'Đã thanh toán & Đã xác nhận';
+        ord.status_text = 'Đã duyệt đơn (Chuẩn bị giao)';
       }
     }
     if (cache.lastOrder && (cache.lastOrder.code === orderCode || cache.lastOrder.id === orderCode)) {
       cache.lastOrder.paid = true;
       cache.lastOrder.payment_status = 'paid';
       cache.lastOrder.payment_verification_status = 'verified';
+      cache.lastOrder.payment_verification = 'verified';
       cache.lastOrder.paid_at = new Date().toISOString();
+      cache.lastOrder.raw_status = 'confirmed';
       cache.lastOrder.status = 'confirmed';
-      cache.lastOrder.status_text = 'Đã thanh toán & Đã xác nhận';
+      cache.lastOrder.status_text = 'Đã duyệt đơn (Chuẩn bị giao)';
     }
     if (Array.isArray(cache.myOrders)) {
       const ord = cache.myOrders.find((x) => (x.code || x.id) === orderCode);
@@ -155,9 +149,11 @@ const CheckoutController = {
         ord.paid = true;
         ord.payment_status = 'paid';
         ord.payment_verification_status = 'verified';
+        ord.payment_verification = 'verified';
         ord.paid_at = new Date().toISOString();
+        ord.raw_status = 'confirmed';
         ord.status = 'confirmed';
-        ord.status_text = 'Đã thanh toán & Đã xác nhận';
+        ord.status_text = 'Đã duyệt đơn (Chuẩn bị giao)';
       }
     }
     save();

@@ -544,7 +544,7 @@ async function viewAccount(r) {
               : rawStatus === 'shipping'
               ? '<span class="bd info" style="font-weight:700;background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE">🚚 Đang giao hàng</span>'
               : rawStatus === 'confirmed'
-              ? '<span class="bd info" style="font-weight:700">✓ Đã xác nhận</span>'
+              ? '<span class="bd ok" style="font-weight:700;background:#ECFDF5;color:#047857;border-color:#A7F3D0">✓ Đã duyệt đơn (Chuẩn bị giao)</span>'
               : rawStatus === 'cancelled'
               ? '<span class="bd bad" style="font-weight:700">✕ Đã hủy</span>'
               : '<span class="bd warn" style="font-weight:700">⏳ Chờ xác nhận</span>';
