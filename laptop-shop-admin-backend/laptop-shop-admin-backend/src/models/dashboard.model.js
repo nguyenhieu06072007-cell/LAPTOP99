@@ -31,12 +31,6 @@ const DashboardModel = {
         GROUP BY c.id, c.name ORDER BY product_count DESC, c.name`
     );
 
-    const [topSold] = await pool.query(
-      `SELECT id, sku, name, sold_count, stock_quantity, COALESCE(sale_price, price) AS price, cost_price
-         FROM products
-        WHERE deleted_at IS NULL AND sold_count > 0 ORDER BY sold_count DESC LIMIT 10`
-    );
-
     const [topViewed] = await pool.query(
       `SELECT id, sku, name, view_count, sold_count, price FROM products
         WHERE deleted_at IS NULL ORDER BY view_count DESC LIMIT 10`
@@ -48,29 +42,33 @@ const DashboardModel = {
         ORDER BY m.id DESC LIMIT 10`
     );
 
-    // 2. Bộ lọc thời gian cho đơn hàng & so sánh kỳ trước
+    // 2. Bộ lọc thời gian cho đơn hàng theo giờ Việt Nam (UTC+7)
+    // Render Cloud MySQL chạy giờ UTC, cần cộng 7 tiếng để 'today' và các mốc thời gian khớp 100% với giờ thực tế
+    const vnNow = 'CONVERT_TZ(NOW(), "+00:00", "+07:00")';
+    const vnOrderedAt = 'CONVERT_TZ(ordered_at, "+00:00", "+07:00")';
+
     let dateFilter = '1=1';
     let prevDateFilter = '1=1';
 
     if (range === 'today') {
-      dateFilter = 'DATE(ordered_at) = CURDATE()';
-      prevDateFilter = 'DATE(ordered_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
+      dateFilter = `DATE(${vnOrderedAt}) = DATE(${vnNow})`;
+      prevDateFilter = `DATE(${vnOrderedAt}) = DATE_SUB(DATE(${vnNow}), INTERVAL 1 DAY)`;
     } else if (range === '7d') {
-      dateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
-      prevDateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) AND ordered_at < DATE_SUB(NOW(), INTERVAL 7 DAY)';
+      dateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 7 DAY)`;
+      prevDateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 14 DAY) AND ${vnOrderedAt} < DATE_SUB(${vnNow}, INTERVAL 7 DAY)`;
     } else if (range === 'quarter') {
-      dateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)';
-      prevDateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 180 DAY) AND ordered_at < DATE_SUB(NOW(), INTERVAL 90 DAY)';
+      dateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 90 DAY)`;
+      prevDateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 180 DAY) AND ${vnOrderedAt} < DATE_SUB(${vnNow}, INTERVAL 90 DAY)`;
     } else if (range === 'year') {
-      dateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 365 DAY)';
-      prevDateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 730 DAY) AND ordered_at < DATE_SUB(NOW(), INTERVAL 365 DAY)';
+      dateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 365 DAY)`;
+      prevDateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 730 DAY) AND ${vnOrderedAt} < DATE_SUB(${vnNow}, INTERVAL 365 DAY)`;
     } else if (range === 'all') {
       dateFilter = '1=1';
       prevDateFilter = '1=1';
     } else {
       // 30 days
-      dateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
-      prevDateFilter = 'ordered_at >= DATE_SUB(NOW(), INTERVAL 60 DAY) AND ordered_at < DATE_SUB(NOW(), INTERVAL 30 DAY)';
+      dateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 30 DAY)`;
+      prevDateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 60 DAY) AND ${vnOrderedAt} < DATE_SUB(${vnNow}, INTERVAL 30 DAY)`;
     }
 
     if (branch && branch !== 'all') {
@@ -78,6 +76,7 @@ const DashboardModel = {
       prevDateFilter += ` AND branch LIKE ${pool.escape(`%${branch}%`)}`;
     }
 
+    let topSold = [];
     let orderStats = { total_revenue: 0, total_orders: 0, new_orders: 0, total_customers: 0 };
     let recentOrders = [];
     let revenueTimeline = [];
@@ -111,6 +110,8 @@ const DashboardModel = {
     let profitMargins = [];
     let stockByRam = [];
     let stockByStorage = [];
+    let stockByCpu = [];
+    let stockByGpu = [];
     let slowMovingStock = [];
     let customerMetrics = {
       tiers: [],
@@ -130,10 +131,10 @@ const DashboardModel = {
     let promoStats = [];
 
     try {
-      // 2.1 Thống kê đơn hàng chính
+      // 2.1 Thống kê đơn hàng chính từ bảng orders theo bộ lọc thời gian
       const [[os]] = await pool.query(`
         SELECT
-          COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status IN ('paid', 'pending_verification') THEN total_amount ELSE 0 END), 0) AS total_revenue,
+          COALESCE(SUM(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0) AS total_revenue,
           COALESCE(SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END), 0) AS delivered_revenue,
           COALESCE(SUM(CASE WHEN status != 'cancelled' THEN 1 ELSE 0 END), 0) AS total_orders,
           COALESCE(SUM(status = 'pending'), 0) AS new_orders
@@ -143,6 +144,30 @@ const DashboardModel = {
 
       const [[{ total_customers }]] = await pool.query('SELECT COUNT(*) AS total_customers FROM customers');
       orderStats = { ...os, total_customers };
+
+      // 2.1.0 Top sản phẩm bán chạy THẬT 100% từ bảng orders theo đúng khoảng thời gian lọc
+      try {
+        const [realTop] = await pool.query(`
+          SELECT 
+            o.product_id AS id,
+            COALESCE(o.sku, p.sku) AS sku,
+            o.product_name AS name,
+            COALESCE(SUM(o.quantity), COUNT(o.id)) AS sold_count,
+            COALESCE(p.stock_quantity, 0) AS stock_quantity,
+            MAX(COALESCE(o.unit_price, p.price, 0)) AS price,
+            MAX(COALESCE(p.cost_price, 0)) AS cost_price,
+            COALESCE(SUM(o.total_amount), 0) AS total_revenue
+          FROM orders o
+          LEFT JOIN products p ON p.id = o.product_id
+          WHERE ${dateFilter} AND o.status != 'cancelled'
+          GROUP BY o.product_id, COALESCE(o.sku, p.sku), o.product_name, p.stock_quantity
+          ORDER BY sold_count DESC, total_revenue DESC
+          LIMIT 10
+        `);
+        topSold = realTop;
+      } catch (e) {
+        console.warn('Dashboard real topSold error:', e.message);
+      }
 
       // 2.2 So sánh kỳ trước
       try {
@@ -193,45 +218,72 @@ const DashboardModel = {
       `);
       recentOrders = ro;
 
-      // 2.5 Biểu đồ doanh thu theo thời gian
+      // 2.5 Biểu đồ doanh thu theo thời gian khớp giờ Việt Nam
       if (range === 'today') {
         const [hourly] = await pool.query(`
           SELECT 
-            HOUR(ordered_at) as hour_num,
+            HOUR(${vnOrderedAt}) as hour_num,
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE DATE(ordered_at) = CURDATE() AND status != 'cancelled' AND payment_status = 'paid'
-          GROUP BY HOUR(ordered_at)
+          WHERE DATE(${vnOrderedAt}) = DATE(${vnNow}) AND status != 'cancelled'
+          GROUP BY hour_num
           ORDER BY hour_num
         `);
         const hoursMap = {};
         hourly.forEach((h) => { hoursMap[h.hour_num] = h; });
 
-        revenueTimeline = [8, 10, 12, 14, 16, 18, 20, 22].map((h) => ({
-          name: `${h}:00`,
-          doanhThu: Number(hoursMap[h]?.doanhThu || 0),
-          donHang: Number(hoursMap[h]?.donHang || 0),
-        }));
+        const timeSlots = [
+          { name: '00:00', hours: [0, 1] },
+          { name: '02:00', hours: [2, 3] },
+          { name: '04:00', hours: [4, 5] },
+          { name: '06:00', hours: [6, 7] },
+          { name: '08:00', hours: [8, 9] },
+          { name: '10:00', hours: [10, 11] },
+          { name: '12:00', hours: [12, 13] },
+          { name: '14:00', hours: [14, 15] },
+          { name: '16:00', hours: [16, 17] },
+          { name: '18:00', hours: [18, 19] },
+          { name: '20:00', hours: [20, 21] },
+          { name: '22:00', hours: [22, 23] },
+        ];
+
+        revenueTimeline = timeSlots.map((slot) => {
+          let sumRev = 0;
+          let sumOrd = 0;
+          slot.hours.forEach((h) => {
+            if (hoursMap[h]) {
+              sumRev += Number(hoursMap[h].doanhThu || 0);
+              sumOrd += Number(hoursMap[h].donHang || 0);
+            }
+          });
+          return {
+            name: slot.name,
+            doanhThu: sumRev,
+            donHang: sumOrd,
+          };
+        });
       } else if (range === '7d') {
         const [daily] = await pool.query(`
           SELECT 
-            DATE_FORMAT(ordered_at, '%d/%m') as day_label,
-            DATE(ordered_at) as order_date,
+            DATE_FORMAT(${vnOrderedAt}, '%d/%m') as day_label,
+            DATE(${vnOrderedAt}) as order_date,
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE ordered_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status != 'cancelled' AND payment_status = 'paid'
-          GROUP BY DATE(ordered_at), day_label
+          WHERE ${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 6 DAY) AND status != 'cancelled'
+          GROUP BY DATE(${vnOrderedAt}), day_label
           ORDER BY order_date ASC
         `);
 
+        const dayMap = {};
+        daily.forEach((d) => { dayMap[d.day_label] = d; });
         const days = [];
         for (let i = 6; i >= 0; i--) {
-          const d = new Date();
+          const d = new Date(Date.now() + 7 * 3600000);
           d.setDate(d.getDate() - i);
           const dayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-          const found = daily.find((x) => x.day_label === dayStr);
+          const found = dayMap[dayStr];
           days.push({
             name: dayStr,
             doanhThu: found ? Number(found.doanhThu) : 0,
@@ -242,11 +294,11 @@ const DashboardModel = {
       } else if (range === 'year' || range === 'all') {
         const [monthly] = await pool.query(`
           SELECT 
-            DATE_FORMAT(ordered_at, 'T%m') as month_label,
+            DATE_FORMAT(${vnOrderedAt}, 'T%m') as month_label,
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE ${dateFilter} AND status != 'cancelled' AND payment_status IN ('paid', 'pending_verification')
+          WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY month_label
           ORDER BY month_label ASC
         `);
@@ -260,13 +312,13 @@ const DashboardModel = {
       } else if (range === 'quarter') {
         const [weekly] = await pool.query(`
           SELECT 
-            CONCAT('Tuần ', WEEK(ordered_at, 1)) as week_label,
+            CONCAT('Tuần ', WEEK(${vnOrderedAt}, 1)) as week_label,
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE ${dateFilter} AND status != 'cancelled' AND payment_status = 'paid'
+          WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY week_label
-          ORDER BY WEEK(ordered_at, 1) ASC
+          ORDER BY WEEK(${vnOrderedAt}, 1) ASC
         `);
         revenueTimeline = weekly.length ? weekly.map((w) => ({
           name: w.week_label,
@@ -278,29 +330,34 @@ const DashboardModel = {
           { name: 'Tháng 3', doanhThu: 0, donHang: 0 },
         ];
       } else {
-        const [weekly] = await pool.query(`
+        // 30 days: hiển thị đường doanh thu theo từng ngày thực tế
+        const [daily] = await pool.query(`
           SELECT 
-            CASE 
-              WHEN ordered_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 'Tuần 4 (Mới nhất)'
-              WHEN ordered_at >= DATE_SUB(NOW(), INTERVAL 14 DAY) THEN 'Tuần 3'
-              WHEN ordered_at >= DATE_SUB(NOW(), INTERVAL 21 DAY) THEN 'Tuần 2'
-              ELSE 'Tuần 1'
-            END as week_label,
+            DATE_FORMAT(${vnOrderedAt}, '%d/%m') as day_label,
+            DATE(${vnOrderedAt}) as order_date,
             COALESCE(SUM(total_amount), 0) as doanhThu,
             COUNT(*) as donHang
           FROM orders
-          WHERE ${dateFilter} AND status != 'cancelled' AND payment_status = 'paid'
-          GROUP BY week_label
+          WHERE ${dateFilter} AND status != 'cancelled'
+          GROUP BY DATE(${vnOrderedAt}), day_label
+          ORDER BY order_date ASC
         `);
 
-        const weekMap = {};
-        weekly.forEach((w) => { weekMap[w.week_label] = w; });
-        revenueTimeline = [
-          { name: 'Tuần 1', doanhThu: Number(weekMap['Tuần 1']?.doanhThu || 0), donHang: Number(weekMap['Tuần 1']?.donHang || 0) },
-          { name: 'Tuần 2', doanhThu: Number(weekMap['Tuần 2']?.doanhThu || 0), donHang: Number(weekMap['Tuần 2']?.donHang || 0) },
-          { name: 'Tuần 3', doanhThu: Number(weekMap['Tuần 3']?.doanhThu || 0), donHang: Number(weekMap['Tuần 3']?.donHang || 0) },
-          { name: 'Tuần 4', doanhThu: Number(weekMap['Tuần 4 (Mới nhất)']?.doanhThu || 0), donHang: Number(weekMap['Tuần 4 (Mới nhất)']?.donHang || 0) },
-        ];
+        const dayMap = {};
+        daily.forEach((d) => { dayMap[d.day_label] = d; });
+        const days = [];
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date(Date.now() + 7 * 3600000);
+          d.setDate(d.getDate() - i);
+          const dayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+          const found = dayMap[dayStr];
+          days.push({
+            name: dayStr,
+            doanhThu: found ? Number(found.doanhThu) : 0,
+            donHang: found ? Number(found.donHang) : 0,
+          });
+        }
+        revenueTimeline = days;
       }
 
       // 2.6 Biểu đồ trạng thái đơn hàng
@@ -464,7 +521,7 @@ const DashboardModel = {
           LEFT JOIN product_specs s ON s.product_id = p.id
           WHERE p.deleted_at IS NULL
           GROUP BY label
-          ORDER BY units DESC LIMIT 6
+          ORDER BY units DESC LIMIT 8
         `);
         stockByRam = ramRows;
 
@@ -476,9 +533,49 @@ const DashboardModel = {
           LEFT JOIN product_specs s ON s.product_id = p.id
           WHERE p.deleted_at IS NULL
           GROUP BY label
-          ORDER BY units DESC LIMIT 6
+          ORDER BY units DESC LIMIT 8
         `);
         stockByStorage = storageRows;
+
+        const [cpuRows] = await pool.query(`
+          SELECT 
+            CASE 
+              WHEN s.cpu_model LIKE '%Apple%' OR s.cpu_brand = 'Apple' THEN 'Apple Silicon'
+              WHEN s.cpu_model LIKE '%Ultra%' THEN 'Intel Core Ultra'
+              WHEN s.cpu_model LIKE '%i7%' OR s.cpu_model LIKE '%Core 7%' THEN 'Intel Core i7'
+              WHEN s.cpu_model LIKE '%i5%' OR s.cpu_model LIKE '%Core 5%' THEN 'Intel Core i5'
+              WHEN s.cpu_model LIKE '%i9%' THEN 'Intel Core i9'
+              WHEN s.cpu_model LIKE '%Ryzen 7%' THEN 'AMD Ryzen 7'
+              WHEN s.cpu_model LIKE '%Ryzen 5%' THEN 'AMD Ryzen 5'
+              ELSE 'Dòng CPU khác'
+            END AS label,
+            COALESCE(SUM(p.stock_quantity), 0) AS units
+          FROM products p
+          LEFT JOIN product_specs s ON s.product_id = p.id
+          WHERE p.deleted_at IS NULL
+          GROUP BY label
+          ORDER BY units DESC LIMIT 8
+        `);
+        stockByCpu = cpuRows;
+
+        const [gpuRows] = await pool.query(`
+          SELECT 
+            CASE 
+              WHEN s.gpu_model LIKE '%4060%' THEN 'RTX 4060'
+              WHEN s.gpu_model LIKE '%4050%' THEN 'RTX 4050'
+              WHEN s.gpu_model LIKE '%3050%' THEN 'RTX 3050'
+              WHEN s.gpu_model LIKE '%Apple%' OR s.cpu_brand = 'Apple' THEN 'Apple GPU'
+              WHEN s.gpu_type = 'integrated' OR s.gpu_model LIKE '%Iris%' OR s.gpu_model LIKE '%Graphics%' THEN 'Onboard Graphics'
+              ELSE 'Dòng GPU khác'
+            END AS label,
+            COALESCE(SUM(p.stock_quantity), 0) AS units
+          FROM products p
+          LEFT JOIN product_specs s ON s.product_id = p.id
+          WHERE p.deleted_at IS NULL
+          GROUP BY label
+          ORDER BY units DESC LIMIT 8
+        `);
+        stockByGpu = gpuRows;
 
         const [slowStock] = await pool.query(`
           SELECT id, sku, name, stock_quantity, sold_count, created_at,
@@ -607,6 +704,8 @@ const DashboardModel = {
       profit_margins: profitMargins,
       stock_by_ram: stockByRam,
       stock_by_storage: stockByStorage,
+      stock_by_cpu: stockByCpu,
+      stock_by_gpu: stockByGpu,
       slow_moving_stock: slowMovingStock,
       customer_metrics: customerMetrics,
       warranty_metrics: warrantyMetrics,

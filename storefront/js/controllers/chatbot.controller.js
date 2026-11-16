@@ -60,9 +60,12 @@ const ChatbotController = {
           time: this.formatChatTime(new Date()),
         },
       ];
-    } else if (this.chatState.messages.length === 1 && this.chatState.messages[0].sender === 'bot') {
-      // Đảm bảo tin chào ban đầu luôn có gợi ý câu hỏi hiển thị trực tiếp
-      this.chatState.messages[0].suggestions = defaultPrompts;
+    } else {
+      // Đảm bảo tin bot đầu tiên luôn có gợi ý câu hỏi hiển thị trực tiếp trong bong bóng chat
+      const firstBot = this.chatState.messages.find((m) => m.sender === 'bot');
+      if (firstBot && (!firstBot.suggestions || firstBot.suggestions.length === 0)) {
+        firstBot.suggestions = defaultPrompts;
+      }
     }
 
     this.bindKeyboardEvents();
@@ -496,10 +499,10 @@ const ChatbotController = {
 
     container.innerHTML = html;
 
-    // Luôn ẩn hoàn toàn thanh cuộn ngang cũ
+    // Loại bỏ vĩnh viễn thanh cuộn ngang cũ khỏi DOM
     if (quickWrap) {
       quickWrap.innerHTML = '';
-      quickWrap.style.display = 'none';
+      quickWrap.remove();
     }
 
     this.scrollChatBottom();

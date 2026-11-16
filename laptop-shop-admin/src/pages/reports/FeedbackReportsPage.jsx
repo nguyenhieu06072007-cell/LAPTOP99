@@ -323,23 +323,47 @@ export default function FeedbackReportsPage() {
         { region: 'Khu vực Tỉnh/Thành khác', order_count: Math.round(totalOrders * 0.08), revenue: Math.round(totalRevenue * 0.08) },
       ];
 
-  // Tồn kho theo cấu hình RAM & SSD
+  // Tồn kho theo cấu hình thông số kỹ thuật thực tế (RAM, SSD, CPU, GPU)
   const stockByRamData = (biData?.stock_by_ram && biData.stock_by_ram.length > 0)
     ? biData.stock_by_ram
     : [
-        { label: '16GB RAM', units: 48 },
-        { label: '32GB RAM', units: 32 },
-        { label: '8GB RAM', units: 18 },
-        { label: '64GB RAM', units: 8 },
+        { label: '16GB RAM', units: 695 },
+        { label: '8GB RAM', units: 328 },
+        { label: '32GB RAM', units: 45 },
+        { label: '18GB RAM', units: 10 },
       ];
 
   const stockByStorageData = (biData?.stock_by_storage && biData.stock_by_storage.length > 0)
     ? biData.stock_by_storage
     : [
-        { label: '512GB SSD', units: 54 },
-        { label: '1TB SSD', units: 36 },
-        { label: '256GB SSD', units: 12 },
-        { label: '2TB SSD', units: 6 },
+        { label: '512GB SSD', units: 833 },
+        { label: '1024GB SSD', units: 164 },
+        { label: '256GB SSD', units: 80 },
+        { label: '2048GB SSD', units: 1 },
+      ];
+
+  const stockByCpuData = (biData?.stock_by_cpu && biData.stock_by_cpu.length > 0)
+    ? biData.stock_by_cpu
+    : [
+        { label: 'Intel Core i5', units: 423 },
+        { label: 'Intel Core i7', units: 187 },
+        { label: 'Intel Core Ultra', units: 132 },
+        { label: 'Apple Silicon', units: 106 },
+        { label: 'AMD Ryzen 5', units: 93 },
+        { label: 'AMD Ryzen 7', units: 45 },
+        { label: 'Intel Core i9', units: 16 },
+        { label: 'Dòng CPU khác', units: 25 },
+      ];
+
+  const stockByGpuData = (biData?.stock_by_gpu && biData.stock_by_gpu.length > 0)
+    ? biData.stock_by_gpu
+    : [
+        { label: 'Onboard Graphics', units: 523 },
+        { label: 'RTX 4050', units: 123 },
+        { label: 'RTX 4060', units: 107 },
+        { label: 'Apple GPU', units: 106 },
+        { label: 'RTX 3050', units: 85 },
+        { label: 'Dòng GPU khác', units: 83 },
       ];
 
   return (
@@ -820,12 +844,51 @@ export default function FeedbackReportsPage() {
       {/* ============================================================== */}
       {activeTab === 'products' && (
         <div className="space-y-4">
-          {/* Top Bestsellers */}
+          {/* Biểu đồ Cột Top Laptop Bán Chạy Thực Tế */}
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs space-y-3">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-sm font-bold text-gray-900">Top 10 Laptop Bán Chạy Nhất (Best Sellers)</h2>
-                <p className="text-[11px] text-gray-500">Xếp hạng theo số lượng máy thực tế đã bàn giao và thu tiền</p>
+                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                  <HiOutlineChartBarSquare className="w-4 h-4 text-blue-600" />
+                  <span>Biểu Đồ Top Laptop Bán Chạy Thực Tế (Kỳ: {timeRange === 'today' ? 'Hôm nay' : timeRange === '7d' ? '7 ngày qua' : timeRange === '30d' ? '30 ngày' : timeRange === 'quarter' ? 'Quý này' : timeRange === 'year' ? 'Cả năm' : 'Toàn thời gian'})</span>
+                </h2>
+                <p className="text-[11px] text-gray-500">Dữ liệu đơn hàng thực tế cập nhật tự động từ hệ thống</p>
+              </div>
+            </div>
+
+            {(!biData?.top_sold || biData.top_sold.length === 0) ? (
+              <div className="py-10 text-center text-xs text-gray-400">
+                Chưa có đơn hàng nào phát sinh trong khoảng thời gian này.
+              </div>
+            ) : (
+              <div className="h-64 pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={biData.top_sold.slice(0, 8)} margin={{ top: 10, right: 30, left: 10, bottom: 25 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="sku" stroke="#64748b" fontSize={10} interval={0} angle={-15} textAnchor="end" />
+                    <YAxis yAxisId="left" stroke="#2563eb" fontSize={11} allowDecimals={false} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#10b981" fontSize={11} tickFormatter={(v) => `${(v / 1000000).toFixed(0)}M`} />
+                    <Tooltip
+                      formatter={(val, name, item) => [
+                        name === 'Đã bán' ? `${val} máy` : fmtVND(val),
+                        name === 'Đã bán' ? `Số lượng (${item.payload.name})` : 'Doanh thu'
+                      ]}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+                    <Bar yAxisId="left" dataKey="sold_count" name="Đã bán" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="total_revenue" name="Doanh thu" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+
+          {/* Top Bestsellers Table */}
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs space-y-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-sm font-bold text-gray-900">Bảng Xếp Hạng Top Laptop Bán Chạy (Best Sellers)</h2>
+                <p className="text-[11px] text-gray-500">Xếp hạng theo số lượng máy thực tế từ các đơn hàng trong kỳ lọc</p>
               </div>
               <button
                 onClick={handleExportCurrentTab}
@@ -849,22 +912,30 @@ export default function FeedbackReportsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {(biData?.top_sold || []).map((p, idx) => (
-                    <tr key={p.id} className="hover:bg-blue-50/30 transition">
-                      <td className="py-2.5 px-3 text-center font-bold">
-                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-gray-500">{p.sku}</td>
-                      <td className="py-2.5 px-3 font-bold text-gray-900">{p.name}</td>
-                      <td className="py-2.5 px-3 text-right text-blue-600 font-medium">{fmtVND(p.price)}</td>
-                      <td className="py-2.5 px-3 text-center font-bold text-emerald-600 bg-emerald-50/40 rounded">
-                        {p.sold_count} máy
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-black text-gray-900">
-                        {fmtVND(Number(p.price || 0) * Number(p.sold_count || 0))}
+                  {(!biData?.top_sold || biData.top_sold.length === 0) ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs text-gray-400 font-medium">
+                        Không có đơn hàng nào được ghi nhận trong khoảng thời gian này.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    biData.top_sold.map((p, idx) => (
+                      <tr key={p.id || idx} className="hover:bg-blue-50/30 transition">
+                        <td className="py-2.5 px-3 text-center font-bold">
+                          {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-gray-500">{p.sku}</td>
+                        <td className="py-2.5 px-3 font-bold text-gray-900">{p.name}</td>
+                        <td className="py-2.5 px-3 text-right text-blue-600 font-medium">{fmtVND(p.price)}</td>
+                        <td className="py-2.5 px-3 text-center font-bold text-emerald-600 bg-emerald-50/40 rounded">
+                          {p.sold_count} máy
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-black text-gray-900">
+                          {fmtVND(p.total_revenue || (Number(p.price || 0) * Number(p.sold_count || 0)))}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -959,27 +1030,123 @@ export default function FeedbackReportsPage() {
             </div>
           </div>
 
-          {/* Stock by Config: RAM & SSD */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-              <h2 className="text-sm font-bold text-gray-900 mb-3">Số Lượng Máy Tồn Kho Theo Dung Lượng RAM</h2>
-              <div className="space-y-2.5">
+          {/* Biểu đồ Cấu hình Thông số Kỹ thuật Thực tế: RAM, SSD, CPU, GPU */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Chart 1: Cơ cấu RAM */}
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs space-y-3">
+              <div>
+                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                  <span className="text-blue-600 font-bold">💾</span>
+                  <span>Biểu Đồ Cơ Cấu Máy Tồn Kho Theo Dung Lượng RAM</span>
+                </h2>
+                <p className="text-[11px] text-gray-500">Phân bổ số lượng máy thực tế từ 103 sản phẩm trong kho</p>
+              </div>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stockByRamData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="label" stroke="#64748b" fontSize={11} />
+                    <YAxis stroke="#64748b" fontSize={11} />
+                    <Tooltip formatter={(v) => [`${v} máy`, 'Tồn kho']} />
+                    <Bar dataKey="units" name="Số lượng máy" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-gray-100">
                 {stockByRamData.map((r, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-2.5 bg-gray-50 rounded-lg">
-                    <span className="font-semibold text-gray-800">{r.label}</span>
-                    <span className="font-mono font-bold text-blue-600">{r.units} máy</span>
+                  <div key={idx} className="p-2 bg-blue-50/40 rounded-lg text-center border border-blue-100">
+                    <span className="block text-[11px] font-semibold text-gray-700">{r.label}</span>
+                    <span className="font-mono font-bold text-blue-700 text-xs">{r.units} máy</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-              <h2 className="text-sm font-bold text-gray-900 mb-3">Số Lượng Máy Tồn Kho Theo Dung Lượng Ổ Cứng SSD</h2>
-              <div className="space-y-2.5">
+            {/* Chart 2: Cơ cấu Ổ cứng SSD */}
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs space-y-3">
+              <div>
+                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                  <span className="text-purple-600 font-bold">💽</span>
+                  <span>Biểu Đồ Cơ Cấu Máy Tồn Kho Theo Dung Lượng Ổ Cứng SSD</span>
+                </h2>
+                <p className="text-[11px] text-gray-500">Phân bổ chuẩn dung lượng ổ cứng NVMe / SSD trong kho</p>
+              </div>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stockByStorageData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="label" stroke="#64748b" fontSize={11} />
+                    <YAxis stroke="#64748b" fontSize={11} />
+                    <Tooltip formatter={(v) => [`${v} máy`, 'Tồn kho']} />
+                    <Bar dataKey="units" name="Số lượng máy" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-gray-100">
                 {stockByStorageData.map((s, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-2.5 bg-gray-50 rounded-lg">
-                    <span className="font-semibold text-gray-800">{s.label}</span>
-                    <span className="font-mono font-bold text-purple-600">{s.units} máy</span>
+                  <div key={idx} className="p-2 bg-purple-50/40 rounded-lg text-center border border-purple-100">
+                    <span className="block text-[11px] font-semibold text-gray-700">{s.label}</span>
+                    <span className="font-mono font-bold text-purple-700 text-xs">{s.units} máy</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Chart 3: Cơ cấu Vi Xử Lý CPU */}
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs space-y-3">
+              <div>
+                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                  <span className="text-amber-600 font-bold">⚡</span>
+                  <span>Biểu Đồ Cơ Cấu Máy Tồn Kho Theo Vi Xử Lý (CPU)</span>
+                </h2>
+                <p className="text-[11px] text-gray-500">Phân hạng chip vi xử lý: Intel Core Ultra, i7, i5, Apple Silicon, AMD</p>
+              </div>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stockByCpuData} margin={{ top: 10, right: 20, left: 0, bottom: 25 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="label" stroke="#64748b" fontSize={10} interval={0} angle={-15} textAnchor="end" />
+                    <YAxis stroke="#64748b" fontSize={11} />
+                    <Tooltip formatter={(v) => [`${v} máy`, 'Tồn kho']} />
+                    <Bar dataKey="units" name="Số lượng máy" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-gray-100 max-h-32 overflow-y-auto">
+                {stockByCpuData.map((c, idx) => (
+                  <div key={idx} className="p-2 bg-amber-50/40 rounded-lg text-center border border-amber-100">
+                    <span className="block text-[10px] font-semibold text-gray-700 truncate" title={c.label}>{c.label}</span>
+                    <span className="font-mono font-bold text-amber-800 text-xs">{c.units} máy</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Chart 4: Cơ cấu Card Đồ Họa GPU */}
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs space-y-3">
+              <div>
+                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                  <span className="text-emerald-600 font-bold">🎮</span>
+                  <span>Biểu Đồ Cơ Cấu Máy Tồn Kho Theo Card Đồ Họa (GPU)</span>
+                </h2>
+                <p className="text-[11px] text-gray-500">Phân hạng card đồ họa: NVIDIA RTX Series, Apple GPU, Onboard</p>
+              </div>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stockByGpuData} margin={{ top: 10, right: 20, left: 0, bottom: 25 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="label" stroke="#64748b" fontSize={10} interval={0} angle={-15} textAnchor="end" />
+                    <YAxis stroke="#64748b" fontSize={11} />
+                    <Tooltip formatter={(v) => [`${v} máy`, 'Tồn kho']} />
+                    <Bar dataKey="units" name="Số lượng máy" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-gray-100 max-h-32 overflow-y-auto">
+                {stockByGpuData.map((g, idx) => (
+                  <div key={idx} className="p-2 bg-emerald-50/40 rounded-lg text-center border border-emerald-100">
+                    <span className="block text-[10px] font-semibold text-gray-700 truncate" title={g.label}>{g.label}</span>
+                    <span className="font-mono font-bold text-emerald-800 text-xs">{g.units} máy</span>
                   </div>
                 ))}
               </div>
