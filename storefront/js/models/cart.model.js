@@ -10,6 +10,15 @@ const PAY = {
 };
 
 const BANK_ACCOUNTS = {
+  CTG: {
+    key: 'CTG',
+    bin: 'vietinbank',
+    name: 'VietinBank (Ngân hàng TMCP Công Thương Việt Nam)',
+    short: 'VietinBank',
+    acc: '888800233939',
+    holder: 'NGUYEN VAN HIEU',
+    branch: 'Hội Sở / Toàn Quốc (Tự động SePay 24/7)',
+  },
   MB: {
     key: 'MB',
     bin: 'MB',
@@ -24,7 +33,7 @@ const BANK_ACCOUNTS = {
     bin: 'VCB',
     name: 'Vietcombank (Ngân hàng Ngoại Thương)',
     short: 'Vietcombank',
-    acc: '6306072007',
+    acc: '888800233939',
     holder: 'NGUYEN VAN HIEU',
     branch: 'CN Sài Gòn',
   },
@@ -33,7 +42,7 @@ const BANK_ACCOUNTS = {
     bin: 'TCB',
     name: 'Techcombank (Ngân hàng Kỹ Thương)',
     short: 'Techcombank',
-    acc: '6306072007',
+    acc: '888800233939',
     holder: 'NGUYEN VAN HIEU',
     branch: 'CN Thắng Lợi',
   },
@@ -42,16 +51,19 @@ const BANK_ACCOUNTS = {
     bin: 'BIDV',
     name: 'BIDV (Đầu tư & Phát triển VN)',
     short: 'BIDV',
-    acc: '6306072007',
+    acc: '888800233939',
     holder: 'NGUYEN VAN HIEU',
     branch: 'CN Đông Sài Gòn',
   },
 };
 
-function buildVietQrUrl(bankKey = 'MB', amount = 0, memo = 'LAPTOP99 THANH TOAN') {
-  const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.MB;
+function buildVietQrUrl(bankKey = 'CTG', amount = 0, memo = 'SEVQR LAPTOP99 THANH TOAN') {
+  const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.CTG;
   const amt = Math.max(0, Math.round(Number(amount) || 0));
-  const cleanMemo = String(memo || 'LAPTOP99').replace(/[^a-zA-Z0-9 \-]/g, ' ').trim();
+  let cleanMemo = String(memo || 'SEVQR LAPTOP99').replace(/[^a-zA-Z0-9 \-]/g, ' ').trim();
+  if (!cleanMemo.toUpperCase().startsWith('SEVQR')) {
+    cleanMemo = 'SEVQR ' + cleanMemo;
+  }
   return `https://img.vietqr.io/image/${b.bin}-${b.acc}-compact2.png?amount=${amt}&addInfo=${encodeURIComponent(cleanMemo)}&accountName=${encodeURIComponent(b.holder)}`;
 }
 

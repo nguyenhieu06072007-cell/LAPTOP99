@@ -31,7 +31,7 @@ const CheckoutController = {
   },
 
   openBankQrModal(orderCode, amount = 0, payMethod = 'bank') {
-    const memo = `LAPTOP99 ${orderCode}`;
+    const memo = `SEVQR LAPTOP99 ${orderCode}`;
     modal(
       mHead('Cổng Thanh Toán Mã QR Ngân Hàng (VietQR Napas 247)', `Đơn hàng: ${orderCode} · Tự động điền số tiền & nội dung`) +
         renderBankQrBox(amount, memo, orderCode),
@@ -45,8 +45,8 @@ const CheckoutController = {
       btn.disabled = true;
       btn.textContent = 'Đang gửi thông báo cho kế toán...';
     }
-    const bankKey = cache.qrBank || 'MB';
-    const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.MB;
+    const bankKey = cache.qrBank || 'CTG';
+    const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.CTG;
 
     try {
       await (typeof OrderService !== 'undefined'
@@ -61,7 +61,7 @@ const CheckoutController = {
     // Nghiệp vụ bảo vệ tiền hàng (Anti-fraud): Ghi nhận khách báo đã chuyển khoản, chờ kế toán đối soát sao kê
     this.applyPendingVerificationState(orderCode);
     closeModal();
-    toast('📋 Đã ghi nhận thông báo chuyển khoản! Kế toán Laptop99 đang đối soát sao kê MB Bank và sẽ duyệt đơn trong 5-15 phút.', 'info');
+    toast(`📋 Đã ghi nhận thông báo chuyển khoản! Kế toán Laptop99 đang đối soát sao kê ${b.short} và sẽ duyệt đơn trong 5-15 phút.`, 'info');
     render();
   },
 
@@ -167,11 +167,13 @@ const CheckoutController = {
   },
 
   onPaymentSuccess(orderCode, amount) {
+    const bankKey = cache.qrBank || 'CTG';
+    const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.CTG;
     const box = $('#vietqr-box');
     if (box) {
-      box.outerHTML = renderBankQrBox(amount, `LAPTOP99 ${orderCode}`, orderCode);
+      box.outerHTML = renderBankQrBox(amount, `SEVQR LAPTOP99 ${orderCode}`, orderCode);
     }
-    toast('🎉 Giao dịch thành công! Tiền đã vào tài khoản MBBANK 6306072007 (NGUYEN VAN HIEU)', 'ok');
+    toast(`🎉 Giao dịch thành công! Tiền đã vào tài khoản ${b.short} ${b.acc} (${b.holder})`, 'ok');
     setTimeout(() => {
       render();
     }, 1200);
@@ -179,18 +181,20 @@ const CheckoutController = {
 
   async simulatePaid(orderCode, amount) {
     if (!orderCode) return;
+    const bankKey = cache.qrBank || 'CTG';
+    const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.CTG;
     const btn = document.getElementById('btn-simulate-pay');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = '⏳ Đang xác nhận biến động số dư MB...';
+      btn.textContent = `⏳ Đang xác nhận biến động số dư ${b.short}...`;
     }
 
     try {
       await API.post(`/orders/${orderCode}/simulate-auto-paid`, {
         amount,
-        bank: 'MBBANK',
-        account: '6306072007',
-        holder: 'NGUYEN VAN HIEU',
+        bank: b.short,
+        account: b.acc,
+        holder: b.holder,
       });
     } catch (e) {
       console.log('Simulate paid fallback locally:', e);

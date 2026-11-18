@@ -378,7 +378,7 @@ const ClientModel = {
     const content = String(payload.content || payload.description || payload.memo || '').trim();
     const amount = Number(payload.amount || payload.transferAmount || 0);
 
-    const match = content.match(/(?:LAPTOP99\s+)?(DH-[A-Za-z0-9\-]+|DH[A-Za-z0-9\-]+|\d+)/i);
+    const match = content.match(/(?:(?:SEVQR|LAPTOP99)\s+)*(DH-[A-Za-z0-9\-]+|DH[A-Za-z0-9\-]+|\d+)/i);
     const orderCode = match ? match[1] : null;
 
     if (!orderCode) {
@@ -398,7 +398,10 @@ const ClientModel = {
       return { success: true, message: 'Đơn hàng này đã được thanh toán trước đó' };
     }
 
-    const noteAdd = `[WEBHOOK TỰ ĐỘNG: Đã nhận ${amount}đ từ MBBank ${payload.accountNumber || '6306072007'} - Ref: ${payload.referenceCode || payload.id || 'N/A'}]`;
+    const bankGateway = payload.gateway || payload.bankName || 'VietinBank';
+    const bankAcc = payload.accountNumber || '888800233939';
+    const refCode = payload.referenceCode || payload.id || 'N/A';
+    const noteAdd = `[WEBHOOK SEPAY TỰ ĐỘNG: Đã nhận ${amount}đ từ ${bankGateway} ${bankAcc} - Ref: ${refCode}]`;
     const updatedNote = [order.notes, noteAdd].filter(Boolean).join(' | ');
 
     await pool.query(

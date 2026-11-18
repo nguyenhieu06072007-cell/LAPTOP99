@@ -259,8 +259,8 @@ function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
     </div>`;
   }
 
-  const bankKey = cache.qrBank || 'MB';
-  const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.MB;
+  const bankKey = cache.qrBank || 'CTG';
+  const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.CTG;
   const qrUrl = buildVietQrUrl(bankKey, amount, memo);
 
   if (orderCode && typeof setTimeout !== 'undefined') {
@@ -276,10 +276,10 @@ function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
       <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
         <span style="display:inline-flex;align-items:center;gap:6px;background:#1D4ED8;color:#fff;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:99px;text-transform:uppercase">VietQR · Napas 247</span>
         <span style="display:inline-flex;align-items:center;gap:6px;background:#DCFCE7;color:#166534;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px">
-          <span style="width:7px;height:7px;background:#22C55E;border-radius:50%;display:inline-block"></span> Tự động ghi nhận tiền vào MB Bank 24/7
+          <span style="width:7px;height:7px;background:#22C55E;border-radius:50%;display:inline-block"></span> Tự động ghi nhận tiền vào qua SePay Webhook 24/7
         </span>
       </div>
-      <div class="xs muted right">Mở App MB Bank / App Ngân hàng bất kỳ hoặc Ví MoMo để quét</div>
+      <div class="xs muted right">Mở App VietinBank / MB Bank / App Ngân hàng bất kỳ hoặc MoMo để quét</div>
     </div>
 
     <div class="row" style="gap:6px;margin-bottom:12px;flex-wrap:wrap">

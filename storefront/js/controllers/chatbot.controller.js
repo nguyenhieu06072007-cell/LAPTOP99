@@ -372,8 +372,8 @@ const ChatbotController = {
     if (q.includes('bảo hành') || q.includes('warranty') || q.includes('s/n') || q.includes('serial')) {
       return 'LAPTOP99 áp dụng chính sách **bảo hành điện tử chính hãng 12 – 24 tháng theo số Serial (S/N)** trên từng máy. Quý khách có thể kiểm tra trực tiếp tại mục [Tra cứu bảo hành](#/warranty) ạ! 🛡️';
     }
-    if (q.includes('thanh toán') || q.includes('chuyển khoản') || q.includes('stk') || q.includes('mbbank') || q.includes('ngân hàng')) {
-      return 'Hệ thống hỗ trợ thanh toán qua **VietQR Napas 247 tự động** vào tài khoản **MB Bank 6306072007 (Chủ TK: NGUYEN VAN HIEU)** hoặc thanh toán COD khi nhận hàng ạ! 💳';
+    if (q.includes('thanh toán') || q.includes('chuyển khoản') || q.includes('stk') || q.includes('mbbank') || q.includes('vietinbank') || q.includes('ngân hàng')) {
+      return 'Hệ thống hỗ trợ thanh toán qua **VietQR Napas 247 tự động (kết nối SePay)** vào tài khoản **VietinBank 888800233939** hoặc **MB Bank 6306072007** (Chủ TK: **NGUYEN VAN HIEU**), tiền vào tự động duyệt đơn trong 3 giây hoặc thanh toán COD khi nhận hàng ạ! 💳';
     }
     if (q.includes('so sánh') || q.includes('compare')) {
       return 'Bạn có thể bấm vào **biểu tượng chiếc cân ⚖️** trên các mẫu laptop để vào trang **[So sánh cấu hình chuyên sâu](#/compare)**. Trí tuệ nhân tạo AI sẽ tự động phân tích và khuyên chọn mẫu tối ưu theo nhu cầu của bạn!';
