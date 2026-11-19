@@ -4,7 +4,7 @@
 
 const OrderService = {
   async createOrder(payload) {
-    return await API.post('/orders', payload, false);
+    return await API.post('/orders', payload, true);
   },
 
   async getMyOrders() {
@@ -20,7 +20,7 @@ const OrderService = {
   },
 
   async getPaymentStatus(code) {
-    return await API.get(`/orders/${code}/payment-status`, false);
+    return await API.get(`/orders/${encodeURIComponent(code)}/payment-status`);
   },
 
   async simulatePaid(code, details = {}) {

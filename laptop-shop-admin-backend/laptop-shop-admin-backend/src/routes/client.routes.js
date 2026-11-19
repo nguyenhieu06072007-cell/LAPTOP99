@@ -77,8 +77,10 @@ router.post('/orders', authenticateCustomer, ClientController.createOrder);
 router.get('/orders/my-orders', authenticateCustomer, ClientController.getMyOrders);
 router.post('/orders/:code/cancel', authenticateCustomer, ClientController.cancelOrder);
 router.post('/orders/:code/confirm-payment', authenticateCustomer, ClientController.confirmOrderPayment);
-router.get('/orders/:code/payment-status', optionalCustomer, ClientController.getOrderPaymentStatus);
-router.post('/orders/:code/simulate-auto-paid', optionalCustomer, ClientController.simulateAutoPaid);
+router.get('/orders/:code/payment-status', authenticateCustomer, ClientController.getOrderPaymentStatus);
+if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
+  router.post('/orders/:code/simulate-auto-paid', authenticateCustomer, ClientController.simulateAutoPaid);
+}
 router.post('/payment/webhook', ClientController.handlePaymentWebhook);
 
 // 5. Warranty S/N Lookup
