@@ -380,8 +380,13 @@ const ClientModel = {
     }
 
     const paymentText = [payload.code, payload.content, payload.description].join(' ');
-    const orderCode = paymentText.match(/\bDH-(?:\d{6}-[A-F0-9]{6}|\d{13}-[A-F0-9]{4})\b/i)?.[0];
-    if (!orderCode) return { success: true, matched: false };
+    // Some banks remove hyphens from the transfer memo. Restore the stored order-code format.
+    const candidates = paymentText.matchAll(/\bDH-?(?:(\d{6})-?([A-F0-9]{6})|(\d{13})-?([A-F0-9]{4}))\b/gi);
+    const orderCodes = new Set(Array.from(candidates, ([, month, suffix, timestamp, fallbackSuffix]) =>
+      `DH-${month || timestamp}-${(suffix || fallbackSuffix).toUpperCase()}`,
+    ));
+    if (orderCodes.size !== 1) return { success: true, matched: false };
+    const [orderCode] = orderCodes;
 
     const reference = String(payload.referenceCode || payload.id || '').slice(0, 80);
     const note = `[SEPAY: Đã đối soát ${amount} đ. Mã giao dịch: ${reference}]`;
