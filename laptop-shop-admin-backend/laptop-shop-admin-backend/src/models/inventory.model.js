@@ -39,8 +39,8 @@ const InventoryModel = {
     return rows;
   },
 
-  async createMovement({ productId, type, delta, unitCost, reason, userId }, req) {
-    return withTransaction(async (conn) => {
+  async createMovement({ productId, type, delta, unitCost, reason, userId }, req, connection) {
+    const write = async (conn) => {
       const [[p]] = await conn.query(
         'SELECT id, stock_quantity, cost_price FROM products WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
         [productId]
@@ -63,7 +63,86 @@ const InventoryModel = {
         oldValues: { stock_quantity: before }, newValues: { stock_quantity: after, reason: reason ?? null },
       });
       return { id: r.insertId, product_id: p.id, type, quantity: delta, stock_before: before, stock_after: after };
-    });
+    };
+    return connection ? write(connection) : withTransaction(write);
+  },
+
+  async getReceipts({ query, user }) {
+    const { page, limit, offset } = paging(query);
+    const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM admin_inventory_receipts');
+    const [rows] = await pool.query(`
+      SELECT r.movement_id, r.supplier, r.warehouse, r.request_key, m.quantity, m.created_at,
+             m.unit_cost, p.name, p.sku, u.full_name AS created_by
+        FROM admin_inventory_receipts r
+        JOIN inventory_movements m ON m.id = r.movement_id
+        JOIN products p ON p.id = m.product_id
+        LEFT JOIN users u ON u.id = m.created_by
+       ORDER BY r.movement_id DESC LIMIT ? OFFSET ?`, [limit, offset]);
+    if (rows.length) {
+      const [serials] = await pool.query('SELECT movement_id, serial FROM admin_inventory_serials WHERE movement_id IN (?) ORDER BY serial',
+        [rows.map((row) => row.movement_id)]);
+      const byMovement = new Map();
+      for (const item of serials) {
+        const values = byMovement.get(item.movement_id) || [];
+        values.push(item.serial);
+        byMovement.set(item.movement_id, values);
+      }
+      for (const row of rows) {
+        row.serials = byMovement.get(row.movement_id) || [];
+        if (!can(user, 'cost:read')) delete row.unit_cost;
+      }
+    }
+    return { data: rows, meta: pageMeta(page, limit, total) };
+  },
+
+  async receiveStock({ request_key, supplier, warehouse, notes, rows }, req) {
+    const prior = async (db) => {
+      const [records] = await db.query(`
+        SELECT r.row_number, m.product_id, m.created_by
+          FROM admin_inventory_receipts r JOIN inventory_movements m ON m.id = r.movement_id
+         WHERE r.request_key = ? ORDER BY r.row_number`, [request_key]);
+      if (!records.length) return null;
+      if (records.some((row) => Number(row.created_by) !== Number(req.user.id))) {
+        throw new ApiError(409, 'Mã phiếu nhập đã được sử dụng');
+      }
+      return { data: records.map(({ row_number, product_id }) => ({ row_number, product_id })), replayed: true };
+    };
+    try {
+      return await withTransaction(async (conn) => {
+        const existing = await prior(conn);
+        if (existing) return existing;
+        const skus = [...new Set(rows.map((row) => row.sku))].sort();
+        const [products] = await conn.query('SELECT id, sku FROM products WHERE sku IN (?) AND deleted_at IS NULL ORDER BY id FOR UPDATE', [skus]);
+        const productBySku = new Map(products.map((product) => [product.sku, product.id]));
+        const allSerials = rows.flatMap((row) => row.serials);
+        if (new Set(allSerials).size !== allSerials.length) throw new ApiError(400, 'Danh sách nhập có serial trùng');
+        const result = [];
+        for (const [index, row] of rows.entries()) {
+          const productId = productBySku.get(row.sku);
+          if (!productId) throw new ApiError(404, `Không tìm thấy SKU ${row.sku} ở dòng ${index + 1}`);
+          if (row.serials.length && row.serials.length !== row.quantity) {
+            throw new ApiError(400, `Số serial phải bằng số lượng ở dòng ${index + 1}`);
+          }
+          const movement = await this.createMovement({
+            productId, type: 'import', delta: row.quantity, unitCost: row.unit_cost,
+            reason: notes, userId: req.user.id,
+          }, req, conn);
+          await conn.query(`INSERT INTO admin_inventory_receipts (movement_id, supplier, warehouse, request_key, row_number)
+            VALUES (?, ?, ?, ?, ?)`, [movement.id, supplier, warehouse, request_key, index + 1]);
+          if (row.serials.length) {
+            await conn.query('INSERT INTO admin_inventory_serials (serial, movement_id) VALUES ?',
+              [row.serials.map((serial) => [serial, movement.id])]);
+          }
+          result.push({ row_number: index + 1, product_id: productId });
+        }
+        return { data: result, replayed: false };
+      });
+    } catch (error) {
+      if (error.code !== 'ER_DUP_ENTRY') throw error;
+      const existing = await prior(pool);
+      if (existing) return existing;
+      throw new ApiError(409, 'Một hoặc nhiều serial đã tồn tại. Phiếu nhập chưa được lưu.');
+    }
   },
 };
 

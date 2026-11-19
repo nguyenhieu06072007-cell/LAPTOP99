@@ -3,6 +3,7 @@ const { pool, withTransaction } = require('../config/db');
 const { ApiError, asyncHandler, paging, pageMeta, escapeLike, toInt, diff } = require('../utils/helpers');
 const { writeAudit } = require('../services/audit');
 const CustomerModel = require('../models/customer.model');
+const { orderScope } = require('../config/permissions');
 
 const nstr = (max) => z.string().trim().max(max).nullish().transform((v) => (v === '' ? null : v));
 
@@ -22,6 +23,7 @@ const updateSchema = createSchema.partial();
 const CustomersController = {
   listCustomers: asyncHandler(async (req, res) => {
     const q = req.query;
+    const scope = orderScope(req.user);
     const { page, limit, offset } = paging(q);
     const where = [];
     const params = [];
@@ -38,12 +40,12 @@ const CustomersController = {
 
     const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const total = await CustomerModel.countCustomers(whereClause, params);
-    const rows = await CustomerModel.findCustomers({ whereClause, params, limit, offset });
+    const rows = await CustomerModel.findCustomers({ whereClause, params, limit, offset, scope });
 
     const custIds = rows.map((r) => r.id);
     const latestMap = {};
     if (custIds.length > 0) {
-      const ords = await CustomerModel.findLatestOrders(custIds);
+      const ords = await CustomerModel.findLatestOrders(custIds, scope);
       for (const o of ords) {
         if (!latestMap[o.customer_id]) {
           latestMap[o.customer_id] = o;
@@ -54,7 +56,7 @@ const CustomersController = {
     const mapped = rows.map((c) => {
       const spent = Number(c.real_total_spent || 0);
       const cnt = Number(c.real_order_count || 0);
-      const tier = spent >= 100_000_000 ? 'VIP' : spent >= 50_000_000 ? 'Thân thiết' : 'Khách mới';
+      const tier = spent >= 100_000_000 ? 'VIP' : spent >= 30_000_000 ? 'Thân thiết' : 'Khách mới';
       return {
         ...c,
         order_count: cnt,
@@ -69,7 +71,7 @@ const CustomersController = {
 
   getCustomer: asyncHandler(async (req, res) => {
     const id = toInt(req.params.id);
-    const detail = await CustomerModel.findCustomerDetail(id);
+    const detail = await CustomerModel.findCustomerDetail(id, orderScope(req.user));
     if (!detail) throw new ApiError(404, 'Không tìm thấy khách hàng');
     res.json({ data: detail });
   }),

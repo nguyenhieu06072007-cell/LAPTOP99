@@ -1,7 +1,27 @@
 const { pool } = require('../config/db');
 
 const DashboardModel = {
-  async getDashboardData({ range = '30d', branch = '', category_id = '', withCost = false }) {
+  async getDashboardData({ range = '30d', branch = '', category_id = '', withCost = false, scope = {} }) {
+    const filter = [];
+    for (const [key, value] of Object.entries(scope)) {
+      if (key === 'assigned_to') filter.push(`base.assigned_to = ${pool.escape(value)}`);
+      if (key === 'branch') filter.push(value ? `base.branch = ${pool.escape(value)}` : '1 = 0');
+    }
+    if (branch && branch !== 'all') filter.push(`base.branch LIKE ${pool.escape(`%${branch}%`)}`);
+    const category = Number(category_id);
+    if (Number.isSafeInteger(category) && category > 0) {
+      filter.push(`EXISTS (SELECT 1 FROM products cp WHERE cp.category_id = ${category} AND (
+        cp.id = base.product_id OR EXISTS (SELECT 1 FROM order_items oi WHERE oi.order_id = base.id AND oi.product_id = cp.id)
+        OR JSON_CONTAINS(base.items_json, JSON_OBJECT('pid', cp.id))
+        OR JSON_CONTAINS(base.items_json, JSON_OBJECT('product_id', cp.id))
+      ))`);
+    }
+    const reportOrders = `(SELECT base.*,
+      CASE WHEN base.status <> 'cancelled' AND base.payment_status = 'paid'
+        THEN GREATEST(0, base.total_amount - COALESCE(refunds.amount, 0)) ELSE 0 END AS recognized_amount
+      FROM orders base
+      LEFT JOIN (SELECT order_id, SUM(amount) AS amount FROM admin_rma_refunds GROUP BY order_id) refunds ON refunds.order_id = base.id
+      ${filter.length ? 'WHERE ' + filter.join(' AND ') : ''})`;
     // 1. Tóm tắt sản phẩm & tồn kho
     const [[summary]] = await pool.query(
       `SELECT COUNT(*) AS total_products,
@@ -54,8 +74,8 @@ const DashboardModel = {
       dateFilter = `DATE(${vnOrderedAt}) = DATE(${vnNow})`;
       prevDateFilter = `DATE(${vnOrderedAt}) = DATE_SUB(DATE(${vnNow}), INTERVAL 1 DAY)`;
     } else if (range === '7d') {
-      dateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 7 DAY)`;
-      prevDateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 14 DAY) AND ${vnOrderedAt} < DATE_SUB(${vnNow}, INTERVAL 7 DAY)`;
+      dateFilter = `DATE(${vnOrderedAt}) >= DATE_SUB(DATE(${vnNow}), INTERVAL 6 DAY)`;
+      prevDateFilter = `DATE(${vnOrderedAt}) >= DATE_SUB(DATE(${vnNow}), INTERVAL 13 DAY) AND DATE(${vnOrderedAt}) < DATE_SUB(DATE(${vnNow}), INTERVAL 6 DAY)`;
     } else if (range === 'quarter') {
       dateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 90 DAY)`;
       prevDateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 180 DAY) AND ${vnOrderedAt} < DATE_SUB(${vnNow}, INTERVAL 90 DAY)`;
@@ -67,16 +87,12 @@ const DashboardModel = {
       prevDateFilter = '1=1';
     } else {
       // 30 days
-      dateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 30 DAY)`;
-      prevDateFilter = `${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 60 DAY) AND ${vnOrderedAt} < DATE_SUB(${vnNow}, INTERVAL 30 DAY)`;
-    }
-
-    if (branch && branch !== 'all') {
-      dateFilter += ` AND branch LIKE ${pool.escape(`%${branch}%`)}`;
-      prevDateFilter += ` AND branch LIKE ${pool.escape(`%${branch}%`)}`;
+      dateFilter = `DATE(${vnOrderedAt}) >= DATE_SUB(DATE(${vnNow}), INTERVAL 29 DAY)`;
+      prevDateFilter = `DATE(${vnOrderedAt}) >= DATE_SUB(DATE(${vnNow}), INTERVAL 59 DAY) AND DATE(${vnOrderedAt}) < DATE_SUB(DATE(${vnNow}), INTERVAL 29 DAY)`;
     }
 
     let topSold = [];
+    const scoped = Object.keys(scope).length > 0;
     let orderStats = { total_revenue: 0, total_orders: 0, new_orders: 0, total_customers: 0 };
     let recentOrders = [];
     let revenueTimeline = [];
@@ -84,27 +100,13 @@ const DashboardModel = {
     let channels = [];
     let paymentMethods = [];
     let regions = [];
-    let orderIssues = {
-      cancelled_count: 0,
-      cancel_rate: 0,
-      returned_count: 0,
-      return_rate: 0,
-      avg_delivery_hours: 24,
-      cancel_reasons: [
-        { reason: 'Khách đổi ý muốn mẫu khác', count: 12 },
-        { reason: 'Tìm thấy giá tốt hơn', count: 8 },
-        { reason: 'Trùng đơn hàng', count: 5 },
-        { reason: 'Thay đổi địa chỉ giao hàng', count: 3 },
-      ],
-      return_reasons: [
-        { reason: 'Lỗi kỹ thuật màn hình/phím', count: 7 },
-        { reason: 'Đổi sang cấu hình cao hơn', count: 5 },
-        { reason: 'Máy trầy xước trong vận chuyển', count: 2 },
-      ],
+    const orderIssues = {
+      cancelled_count: 0, cancel_rate: 0, returned_count: 0, return_rate: 0,
+      avg_delivery_hours: null, cancel_reasons: [], return_reasons: [],
     };
-    let prevPeriod = { revenue: 0, orders: 0, revenue_change_pct: 12, orders_change_pct: 8 };
-    let cogs = 0;
-    let grossProfit = 0;
+    let prevPeriod = null;
+    let cogs = null;
+    let grossProfit = null;
     let slowSold = [];
     let highViewLowBuy = [];
     let profitMargins = [];
@@ -113,20 +115,8 @@ const DashboardModel = {
     let stockByCpu = [];
     let stockByGpu = [];
     let slowMovingStock = [];
-    let customerMetrics = {
-      tiers: [],
-      topSpenders: [],
-      retentionRate: 38,
-      newVsReturning: [
-        { name: 'Khách hàng mới', value: 62 },
-        { name: 'Khách quay lại', value: 38 },
-      ],
-    };
-    let warrantyMetrics = {
-      rma_by_status: [],
-      common_defects: [],
-      service_revenue: 12500000,
-    };
+    const customerMetrics = { tiers: [], topSpenders: [], retentionRate: null, newVsReturning: [] };
+    const warrantyMetrics = { rma_by_status: [], common_defects: [] };
     let staffSales = [];
     let promoStats = [];
 
@@ -134,48 +124,83 @@ const DashboardModel = {
       // 2.1 Thống kê đơn hàng chính từ bảng orders theo bộ lọc thời gian
       const [[os]] = await pool.query(`
         SELECT
-          COALESCE(SUM(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0) AS total_revenue,
-          COALESCE(SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END), 0) AS delivered_revenue,
+          COALESCE(SUM(recognized_amount), 0) AS total_revenue,
+          COALESCE(SUM(CASE WHEN status = 'delivered' THEN recognized_amount ELSE 0 END), 0) AS delivered_revenue,
+          COALESCE(SUM(status = 'delivered'), 0) AS delivered_orders,
+          COALESCE(SUM(status <> 'cancelled' AND payment_status = 'paid'), 0) AS paid_orders,
+          COALESCE(SUM(CASE WHEN status <> 'cancelled' AND payment_status IN ('unpaid', 'pending', 'collecting', 'pending_verification')
+            AND (payment_method LIKE '%COD%' OR payment_method LIKE '%Tiền mặt%') THEN total_amount ELSE 0 END), 0) AS cod_pending,
+          COALESCE(SUM(CASE WHEN status <> 'cancelled' AND payment_status = 'paid' THEN gateway_fee ELSE 0 END), 0) AS gateway_fees,
           COALESCE(SUM(CASE WHEN status != 'cancelled' THEN 1 ELSE 0 END), 0) AS total_orders,
           COALESCE(SUM(status = 'pending'), 0) AS new_orders
-        FROM orders
+        FROM ${reportOrders} o
         WHERE ${dateFilter}
       `);
 
       const [[{ total_customers }]] = await pool.query('SELECT COUNT(*) AS total_customers FROM customers');
-      orderStats = { ...os, total_customers };
+      orderStats = { ...os, total_customers: scoped ? null : total_customers };
 
-      // 2.1.0 Top sản phẩm bán chạy THẬT 100% từ bảng orders theo đúng khoảng thời gian lọc
+      // Ưu tiên các dòng hàng chuẩn hóa, rồi các đơn dùng items_json hoặc SKU cũ.
       try {
-        const [realTop] = await pool.query(`
-          SELECT 
-            o.product_id AS id,
-            COALESCE(o.sku, p.sku) AS sku,
-            o.product_name AS name,
-            COALESCE(SUM(o.quantity), COUNT(o.id)) AS sold_count,
-            COALESCE(p.stock_quantity, 0) AS stock_quantity,
-            MAX(COALESCE(o.unit_price, p.price, 0)) AS price,
-            MAX(COALESCE(p.cost_price, 0)) AS cost_price,
-            COALESCE(SUM(o.total_amount), 0) AS total_revenue
-          FROM orders o
-          LEFT JOIN products p ON p.id = o.product_id
-          WHERE ${dateFilter} AND o.status != 'cancelled'
-          GROUP BY o.product_id, COALESCE(o.sku, p.sku), o.product_name, p.stock_quantity
-          ORDER BY sold_count DESC, total_revenue DESC
-          LIMIT 10
-        `);
-        topSold = realTop;
+        const [orders] = await pool.query(`SELECT id, product_id, product_name, sku, quantity, unit_price, items_json
+          FROM ${reportOrders} o WHERE ${dateFilter} AND status <> 'cancelled' AND payment_status IN ('paid', 'refunded')`);
+        const [products] = await pool.query('SELECT id, sku, name, price, cost_price, stock_quantity, category_id FROM products');
+        const [details] = await pool.query(`SELECT oi.* FROM order_items oi JOIN ${reportOrders} o ON oi.order_id = o.id
+          WHERE ${dateFilter} AND o.status <> 'cancelled' AND o.payment_status IN ('paid', 'refunded')`);
+        const productsById = new Map(products.map((p) => [Number(p.id), p]));
+        const detailsByOrder = new Map();
+        for (const row of details) {
+          const list = detailsByOrder.get(row.order_id) || [];
+          list.push(row);
+          detailsByOrder.set(row.order_id, list);
+        }
+        const sold = new Map();
+        let totalCost = 0;
+        let missingCost = false;
+        for (const order of orders) {
+          let items = detailsByOrder.get(order.id);
+          if (!items?.length && order.items_json) {
+            try {
+              items = typeof order.items_json === 'string' ? JSON.parse(order.items_json) : order.items_json;
+            } catch {}
+          }
+          if (!Array.isArray(items) || !items.length) items = [order];
+          for (const item of items) {
+            const id = Number(item.pid ?? item.product_id);
+            const product = productsById.get(id);
+            const sku = product?.sku || item.sku || item.product_sku || order.sku;
+            const quantity = Number(item.qty ?? item.quantity);
+            const unitPrice = item.unit_price ?? item.price;
+            const amount = item.line_total ?? item.total ?? (unitPrice != null ? Number(unitPrice) * quantity : null);
+            const cost = item.cost_price ?? product?.cost_price;
+            if (cost == null || Number(cost) <= 0 || !(quantity > 0)) missingCost = true;
+            else totalCost += Number(cost) * quantity;
+            if (!sku || !(quantity > 0) || (category > 0 && Number(product?.category_id) !== category)) continue;
+            const current = sold.get(sku) || {
+              id: product?.id || sku, sku, name: product?.name || item.name || item.product_name || order.product_name,
+              sold_count: 0, total_revenue: 0, stock_quantity: product?.stock_quantity ?? null, price: product?.price ?? unitPrice,
+            };
+            current.sold_count += quantity;
+            current.total_revenue += Number(amount || 0);
+            sold.set(sku, current);
+          }
+        }
+        topSold = [...sold.values()].sort((a, b) => b.sold_count - a.sold_count).slice(0, 10);
+        if (withCost && !missingCost) {
+          cogs = totalCost;
+          grossProfit = Number(orderStats.total_revenue) - cogs;
+        }
       } catch (e) {
-        console.warn('Dashboard real topSold error:', e.message);
+        console.warn('Dashboard order lines unavailable:', e.message);
       }
 
       // 2.2 So sánh kỳ trước
-      try {
+      if (range !== 'all') try {
         const [[prevStats]] = await pool.query(`
           SELECT 
-            COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS prev_revenue,
+            COALESCE(SUM(recognized_amount), 0) AS prev_revenue,
             COALESCE(SUM(CASE WHEN status != 'cancelled' THEN 1 ELSE 0 END), 0) AS prev_orders
-          FROM orders
+          FROM ${reportOrders} o
           WHERE ${prevDateFilter}
         `);
         const pRev = Number(prevStats?.prev_revenue || 0);
@@ -185,26 +210,11 @@ const DashboardModel = {
         prevPeriod = {
           revenue: pRev,
           orders: pOrd,
-          revenue_change_pct: pRev > 0 ? Math.round(((curRev - pRev) / pRev) * 100) : (curRev > 0 ? 100 : 0),
-          orders_change_pct: pOrd > 0 ? Math.round(((curOrd - pOrd) / pOrd) * 100) : (curOrd > 0 ? 100 : 0),
+          revenue_change_pct: pRev > 0 ? Math.round(((curRev - pRev) / pRev) * 100) : null,
+          orders_change_pct: pOrd > 0 ? Math.round(((curOrd - pOrd) / pOrd) * 100) : null,
         };
       } catch (e) {
         console.warn('Dashboard prev period error:', e.message);
-      }
-
-      // 2.3 Giá vốn & Lợi nhuận gộp
-      try {
-        const [[cogsRow]] = await pool.query(`
-          SELECT COALESCE(SUM(COALESCE(p.cost_price, p.price * 0.78) * o.quantity), 0) AS cogs
-          FROM orders o
-          LEFT JOIN products p ON p.id = o.product_id
-          WHERE ${dateFilter} AND o.status != 'cancelled' AND o.payment_status = 'paid'
-        `);
-        cogs = Number(cogsRow?.cogs || 0);
-        grossProfit = Math.max(0, Number(orderStats.total_revenue || 0) - cogs);
-      } catch (e) {
-        cogs = Math.round(Number(orderStats.total_revenue || 0) * 0.78);
-        grossProfit = Math.round(Number(orderStats.total_revenue || 0) * 0.22);
       }
 
       // 2.4 Danh sách 10 đơn gần đây
@@ -212,8 +222,9 @@ const DashboardModel = {
         SELECT o.id, o.code, o.customer_name, o.customer_phone, o.product_name,
                o.total_amount, o.status, o.payment_status, o.ordered_at, o.serial_number,
                c.tier AS customer_tier
-          FROM orders o
+          FROM ${reportOrders} o
           LEFT JOIN customers c ON c.id = o.customer_id
+         WHERE ${dateFilter}
          ORDER BY o.ordered_at DESC, o.id DESC LIMIT 10
       `);
       recentOrders = ro;
@@ -223,10 +234,10 @@ const DashboardModel = {
         const [hourly] = await pool.query(`
           SELECT 
             HOUR(${vnOrderedAt}) as hour_num,
-            COALESCE(SUM(total_amount), 0) as doanhThu,
+            COALESCE(SUM(recognized_amount), 0) as doanhThu,
             COUNT(*) as donHang
-          FROM orders
-          WHERE DATE(${vnOrderedAt}) = DATE(${vnNow}) AND status != 'cancelled'
+          FROM ${reportOrders} o
+          WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY hour_num
           ORDER BY hour_num
         `);
@@ -268,10 +279,10 @@ const DashboardModel = {
           SELECT 
             DATE_FORMAT(${vnOrderedAt}, '%d/%m') as day_label,
             DATE(${vnOrderedAt}) as order_date,
-            COALESCE(SUM(total_amount), 0) as doanhThu,
+            COALESCE(SUM(recognized_amount), 0) as doanhThu,
             COUNT(*) as donHang
-          FROM orders
-          WHERE ${vnOrderedAt} >= DATE_SUB(${vnNow}, INTERVAL 6 DAY) AND status != 'cancelled'
+          FROM ${reportOrders} o
+          WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY DATE(${vnOrderedAt}), day_label
           ORDER BY order_date ASC
         `);
@@ -281,8 +292,8 @@ const DashboardModel = {
         const days = [];
         for (let i = 6; i >= 0; i--) {
           const d = new Date(Date.now() + 7 * 3600000);
-          d.setDate(d.getDate() - i);
-          const dayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+          d.setUTCDate(d.getUTCDate() - i);
+          const dayStr = `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
           const found = dayMap[dayStr];
           days.push({
             name: dayStr,
@@ -294,50 +305,42 @@ const DashboardModel = {
       } else if (range === 'year' || range === 'all') {
         const [monthly] = await pool.query(`
           SELECT 
-            DATE_FORMAT(${vnOrderedAt}, 'T%m') as month_label,
-            COALESCE(SUM(total_amount), 0) as doanhThu,
+            DATE_FORMAT(${vnOrderedAt}, '%Y-%m') as month_label,
+            COALESCE(SUM(recognized_amount), 0) as doanhThu,
             COUNT(*) as donHang
-          FROM orders
+          FROM ${reportOrders} o
           WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY month_label
           ORDER BY month_label ASC
         `);
-        const monthMap = {};
-        monthly.forEach((m) => { monthMap[m.month_label] = m; });
-        revenueTimeline = ['T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'T08', 'T09', 'T10', 'T11', 'T12'].map((m) => ({
-          name: m,
-          doanhThu: Number(monthMap[m]?.doanhThu || 0),
-          donHang: Number(monthMap[m]?.donHang || 0),
+        revenueTimeline = monthly.map((month) => ({
+          name: month.month_label, doanhThu: Number(month.doanhThu), donHang: Number(month.donHang),
         }));
       } else if (range === 'quarter') {
         const [weekly] = await pool.query(`
           SELECT 
-            CONCAT('Tuần ', WEEK(${vnOrderedAt}, 1)) as week_label,
-            COALESCE(SUM(total_amount), 0) as doanhThu,
+            YEARWEEK(${vnOrderedAt}, 3) as week_label,
+            COALESCE(SUM(recognized_amount), 0) as doanhThu,
             COUNT(*) as donHang
-          FROM orders
+          FROM ${reportOrders} o
           WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY week_label
-          ORDER BY WEEK(${vnOrderedAt}, 1) ASC
+          ORDER BY week_label ASC
         `);
         revenueTimeline = weekly.length ? weekly.map((w) => ({
-          name: w.week_label,
+          name: String(w.week_label).replace(/^(\d{4})/, '$1-W'),
           doanhThu: Number(w.doanhThu || 0),
           donHang: Number(w.donHang || 0),
-        })) : [
-          { name: 'Tháng 1', doanhThu: 0, donHang: 0 },
-          { name: 'Tháng 2', doanhThu: 0, donHang: 0 },
-          { name: 'Tháng 3', doanhThu: 0, donHang: 0 },
-        ];
+        })) : [];
       } else {
         // 30 days: hiển thị đường doanh thu theo từng ngày thực tế
         const [daily] = await pool.query(`
           SELECT 
             DATE_FORMAT(${vnOrderedAt}, '%d/%m') as day_label,
             DATE(${vnOrderedAt}) as order_date,
-            COALESCE(SUM(total_amount), 0) as doanhThu,
+            COALESCE(SUM(recognized_amount), 0) as doanhThu,
             COUNT(*) as donHang
-          FROM orders
+          FROM ${reportOrders} o
           WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY DATE(${vnOrderedAt}), day_label
           ORDER BY order_date ASC
@@ -348,8 +351,8 @@ const DashboardModel = {
         const days = [];
         for (let i = 29; i >= 0; i--) {
           const d = new Date(Date.now() + 7 * 3600000);
-          d.setDate(d.getDate() - i);
-          const dayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+          d.setUTCDate(d.getUTCDate() - i);
+          const dayStr = `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
           const found = dayMap[dayStr];
           days.push({
             name: dayStr,
@@ -363,7 +366,7 @@ const DashboardModel = {
       // 2.6 Biểu đồ trạng thái đơn hàng
       const [statusRows] = await pool.query(`
         SELECT status, COUNT(*) as cnt
-        FROM orders
+        FROM ${reportOrders} o
         WHERE ${dateFilter}
         GROUP BY status
       `);
@@ -386,24 +389,20 @@ const DashboardModel = {
         };
       }).filter((item) => item.value > 0);
 
-      if (orderStatusDist.length === 0) {
-        orderStatusDist = [{ name: 'Chưa có đơn', value: 1, color: '#94a3b8' }];
-      }
-
       // 2.7 Doanh thu theo Kênh bán
       try {
         const [chRows] = await pool.query(`
           SELECT 
             CASE 
-              WHEN branch LIKE '%Website%' OR branch IS NULL OR branch = '' OR branch LIKE '%HQ%' THEN 'Website Trực tuyến'
+              WHEN branch LIKE '%Website%'  THEN 'Website Trực tuyến'
               WHEN branch LIKE '%Hà Nội%' THEN 'Showroom Hà Nội'
               WHEN branch LIKE '%Hồ Chí Minh%' OR branch LIKE '%TP.HCM%' THEN 'Showroom TP.HCM'
               WHEN branch LIKE '%Đà Nẵng%' THEN 'Chi nhánh Đà Nẵng'
-              ELSE 'Sàn TMĐT / Kênh khác'
+              ELSE 'Kênh chưa phân loại'
             END AS channel,
             COUNT(*) AS order_count,
-            COALESCE(SUM(total_amount), 0) AS revenue
-          FROM orders
+            COALESCE(SUM(recognized_amount), 0) AS revenue
+          FROM ${reportOrders} o
           WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY channel
           ORDER BY revenue DESC
@@ -417,10 +416,10 @@ const DashboardModel = {
       try {
         const [pmRows] = await pool.query(`
           SELECT 
-            COALESCE(payment_method, 'COD - Tiền mặt') AS method,
+            COALESCE(NULLIF(payment_method, ''), 'Chưa phân loại') AS method,
             COUNT(*) AS count,
-            COALESCE(SUM(total_amount), 0) AS revenue
-          FROM orders
+            COALESCE(SUM(recognized_amount), 0) AS revenue
+          FROM ${reportOrders} o
           WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY payment_method
           ORDER BY revenue DESC
@@ -438,11 +437,11 @@ const DashboardModel = {
               WHEN branch LIKE '%Hà Nội%' THEN 'Miền Bắc (Hà Nội & lân cận)'
               WHEN branch LIKE '%Hồ Chí Minh%' OR branch LIKE '%TP.HCM%' THEN 'Miền Nam (TP.HCM)'
               WHEN branch LIKE '%Đà Nẵng%' THEN 'Miền Trung (Đà Nẵng)'
-              ELSE 'Giao hàng Toàn quốc'
+              ELSE 'Chi nhánh chưa phân loại'
             END AS region,
             COUNT(*) AS order_count,
-            COALESCE(SUM(total_amount), 0) AS revenue
-          FROM orders
+            COALESCE(SUM(recognized_amount), 0) AS revenue
+          FROM ${reportOrders} o
           WHERE ${dateFilter} AND status != 'cancelled'
           GROUP BY region
           ORDER BY revenue DESC
@@ -458,18 +457,18 @@ const DashboardModel = {
           SELECT 
             COALESCE(SUM(status = 'cancelled'), 0) AS cancelled_count,
             COUNT(*) AS total_all,
-            COALESCE(AVG(TIMESTAMPDIFF(HOUR, ordered_at, delivered_at)), 26) AS avg_hours
-          FROM orders
+            AVG(TIMESTAMPDIFF(MINUTE, ordered_at, delivered_at)) / 60 AS avg_hours
+          FROM ${reportOrders} o
           WHERE ${dateFilter}
         `);
         const totalAll = Number(issueStats?.total_all || 0);
         const cancelled = Number(issueStats?.cancelled_count || 0);
         orderIssues.cancelled_count = cancelled;
         orderIssues.cancel_rate = totalAll > 0 ? Math.round((cancelled / totalAll) * 100) : 0;
-        orderIssues.avg_delivery_hours = Math.round(Number(issueStats?.avg_hours || 26));
+        orderIssues.avg_delivery_hours = issueStats?.avg_hours == null ? null : Math.round(Number(issueStats.avg_hours));
 
         try {
-          const [[rmaRow]] = await pool.query('SELECT COUNT(*) AS rma_total FROM rmas');
+          const [[rmaRow]] = await pool.query(`SELECT COUNT(DISTINCT r.order_code) AS rma_total FROM rmas r JOIN ${reportOrders} o ON o.code = r.order_code WHERE ${dateFilter} AND r.status = 'Hoàn tất'`);
           orderIssues.returned_count = Number(rmaRow?.rma_total || 0);
           orderIssues.return_rate = totalAll > 0 ? Math.round((orderIssues.returned_count / totalAll) * 100) : 0;
         } catch {
@@ -499,14 +498,16 @@ const DashboardModel = {
         `);
         highViewLowBuy = hvlb;
 
+        if (withCost) {
         const [pm] = await pool.query(`
           SELECT id, sku, name, price, cost_price,
-                 ROUND(((price - COALESCE(cost_price, price * 0.78)) / GREATEST(price, 1)) * 100, 1) AS margin_pct
+                 ROUND(((price - cost_price) / GREATEST(price, 1)) * 100, 1) AS margin_pct
           FROM products
-          WHERE deleted_at IS NULL
+          WHERE deleted_at IS NULL AND cost_price > 0
           ORDER BY margin_pct DESC LIMIT 8
         `);
         profitMargins = pm;
+        }
       } catch (e) {
         console.warn('Dashboard product deep analysis error:', e.message);
       }
@@ -515,7 +516,7 @@ const DashboardModel = {
       try {
         const [ramRows] = await pool.query(`
           SELECT 
-            COALESCE(CONCAT(s.ram_gb, 'GB'), '16GB') AS label,
+            COALESCE(CONCAT(s.ram_gb, 'GB'), 'Chưa khai báo') AS label,
             COALESCE(SUM(p.stock_quantity), 0) AS units
           FROM products p
           LEFT JOIN product_specs s ON s.product_id = p.id
@@ -527,7 +528,7 @@ const DashboardModel = {
 
         const [storageRows] = await pool.query(`
           SELECT 
-            COALESCE(CONCAT(s.storage_gb, 'GB SSD'), '512GB SSD') AS label,
+            COALESCE(CONCAT(s.storage_gb, 'GB SSD'), 'Chưa khai báo') AS label,
             COALESCE(SUM(p.stock_quantity), 0) AS units
           FROM products p
           LEFT JOIN product_specs s ON s.product_id = p.id
@@ -590,46 +591,55 @@ const DashboardModel = {
       }
 
       // 2.13 Khách hàng: VIP & Retention
-      try {
-        const [tierRows] = await pool.query(`
-          SELECT tier, COUNT(*) AS count, COALESCE(SUM(total_spent), 0) AS spent
-          FROM customers GROUP BY tier
-        `);
-        customerMetrics.tiers = tierRows;
+      if (!scoped) try {
+        const [spenders] = await pool.query(`SELECT c.id, c.code, c.full_name, c.phone,
+            COUNT(o.id) AS order_count, SUM(o.recognized_amount) AS total_spent
+          FROM customers c JOIN ${reportOrders} o ON o.customer_id = c.id
+          WHERE ${dateFilter} AND o.status = 'delivered' AND o.payment_status = 'paid'
+          GROUP BY c.id, c.code, c.full_name, c.phone ORDER BY total_spent DESC LIMIT 8`);
+        customerMetrics.topSpenders = spenders.map((customer) => ({
+          ...customer,
+          tier: customer.total_spent >= 100000000 ? 'VIP' : customer.total_spent >= 30000000 ? 'Thân thiết' : 'Khách mới',
+        }));
 
-        const [spenders] = await pool.query(`
-          SELECT id, code, full_name, phone, tier, order_count, total_spent
-          FROM customers ORDER BY total_spent DESC LIMIT 8
-        `);
-        customerMetrics.topSpenders = spenders;
-
-        const [[custStats]] = await pool.query(`
-          SELECT 
-            COUNT(*) AS total_custs,
-            COALESCE(SUM(order_count > 1), 0) AS returning_custs
-          FROM customers
-        `);
-        const totalC = Number(custStats?.total_custs || 1);
+        const [[custStats]] = await pool.query(`SELECT COUNT(*) AS total_custs,
+            COALESCE(SUM(paid_orders > 1), 0) AS returning_custs,
+            COALESCE(SUM(spent >= 100000000), 0) AS vip_count
+          FROM (SELECT customer_id, COUNT(*) AS paid_orders, SUM(recognized_amount) AS spent
+            FROM ${reportOrders} o WHERE ${dateFilter} AND status = 'delivered'
+              AND payment_status = 'paid' AND customer_id IS NOT NULL GROUP BY customer_id) customers_in_period`);
+        const totalC = Number(custStats?.total_custs || 0);
         const returningC = Number(custStats?.returning_custs || 0);
-        const retPct = Math.round((returningC / totalC) * 100);
+        const retPct = totalC ? Math.round((returningC / totalC) * 100) : null;
         customerMetrics.retentionRate = retPct;
-        customerMetrics.newVsReturning = [
+        customerMetrics.vipCount = Number(custStats?.vip_count || 0);
+        customerMetrics.newVsReturning = totalC ? [
           { name: 'Khách hàng mới', value: Math.max(0, 100 - retPct) },
           { name: 'Khách quay lại', value: retPct },
-        ];
+        ] : [];
       } catch (e) {
         console.warn('Dashboard customer metrics error:', e.message);
       }
 
+      try {
+        const [[reviews]] = await pool.query(`SELECT COUNT(*) AS review_count, ROUND(AVG(rating), 1) AS average_rating
+          FROM product_reviews WHERE status IN ('approved', 'replied')`);
+        customerMetrics.reviewCount = Number(reviews.review_count);
+        customerMetrics.averageRating = reviews.average_rating;
+      } catch (e) {
+        console.warn('Dashboard review metrics unavailable:', e.message);
+      }
+
       // 2.14 Bảo hành & Hậu mãi
       try {
-        const [rmaStatus] = await pool.query('SELECT status, COUNT(*) AS count FROM rmas GROUP BY status');
+        const [rmaStatus] = await pool.query(`SELECT r.status, COUNT(*) AS count FROM rmas r JOIN ${reportOrders} o ON o.code = r.order_code WHERE ${dateFilter} GROUP BY r.status`);
         warrantyMetrics.rma_by_status = rmaStatus;
 
         const [rmaReasons] = await pool.query(`
-          SELECT reason, COUNT(*) AS count FROM rmas WHERE reason IS NOT NULL AND reason != '' GROUP BY reason ORDER BY count DESC LIMIT 6
+          SELECT r.reason, COUNT(*) AS count FROM rmas r JOIN ${reportOrders} o ON o.code = r.order_code WHERE ${dateFilter} AND r.reason IS NOT NULL AND r.reason != '' GROUP BY r.reason ORDER BY count DESC LIMIT 6
         `);
         warrantyMetrics.common_defects = rmaReasons;
+        orderIssues.return_reasons = rmaReasons;
       } catch (e) {
         console.warn('Dashboard warranty error:', e.message);
       }
@@ -638,13 +648,13 @@ const DashboardModel = {
       try {
         const [staff] = await pool.query(`
           SELECT 
-            u.id, u.full_name, u.role, u.branch,
+            u.id, u.full_name, r.name AS role, u.branch,
             COUNT(o.id) AS order_count,
-            COALESCE(SUM(CASE WHEN o.status != 'cancelled' THEN o.total_amount ELSE 0 END), 0) AS total_sales,
-            COALESCE(SUM(CASE WHEN o.status = 'delivered' AND o.payment_status = 'paid' THEN o.total_amount ELSE 0 END), 0) AS delivered_sales
-          FROM users u
-          LEFT JOIN orders o ON o.assigned_to = u.id AND ${dateFilter}
-          GROUP BY u.id, u.full_name, u.role, u.branch
+            COALESCE(SUM(o.recognized_amount), 0) AS total_sales,
+            COALESCE(SUM(CASE WHEN o.status = 'delivered' AND o.payment_status = 'paid' THEN o.recognized_amount ELSE 0 END), 0) AS delivered_sales
+          FROM users u JOIN roles r ON r.id = u.role_id
+          JOIN ${reportOrders} o ON o.assigned_to = u.id AND ${dateFilter}
+          GROUP BY u.id, u.full_name, r.name, u.branch
           ORDER BY total_sales DESC LIMIT 10
         `);
         staffSales = staff;
@@ -655,8 +665,9 @@ const DashboardModel = {
       // 2.16 Marketing & Mã giảm giá
       try {
         const [promos] = await pool.query(`
-          SELECT id, code, name, discount_type, discount_value, used_count, status
-          FROM promotions ORDER BY used_count DESC LIMIT 8
+          SELECT p.id, p.code, p.title, p.status, COUNT(o.id) AS used_count, COALESCE(SUM(o.recognized_amount), 0) AS revenue
+          FROM promotions p LEFT JOIN ${reportOrders} o ON o.coupon_code = p.code AND ${dateFilter} AND o.status <> 'cancelled'
+          GROUP BY p.id, p.code, p.title, p.status ORDER BY used_count DESC LIMIT 20
         `);
         promoStats = promos;
       } catch (e) {
@@ -664,7 +675,7 @@ const DashboardModel = {
       }
 
     } catch (err) {
-      console.error('Error in DashboardModel.getDashboardData:', err);
+      throw err;
     }
 
     // 3. Tỷ trọng danh mục laptop thực tế
@@ -679,7 +690,12 @@ const DashboardModel = {
     return {
       summary,
       total_revenue:   orderStats.total_revenue,
-      total_orders:    orderStats.total_orders,
+      total_orders: orderStats.total_orders,
+      delivered_orders: orderStats.delivered_orders,
+      delivered_revenue: orderStats.delivered_revenue,
+      paid_orders: orderStats.paid_orders,
+      cod_pending: orderStats.cod_pending,
+      gateway_fees: orderStats.gateway_fees,
       new_orders:      orderStats.new_orders,
       total_customers: orderStats.total_customers,
       recent_orders:   recentOrders,

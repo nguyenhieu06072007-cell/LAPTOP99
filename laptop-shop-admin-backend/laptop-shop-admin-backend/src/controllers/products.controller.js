@@ -10,7 +10,7 @@ const {
 const { writeAudit } = require('../services/audit');
 const ProductModel = require('../models/product.model');
 
-const canCost = (req) => can(req.user.role, 'cost:read');
+const canCost = (req) => can(req.user, 'cost:read');
 
 /* ------------------------------------------------------------------ */
 /* Schemas & Validators                                               */

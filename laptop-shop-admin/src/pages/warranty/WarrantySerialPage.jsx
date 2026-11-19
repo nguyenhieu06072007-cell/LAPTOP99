@@ -16,15 +16,14 @@ export default function WarrantySerialPage() {
   const [searchSerial, setSearchSerial] = useState('');
   const [searchedItem, setSearchedItem] = useState(null);
 
-  const fetchSerials = async () => {
+  const fetchSerials = async (search) => {
     try {
       setLoading(true);
-      const res = await api.get('/orders/serials/list');
+      const res = await api.get('/orders/serials/list', { params: { search } });
       const rows = res.data?.data || [];
       setSerialList(rows);
-      if (rows.length > 0 && !searchedItem) {
-        setSearchedItem(rows[0]);
-      }
+      setSearchedItem(rows[0] || null);
+      return rows;
     } catch (err) {
       toast.error('Không thể tải danh sách Serial bảo hành từ đơn hàng');
     } finally {
@@ -36,26 +35,12 @@ export default function WarrantySerialPage() {
     fetchSerials();
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const q = searchSerial.trim().toLowerCase();
-    if (!q) {
-      toast.error('Vui lòng nhập Serial Number (S/N) hoặc Mã đơn hàng');
-      return;
-    }
-    const found = serialList.find(
-      (s) =>
-        s.serial.toLowerCase().includes(q) ||
-        (s.order_code || '').toLowerCase().includes(q) ||
-        (s.customer || '').toLowerCase().includes(q)
-    );
-    if (found) {
-      setSearchedItem(found);
-      toast.success(`Đã tìm thấy thông tin bảo hành S/N: ${found.serial}`);
-    } else {
-      setSearchedItem(null);
-      toast.error(`Không tìm thấy mã Serial "${searchSerial}" trong các đơn hàng thực tế`);
-    }
+  const handleSearch = async (event) => {
+    event.preventDefault();
+    const search = searchSerial.trim();
+    if (!search) return toast.error('Nhập serial hoặc mã đơn hàng');
+    const rows = await fetchSerials(search);
+    if (rows?.length === 0) toast.error('Không tìm thấy serial hoặc đơn hàng');
   };
 
   if (loading) return <LoadingSpinner fullPage text="Đang đồng bộ Serial Number (S/N) từ đơn hàng khách..." />;

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../api/axios';
+import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   HiOutlineShoppingCart,
   HiOutlineTruck,
@@ -28,12 +30,20 @@ const COLUMNS = [
 const NEXT_STATUS = { pending: 'confirmed', confirmed: 'shipping', shipping: 'delivered' };
 
 export default function OrderKanbanPage() {
+  const { can } = useAuth();
+  const [params] = useSearchParams();
+  const defaultSearch = params.get('search') || '';
+  const mayWrite = can('order:write');
+  const maySeePayments = can(['finance:read', 'finance:reconcile', 'finance:refund', 'report:sales', 'report:read']);
+  const [paymentReference, setPaymentReference] = useState('');
+  const [acting, setActing] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState('kanban');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [paymentFilter, setPaymentFilter] = useState('');
-  const [searchVal, setSearchVal] = useState('');
+  const [searchVal, setSearchVal] = useState(defaultSearch);
+  useEffect(() => setSearchVal(defaultSearch), [defaultSearch]);
 
   // Create order modal
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -73,28 +83,42 @@ export default function OrderKanbanPage() {
   }, [fetchOrders]);
 
   useEffect(() => {
-    if (activeMainTab === 'payments') fetchFinanceSummary();
-  }, [activeMainTab]);
+    if (activeMainTab === 'payments' && maySeePayments) fetchFinanceSummary();
+  }, [activeMainTab, maySeePayments]);
 
-  const moveOrder = async (orderId, newStatus) => {
-    try {
-      await api.patch(`/orders/${orderId}/status`, { status: newStatus });
-      const targetOrd = orders.find(o => o.id === orderId);
-      if (newStatus === 'confirmed' && targetOrd && (targetOrd.payment_status === 'pending_verification' || targetOrd.payment_verification_status === 'pending_verification')) {
-        try {
-          await api.patch(`/orders/${orderId}/reconcile-payment`, {});
-        } catch(e) {}
-      }
-      setOrders(prev => prev.map(o => o.id === orderId ? {
-        ...o,
-        status: newStatus,
-        payment_status: (newStatus === 'confirmed' && (o.payment_status === 'pending_verification' || o.payment_verification_status === 'pending_verification')) ? 'paid' : o.payment_status
-      } : o));
-      toast.success(`Đã cập nhật trạng thái đơn`);
-    } catch (err) {
-      toast.error(err.message || 'Lỗi cập nhật trạng thái');
-    }
+  const applyOrder = (updated) => {
+    setOrders((previous) => previous.map((order) => order.id === updated.id ? updated : order));
+    setSelectedOrder((previous) => previous?.id === updated.id ? updated : previous);
   };
+
+  async function moveOrder(orderId, status) {
+    try {
+      const { data } = await api.patch(`/orders/${orderId}/status`, { status });
+      applyOrder(data.data);
+      toast.success('Đã cập nhật trạng thái đơn');
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
+
+  async function confirmPayment(event, refund = false) {
+    event.preventDefault();
+    if (acting || !paymentReference.trim()) return;
+    setActing(true);
+    try {
+      const action = refund ? 'refund' : 'reconcile-payment';
+      const key = refund ? 'reference' : 'gateway_code';
+      const { data } = await api.patch(`/orders/${selectedOrder.id}/${action}`, { [key]: paymentReference.trim() });
+      applyOrder(data.data);
+      setPaymentReference('');
+      toast.success(refund ? 'Đã ghi nhận khoản tiền hoàn' : 'Đã ghi nhận đối soát');
+      fetchFinanceSummary();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setActing(false);
+    }
+  }
 
   const handleCreateOrder = async (e) => {
     e.preventDefault();
@@ -147,15 +171,15 @@ export default function OrderKanbanPage() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <button
+          {mayWrite && <button
             onClick={() => setIsCreateOpen(true)}
             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5"
           >
             <HiOutlinePlus className="w-4 h-4" />
             <span>Tạo đơn mới</span>
-          </button>
+          </button>}
           <button
-            onClick={() => { fetchOrders(); fetchFinanceSummary(); toast.success('Đang đồng bộ đơn hàng...'); }}
+            onClick={() => { fetchOrders(); if (maySeePayments) fetchFinanceSummary(); }}
             className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5"
           >
             <HiOutlineArrowPath className="w-4 h-4" />
@@ -176,7 +200,7 @@ export default function OrderKanbanPage() {
           <span>1. Kanban Đơn hàng ({orders.filter(o => o.status !== 'cancelled').length})</span>
         </button>
 
-        <button
+        {maySeePayments && <button
           onClick={() => setActiveMainTab('payments')}
           className={`flex items-center gap-2 py-3 px-5 border-b-2 font-bold text-xs transition ${
             activeMainTab === 'payments' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -184,7 +208,7 @@ export default function OrderKanbanPage() {
         >
           <HiOutlineCreditCard className="w-4 h-4 text-purple-600" />
           <span>2. Thanh toán & Đối soát Dòng tiền</span>
-        </button>
+        </button>}
       </div>
 
       {/* TAB 1: KANBAN */}
@@ -260,14 +284,14 @@ export default function OrderKanbanPage() {
 
                         <div className="pt-1 flex items-center justify-between">
                           <button
-                            onClick={() => setSelectedOrder(order)}
+                            onClick={() => { setPaymentReference(''); setSelectedOrder(order); }}
                             className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-gray-100 rounded transition flex items-center gap-1 text-[11px]"
                           >
                             <HiOutlinePrinter className="w-4 h-4" />
                             <span>In phiếu</span>
                           </button>
 
-                          {NEXT_STATUS[col.id] && (
+                          {mayWrite && NEXT_STATUS[col.id] && (
                             <button
                               onClick={() => moveOrder(order.id, NEXT_STATUS[col.id])}
                               className={`px-2.5 py-1 rounded text-[10px] font-semibold transition text-white ${
@@ -291,7 +315,7 @@ export default function OrderKanbanPage() {
       )}
 
       {/* TAB 2: PAYMENTS */}
-      {activeMainTab === 'payments' && (
+      {maySeePayments && activeMainTab === 'payments' && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
@@ -363,7 +387,7 @@ export default function OrderKanbanPage() {
                 <tbody className="divide-y divide-gray-100">
                   {filteredForPayment.map((o) => (
                     <tr key={o.id} className="hover:bg-blue-50/30">
-                      <td className="p-3 font-mono font-bold text-blue-600">{o.code}</td>
+                      <td className="p-3 font-mono font-bold text-blue-600"><button className="text-blue-700" onClick={() => { setSelectedOrder(o); setPaymentReference(''); }}>{o.code}</button></td>
                       <td className="p-3">
                         <div className="font-bold text-gray-900">{o.customer_name}</div>
                         <div className="text-[10px] text-gray-500">{o.customer_phone}</div>
@@ -374,7 +398,9 @@ export default function OrderKanbanPage() {
                       <td className="p-3 text-rose-600 font-medium">-{formatVND(o.gateway_fee)}</td>
                       <td className="p-3 font-black text-emerald-700">{formatVND(o.net_received)}</td>
                       <td className="p-3">
-                        {o.payment_status === 'paid' ? (
+                        {o.payment_status === 'refund_pending' || o.payment_status === 'refunded' || (o.status === 'cancelled' && o.payment_status === 'paid') ? (
+                          <span className="font-bold text-amber-800">{o.payment_status === 'refunded' ? 'Đã hoàn tiền' : 'Chờ hoàn tiền'}</span>
+                        ) : o.payment_status === 'paid' ? (
                           <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">● Đã thanh toán</span>
                         ) : o.payment_status === 'collecting' ? (
                           <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px]">● Đang thu COD</span>
@@ -424,17 +450,33 @@ export default function OrderKanbanPage() {
               </div>
             </div>
 
+            {can('order:cancel') && ['pending', 'confirmed', 'shipping'].includes(selectedOrder.status) && (
+              <button className="rounded border border-red-300 px-3 py-2 text-red-700"
+                onClick={() => {
+                  if (window.confirm(`Hủy đơn ${selectedOrder.code} và hoàn tồn kho?`)) moveOrder(selectedOrder.id, 'cancelled');
+                }}>Hủy đơn</button>
+            )}
+            {((can('finance:reconcile') && selectedOrder.status !== 'cancelled' && ['unpaid', 'pending', 'collecting', 'pending_verification'].includes(selectedOrder.payment_status))
+              || (can('finance:refund') && (selectedOrder.payment_status === 'refund_pending' || (selectedOrder.status === 'cancelled' && selectedOrder.payment_status === 'paid')))) && (
+              <form onSubmit={(event) => confirmPayment(event, selectedOrder.status === 'cancelled' || selectedOrder.payment_status === 'refund_pending')} className="space-y-2">
+                <p className="text-gray-600">Đối chiếu sao kê hoặc biên nhận hoàn tiền trước khi ghi nhận.</p>
+                <input required maxLength={100} className="w-full rounded border p-2" aria-label="Mã giao dịch" placeholder="Mã giao dịch theo sao kê" value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} />
+                <button type="submit" disabled={acting} className="rounded bg-indigo-600 px-3 py-2 text-white">
+                  {selectedOrder.status === 'cancelled' || selectedOrder.payment_status === 'refund_pending' ? 'Ghi nhận đã hoàn tiền' : 'Ghi nhận đã đối soát'}
+                </button>
+              </form>
+            )}
             <div className="flex justify-end gap-2 pt-2 border-t">
               <button onClick={() => setSelectedOrder(null)} className="px-4 py-2 border rounded-lg hover:bg-gray-100 font-medium text-xs">
                 Đóng
               </button>
-              <button
+              {can('order:print') && <button
                 onClick={() => { window.print(); toast.success('Đang kết xuất hoá đơn VAT...'); }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold flex items-center gap-1.5 text-xs"
               >
                 <HiOutlinePrinter className="w-4 h-4" />
-                In Hóa đơn VAT & Phiếu xuất kho
-              </button>
+                In đơn hàng
+              </button>}
             </div>
           </div>
         </div>

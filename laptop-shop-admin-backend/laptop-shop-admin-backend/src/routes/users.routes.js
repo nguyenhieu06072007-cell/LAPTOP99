@@ -7,8 +7,8 @@ router.use(authenticate, authorize('user:manage')); // chỉ super_admin
 
 router.get('/permissions-catalog', UsersController.getPermissionsCatalog);
 router.get('/roles', UsersController.getRoles);
-router.post('/roles', UsersController.createRole);
-router.put('/roles/:id', UsersController.updateRole);
+router.post('/roles', authorize('role:manage'), UsersController.createRole);
+router.put('/roles/:id', authorize('role:manage'), UsersController.updateRole);
 
 router.get('/', UsersController.getUsers);
 router.post('/', UsersController.createUser);

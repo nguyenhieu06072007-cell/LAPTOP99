@@ -523,7 +523,7 @@ const ClientModel = {
           throw new ApiError(400, `Phiếu thu cũ đang ở trạng thái "${ti.status}", chưa thể áp dụng trừ tiền`);
         }
 
-        tradeInDiscount = Number(ti.final_price || ti.estimated_price || 0);
+        tradeInDiscount = Number(ti.final_price ?? ti.estimated_price ?? 0);
         tradeInId = ti.id;
       }
 

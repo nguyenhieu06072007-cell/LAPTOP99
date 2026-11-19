@@ -1,19 +1,22 @@
 const { pool } = require('../config/db');
 
 const OrderModel = {
-  async getFinanceSummary() {
+  async getFinanceSummary(scope = {}) {
+    const filters = Object.entries(scope);
+    const where = filters.length ? 'WHERE ' + filters.map(([field]) => `o.${field} = ?`).join(' AND ') : '';
     const [[stats]] = await pool.query(`
       SELECT
-        COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS total_paid,
-        COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status != 'paid' AND (payment_method LIKE '%COD%' OR payment_method LIKE '%Tiền mặt%') THEN total_amount ELSE 0 END), 0) AS total_cod_pending,
-        COALESCE(SUM(CASE WHEN payment_status = 'collecting' THEN total_amount ELSE 0 END), 0) AS collecting,
+        COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'paid' THEN GREATEST(0, total_amount - COALESCE(r.amount, 0)) ELSE 0 END), 0) AS total_paid,
+        COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status IN ('unpaid', 'pending', 'collecting', 'pending_verification') AND (payment_method LIKE '%COD%' OR payment_method LIKE '%Tiền mặt%') THEN total_amount ELSE 0 END), 0) AS total_cod_pending,
+        COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'collecting' THEN total_amount ELSE 0 END), 0) AS collecting,
         COALESCE(SUM(CASE WHEN status != 'cancelled' THEN gateway_fee ELSE 0 END), 0) AS total_gateway_fees,
         COALESCE(SUM(CASE WHEN status != 'cancelled' AND payment_status = 'paid' THEN net_received ELSE 0 END), 0) AS total_net_received,
         COALESCE(SUM(CASE WHEN status != 'cancelled' THEN 1 ELSE 0 END), 0) AS total_orders,
         COALESCE(SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END), 0) AS delivered_orders,
-        COALESCE(SUM(CASE WHEN status = 'delivered' AND payment_status = 'paid' THEN total_amount ELSE 0 END), 0) AS delivered_revenue
-      FROM orders
-    `);
+        COALESCE(SUM(CASE WHEN status = 'delivered' AND payment_status = 'paid' THEN GREATEST(0, total_amount - COALESCE(r.amount, 0)) ELSE 0 END), 0) AS delivered_revenue
+      FROM orders o LEFT JOIN (SELECT order_id, SUM(amount) AS amount FROM admin_rma_refunds GROUP BY order_id) r ON r.order_id = o.id
+      ${where}
+    `, filters.map(([, value]) => value || null));
     return stats;
   },
 
@@ -81,9 +84,9 @@ const OrderModel = {
   async syncCustomerStats(conn, customerId) {
     if (!customerId) return;
     const [[stats]] = await conn.query(
-      `SELECT COUNT(*) AS cnt, COALESCE(SUM(total_amount), 0) AS spent
-         FROM orders
-        WHERE customer_id = ? AND status = 'delivered' AND payment_status = 'paid'`,
+      `SELECT COUNT(*) AS cnt, COALESCE(SUM(GREATEST(0, o.total_amount - COALESCE(r.amount, 0))), 0) AS spent
+         FROM orders o LEFT JOIN (SELECT order_id, SUM(amount) AS amount FROM admin_rma_refunds GROUP BY order_id) r ON r.order_id = o.id
+        WHERE o.customer_id = ? AND o.status = 'delivered' AND o.payment_status = 'paid'`,
       [customerId],
     );
     const spent = Number(stats?.spent || 0);

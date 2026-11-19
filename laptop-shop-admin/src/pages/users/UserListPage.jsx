@@ -111,15 +111,6 @@ export default function UserListPage() {
   const [matrixState, setMatrixState] = useState({});
   const [matrixSaving, setMatrixSaving] = useState(false);
 
-  // Security Policies State
-  const [securityPolicies, setSecurityPolicies] = useState({
-    idorProtection: true,
-    maskCostPrice: true,
-    maskCustomerPhone: true,
-    enforce2FA: true,
-    sessionTimeoutMinutes: 30,
-  });
-
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -261,7 +252,7 @@ export default function UserListPage() {
 
   // Fast Reset Password
   const handleResetPassword = async (u) => {
-    const tempPass = 'Laptop@' + Math.floor(100000 + Math.random() * 900000);
+    const tempPass = 'Lp@' + Array.from(crypto.getRandomValues(new Uint8Array(12)), (value) => value.toString(16).padStart(2, '0')).join('');
     try {
       await api.post(`/users/${u.id}/reset-password`, { new_password: tempPass });
       setResetModalData({
@@ -365,10 +356,7 @@ export default function UserListPage() {
   // Helper: Count stats
   const activeCount = users.filter((u) => u.status === 'active').length;
   const financialAccessCount = users.filter(
-    (u) =>
-      u.role === 'super_admin' ||
-      u.role === 'accountant' ||
-      (Array.isArray(u.custom_permissions) && u.custom_permissions.includes('cost:read'))
+    (u) => ['*', 'cost:*', 'cost:read'].some((permission) => u.all_permissions?.includes(permission))
   ).length;
 
   return (
@@ -395,7 +383,7 @@ export default function UserListPage() {
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => handleOpenRoleModal()}
+            disabled={!can('role:manage')} onClick={() => handleOpenRoleModal()}
             className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-xs font-semibold shadow-xs transition"
           >
             <HiShieldCheck className="w-4 h-4 text-purple-600" />
@@ -741,7 +729,7 @@ export default function UserListPage() {
                 </p>
               </div>
               <button
-                onClick={() => handleOpenRoleModal()}
+                disabled={!can('role:manage')} onClick={() => handleOpenRoleModal()}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition"
               >
                 <HiPlus className="w-4 h-4" />
@@ -805,7 +793,7 @@ export default function UserListPage() {
                         {users.filter((u) => u.role_id === r.id).length} nhân sự thuộc nhóm
                       </span>
                       <button
-                        onClick={() => handleOpenRoleModal(r)}
+                        disabled={!can('role:manage')} onClick={() => handleOpenRoleModal(r)}
                         className="px-2.5 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded font-semibold transition"
                       >
                         Chỉnh sửa quyền ›
@@ -830,7 +818,7 @@ export default function UserListPage() {
               </div>
               <button
                 onClick={handleSaveMatrix}
-                disabled={matrixSaving}
+                disabled={matrixSaving || !can('role:manage')}
                 className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition flex-shrink-0"
               >
                 {matrixSaving ? <LoadingSpinner size="sm" /> : <HiClipboardDocumentCheck className="w-4 h-4" />}
@@ -910,115 +898,9 @@ export default function UserListPage() {
 
         {/* TAB 4: SECURITY POLICIES & DATA VISIBILITY */}
         {activeTab === 'security' && (
-          <div className="p-5 space-y-6 max-w-4xl">
-            <div>
-              <h3 className="text-base font-bold text-gray-900">Thiết lập Chính sách Bảo mật & Phòng thủ Lỗ hổng</h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Các quy chuẩn an toàn dữ liệu đáp ứng mục II bản đặc tả kỹ thuật: Chống IDOR, chống rò rỉ giá vốn và bảo vệ thông tin khách hàng.
-              </p>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              {/* Policy 1: Zero-Trust IDOR */}
-              <div className="p-4 rounded-xl border border-gray-200 bg-white flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
-                    <span className="text-blue-600">🛡️</span>
-                    <span>Cơ chế Phòng vệ Tham chiếu Trực tiếp (Zero-Trust IDOR Prevention)</span>
-                  </div>
-                  <p className="text-gray-600">
-                    Ngăn chặn hoàn toàn việc nhân viên thay đổi ID trên URL (ví dụ: <code className="bg-gray-100 px-1 py-0.5 rounded">/orders/10</code> thành <code className="bg-gray-100 px-1 py-0.5 rounded">/orders/11</code>). Mọi truy vấn database đều tự động kiểm tra quyền sở hữu (Context User ID) trước khi trả về dữ liệu.
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={securityPolicies.idorProtection}
-                    onChange={(e) => {
-                      setSecurityPolicies({ ...securityPolicies, idorProtection: e.target.checked });
-                      toast.success('Đã cập nhật chính sách Zero-Trust IDOR');
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              {/* Policy 2: Mask Cost Price */}
-              <div className="p-4 rounded-xl border border-gray-200 bg-white flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
-                    <span className="text-amber-600">💰</span>
-                    <span>Ẩn Giá vốn & Biên Lợi nhuận đối với Bộ phận Kho & Bán lẻ</span>
-                  </div>
-                  <p className="text-gray-600">
-                    Ẩn cột Giá nhập trên màn hình Danh sách sản phẩm, Phiếu kiểm kho và Phiếu xuất hàng. Chỉ Super Admin và Kế toán mới được phân quyền xem giá vốn thực tế của từng SKU.
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={securityPolicies.maskCostPrice}
-                    onChange={(e) => {
-                      setSecurityPolicies({ ...securityPolicies, maskCostPrice: e.target.checked });
-                      toast.success('Đã bật chế độ Ẩn Giá Vốn cho nhân sự vận hành');
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              {/* Policy 3: Mask Customer Phone */}
-              <div className="p-4 rounded-xl border border-gray-200 bg-white flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
-                    <span className="text-purple-600">📱</span>
-                    <span>Che giấu Số điện thoại Khách hàng VIP (Data Masking)</span>
-                  </div>
-                  <p className="text-gray-600">
-                    Chỉ hiển thị 4 số đuôi (ví dụ: <code className="bg-gray-100 px-1 py-0.5 rounded">098***4321</code>) cho nhân viên không thuộc bộ phận Giao hàng/Chăm sóc trực tiếp để ngăn chặn rủi ro tuồn tệp khách hàng cho đối thủ.
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={securityPolicies.maskCustomerPhone}
-                    onChange={(e) => {
-                      setSecurityPolicies({ ...securityPolicies, maskCustomerPhone: e.target.checked });
-                      toast.success('Đã cập nhật chính sách Masking SĐT Khách hàng');
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              {/* Policy 4: Enforce 2FA */}
-              <div className="p-4 rounded-xl border border-gray-200 bg-white flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
-                    <span className="text-emerald-600">🔐</span>
-                    <span>Bắt buộc Xác thực 2 Lớp (Enforce 2FA via OTP/Authenticator)</span>
-                  </div>
-                  <p className="text-gray-600">
-                    Bắt buộc đối với toàn bộ tài khoản có quyền truy cập module Tài chính, Quản trị hệ thống và Đổi mật khẩu. Tài khoản chưa liên kết 2FA sẽ bị khoá tính năng xuất báo cáo.
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={securityPolicies.enforce2FA}
-                    onChange={(e) => {
-                      setSecurityPolicies({ ...securityPolicies, enforce2FA: e.target.checked });
-                      toast.success('Đã kích hoạt chính sách bắt buộc 2FA');
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            </div>
+          <div className="rounded-xl border bg-white p-4 text-sm">
+            Quyền truy cập được kiểm tra ở máy chủ theo vai trò và quyền riêng của nhân viên.
+            Mục này chưa có cấu hình xác thực hai bước hoặc thời hạn phiên riêng.
           </div>
         )}
       </div>
@@ -1121,7 +1003,7 @@ export default function UserListPage() {
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 font-semibold mb-1">Phạm vi xem dữ liệu (Data Visibility) *</label>
+                    <label className="block text-gray-700 font-semibold mb-1">Phạm vi đơn hàng và báo cáo *</label>
                     <select
                       value={userFormData.data_visibility}
                       onChange={(e) => setUserFormData({ ...userFormData, data_visibility: e.target.value })}
@@ -1135,6 +1017,22 @@ export default function UserListPage() {
                     </select>
                   </div>
                 </div>
+
+                <details className="rounded border bg-gray-50 p-3">
+                  <summary className="cursor-pointer font-semibold">Quyền sẽ có của nhân viên này</summary>
+                  {(() => {
+                    const role = roles.find((entry) => String(entry.id) === String(userFormData.role_id));
+                    const inherited = role?.permissions || [];
+                    const direct = showCustomPermOverride ? userFormData.custom_permissions : [];
+                    const permissions = [...inherited, ...direct];
+                    const names = catalog.flatMap((group) => group.permissions);
+                    if (permissions.includes('*')) return <p className="mt-2">Toàn quyền hệ thống.</p>;
+                    const visible = names.filter(({ id }) => permissions.includes(id) || permissions.includes(id.split(':')[0] + ':*'));
+                    return visible.length ? <ul className="mt-2 list-disc space-y-1 pl-4">
+                      {visible.map(({ id, name }) => <li key={id}>{name} · {direct.includes(id) ? 'Quyền riêng' : 'Theo vai trò'}</li>)}
+                    </ul> : <p className="mt-2">Chưa có quyền được chọn.</p>;
+                  })()}
+                </details>
 
                 {/* Role Selector Grid */}
                 <div className="pt-2 border-t border-gray-100">

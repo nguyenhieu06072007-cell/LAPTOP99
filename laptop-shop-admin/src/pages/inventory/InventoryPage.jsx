@@ -119,7 +119,7 @@ export default function InventoryPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Quản lý kho hàng</h1>
-        <button
+        {can('inventory:write') && <button
           onClick={() => {
             setFormData({ product_id: '', type: 'import', quantity: 1, unit_cost: 0, reason: '' });
             setProductSearch('');
@@ -130,7 +130,7 @@ export default function InventoryPage() {
         >
           <HiPlus className="w-5 h-5" />
           Tạo phiếu kho
-        </button>
+        </button>}
       </div>
 
       <div className="flex border-b border-gray-200">

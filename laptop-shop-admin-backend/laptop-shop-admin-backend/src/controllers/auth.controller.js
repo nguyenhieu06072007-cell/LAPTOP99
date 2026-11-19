@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const { z } = require('zod');
 const env = require('../config/env');
 const { pool } = require('../config/db');
-const { ROLE_PERMISSIONS } = require('../config/permissions');
+const { effectivePermissions } = require('../config/permissions');
 const { ApiError, asyncHandler } = require('../utils/helpers');
 const { writeAudit } = require('../services/audit');
 const UserModel = require('../models/user.model');
@@ -53,14 +53,7 @@ const AuthController = {
     await UserModel.resetLoginSuccess(user.id);
     await writeAudit(pool, req, { userId: user.id, action: 'login', entity: 'user', entityId: user.id });
 
-    const rolePerms = ROLE_PERMISSIONS[user.role] || [];
-    let customPerms = [];
-    try {
-      customPerms = typeof user.custom_permissions === 'string' ? JSON.parse(user.custom_permissions) : (user.custom_permissions || []);
-    } catch {
-      customPerms = [];
-    }
-    const combinedPerms = [...new Set([...rolePerms, ...customPerms])];
+    const combinedPerms = effectivePermissions(user);
 
     const token = jwt.sign(
       { sub: user.id, role: user.role, type: 'staff' },
@@ -84,9 +77,7 @@ const AuthController = {
   }),
 
   getMe: asyncHandler(async (req, res) => {
-    const rolePerms = ROLE_PERMISSIONS[req.user.role] || [];
-    const customPerms = req.user.custom_permissions || [];
-    const combinedPerms = [...new Set([...rolePerms, ...customPerms])];
+    const combinedPerms = effectivePermissions(req.user);
     res.json({ data: { ...req.user, permissions: combinedPerms } });
   }),
 

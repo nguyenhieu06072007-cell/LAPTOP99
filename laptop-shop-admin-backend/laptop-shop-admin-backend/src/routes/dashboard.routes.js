@@ -6,5 +6,6 @@ const router = express.Router();
 router.use(authenticate, authorize('report:read'));
 
 router.get('/', DashboardController.getDashboard);
+router.post('/email', authorize('report:send'), DashboardController.emailReport);
 
 module.exports = router;

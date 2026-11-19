@@ -175,7 +175,7 @@ export default function App() {
         <Route
           path="returns"
           element={
-            <PermissionRoute permission={['rma:manage', 'warranty:read']}>
+            <PermissionRoute permission={['rma:manage', 'warranty:read', 'finance:refund']}>
               <ReturnsManagementPage />
             </PermissionRoute>
           }
@@ -183,7 +183,7 @@ export default function App() {
         <Route
           path="trade-in"
           element={
-            <PermissionRoute permission={['tradein:estimate', 'order:read:all', 'warranty:read']}>
+            <PermissionRoute permission={['tradein:estimate', 'order:read:all']}>
               <TradeInPage />
             </PermissionRoute>
           }
@@ -224,7 +224,7 @@ export default function App() {
         <Route
           path="reports"
           element={
-            <PermissionRoute permission={['report:read', 'report:sales', 'finance:read']}>
+            <PermissionRoute permission={'report:read'}>
               <FeedbackReportsPage />
             </PermissionRoute>
           }

@@ -6,9 +6,10 @@ const router = express.Router();
 router.use(authenticate);
 
 // 1. Analytics & Auxiliary Lists
-router.get('/finance/summary', authorizeAny('finance:read', 'report:sales', 'report:read'), OrdersController.getFinanceSummary);
+router.get('/finance/summary', authorizeAny('finance:read', 'report:sales', 'report:read', 'finance:refund', 'finance:reconcile'), OrdersController.getFinanceSummary);
 router.get('/serials/list', authorizeAny('inventory:serial:read', 'inventory:serial:manage', 'warranty:read'), OrdersController.getSerialsList);
-router.get('/rmas/list', authorizeAny('rma:manage', 'warranty:read'), OrdersController.getRmasList);
+router.get('/rmas/list', authorizeAny('rma:manage', 'warranty:read', 'finance:refund'), OrdersController.getRmasList);
+router.patch('/rmas/:id/refund', authorize('finance:refund'), OrdersController.confirmRmaRefund);
 router.patch('/rmas/:id/status', authorizeAny('rma:manage', 'warranty:write'), OrdersController.updateRmaStatus);
 router.get('/tradeins/list', authorizeAny('tradein:estimate', 'order:read:all'), OrdersController.getTradeInsList);
 router.patch('/tradeins/:id/status', authorize('tradein:estimate'), OrdersController.updateTradeInStatus);
@@ -18,6 +19,7 @@ router.get('/', authorizeAny('order:read:all', 'order:read:own'), OrdersControll
 router.get('/:id', authorizeAny('order:read:all', 'order:read:own'), OrdersController.getOrder);
 router.post('/', authorize('order:write'), OrdersController.createOrder);
 router.patch('/:id/status', authorize('order:write'), OrdersController.updateOrderStatus);
-router.patch('/:id/reconcile-payment', authorizeAny('finance:reconcile', 'finance:read'), OrdersController.reconcilePayment);
+router.patch('/:id/reconcile-payment', authorize('finance:reconcile'), OrdersController.reconcilePayment);
+router.patch('/:id/refund', authorize('finance:refund'), OrdersController.confirmRefund);
 
 module.exports = router;

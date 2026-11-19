@@ -1,166 +1,89 @@
 const { pool } = require('../config/db');
+const { can, orderScope } = require('../config/permissions');
 
-function timeAgo(date) {
-  if (!date) return 'Vừa xong';
-  const now = new Date();
-  const past = new Date(date);
-  const diffMs = now - past;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
-
-  if (diffSec < 60) return 'Vừa xong';
-  if (diffMin < 60) return `${diffMin} phút trước`;
-  if (diffHr < 24) return `${diffHr} giờ trước`;
-  if (diffDay === 1) return 'Hôm qua';
-  if (diffDay < 7) return `${diffDay} ngày trước`;
-  return past.toLocaleDateString('vi-VN');
-}
-
-function formatVnd(amount) {
-  return Number(amount || 0).toLocaleString('vi-VN') + ' ₫';
-}
-
-const NotificationModel = {
-  async getNotifications({ limit = 20 } = {}) {
-    const notifs = [];
-
-    // 1. Orders from customers (Storefront actions)
-    try {
-      const [orders] = await pool.query(
-        `SELECT id, code, customer_name, product_name, total_amount, status, payment_status, payment_verification_status, ordered_at, created_at
-           FROM orders
-          ORDER BY ordered_at DESC
-          LIMIT 12`
-      );
-
-      orders.forEach((o) => {
-        const orderDate = o.ordered_at || o.created_at;
-        if (o.payment_verification_status === 'pending_verification') {
-          notifs.push({
-            id: `pay-${o.id}`,
-            type: 'order',
-            title: `Xác nhận chuyển khoản: ${o.code}`,
-            message: `Khách hàng ${o.customer_name} đã xác nhận chuyển khoản cho đơn #${o.code} (${formatVnd(o.total_amount)}) - Chờ đối soát.`,
-            time: timeAgo(orderDate),
-            timestamp: new Date(orderDate).toISOString(),
-            read: false,
-            link: '/orders',
-          });
-        } else {
-          let statusText = 'Mới đặt hàng';
-          let isRead = false;
-          if (o.status === 'confirmed') {
-            statusText = 'Đã duyệt';
-          } else if (o.status === 'shipping') {
-            statusText = 'Đang giao';
-          } else if (o.status === 'delivered') {
-            statusText = 'Giao thành công';
-            isRead = true;
-          } else if (o.status === 'cancelled') {
-            statusText = 'Đã hủy đơn';
-            isRead = true;
-          }
-
-          notifs.push({
-            id: `ord-${o.id}`,
-            type: 'order',
-            title: o.status === 'pending' ? `Đơn hàng mới: ${o.code}` : `Đơn hàng: ${o.code}`,
-            message: `Khách hàng ${o.customer_name} đặt ${o.product_name || 'laptop'} (${formatVnd(o.total_amount)}) · ${statusText}`,
-            time: timeAgo(orderDate),
-            timestamp: new Date(orderDate).toISOString(),
-            read: isRead,
-            link: '/orders',
-          });
-        }
-      });
-    } catch (err) {
-      console.error('Error fetching orders for notifications:', err.message);
-    }
-
-    // 2. Real Low Stock & Out of Stock Alerts
-    try {
-      const [lowStock] = await pool.query(
-        `SELECT id, name, sku, stock_quantity, low_stock_threshold, updated_at
-           FROM products
-          WHERE stock_quantity <= low_stock_threshold AND deleted_at IS NULL
-          ORDER BY stock_quantity ASC
-          LIMIT 8`
-      );
-
-      lowStock.forEach((p) => {
-        const isOutOfStock = p.stock_quantity === 0;
-        notifs.push({
-          id: `stock-${p.id}`,
-          type: 'stock',
-          title: isOutOfStock ? 'Hết hàng trong kho (Out of Stock)' : 'Cảnh báo tồn kho tối thiểu',
-          message: `Sản phẩm "${p.name}" (SKU: ${p.sku}) ${isOutOfStock ? 'hiện đã hết hàng trong kho.' : `chỉ còn ${p.stock_quantity} máy trong kho (ngưỡng: ${p.low_stock_threshold}).`}`,
-          time: timeAgo(p.updated_at),
-          timestamp: new Date(p.updated_at || Date.now()).toISOString(),
-          read: false,
-          link: '/inventory',
-        });
-      });
-    } catch (err) {
-      console.error('Error fetching low stock for notifications:', err.message);
-    }
-
-    // 3. Customer RMA (Return & Warranty) Requests
-    try {
-      const [rmas] = await pool.query(
-        `SELECT id, code, order_code, product_name, type, reason, status, created_at
-           FROM rmas
-          ORDER BY created_at DESC
-          LIMIT 5`
-      );
-
-      rmas.forEach((r) => {
-        notifs.push({
-          id: `rma-${r.id}`,
-          type: 'rma',
-          title: `Yêu cầu đổi trả ${r.code} (${r.status})`,
-          message: `Đơn #${r.order_code} (${r.product_name}): ${r.reason}`,
-          time: timeAgo(r.created_at),
-          timestamp: new Date(r.created_at).toISOString(),
-          read: r.status === 'Hoàn tất' || r.status === 'Từ chối',
-          link: '/returns',
-        });
-      });
-    } catch (err) {
-      console.error('Error fetching RMAs for notifications:', err.message);
-    }
-
-    // 4. Customer Trade-In Requests
-    try {
-      const [tradeIns] = await pool.query(
-        `SELECT id, code, customer_name, brand, model, status, created_at
-           FROM trade_ins
-          ORDER BY created_at DESC
-          LIMIT 5`
-      );
-
-      tradeIns.forEach((t) => {
-        notifs.push({
-          id: `tradein-${t.id}`,
-          type: 'tradein',
-          title: `Thu cũ đổi mới: ${t.code}`,
-          message: `Khách hàng ${t.customer_name} gửi yêu cầu định giá máy ${t.brand} ${t.model} (${t.status}).`,
-          time: timeAgo(t.created_at),
-          timestamp: new Date(t.created_at).toISOString(),
-          read: t.status === 'Đã duyệt' || t.status === 'Đã đóng',
-          link: '/trade-in',
-        });
-      });
-    } catch (err) {
-      // Optional table, ignore if not present
-    }
-
-    // Sort all notifications chronologically (newest first)
-    notifs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    return notifs.slice(0, limit);
-  },
+const orderLabels = {
+  pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', shipping: 'Đang giao',
+  delivered: 'Đã giao', completed: 'Hoàn tất', cancelled: 'Đã hủy',
+};
+const paymentLabels = {
+  pending_verification: 'Khách báo đã chuyển khoản',
+  paid: 'Thanh toán đã được xác nhận',
+  collecting: 'Chờ đối soát COD',
+  refund_pending: 'Chờ hoàn tiền',
+  refunded: 'Đã ghi nhận hoàn tiền',
 };
 
-module.exports = NotificationModel;
+function formatEvent(id, type, title, message, date, link, subType) {
+  if (!date || Number.isNaN(new Date(date).getTime())) return null;
+  return { id, type, title, message, timestamp: new Date(date).toISOString(), read: false, link, subType };
+}
+
+async function getNotifications({ user, limit = 30 }) {
+  const jobs = [];
+  const add = (query, values, map) => jobs.push(pool.query(query, values).then(([rows]) => rows.map(map)));
+  if (can(user, 'order:read:all') || can(user, 'order:read:own')) {
+    const constraints = Object.entries(orderScope(user));
+    const where = constraints.length ? ' WHERE ' + constraints.map(([column]) => `${column} = ?`).join(' AND ') : '';
+    add(`SELECT id, code, total_amount, status, payment_status, ordered_at, updated_at, created_at
+      FROM orders${where} ORDER BY updated_at DESC, id DESC LIMIT ?`,
+    [...constraints.map(([, value]) => value || null), limit], (order) => {
+      const payment = paymentLabels[order.payment_status];
+      const title = payment || (order.status === 'pending' ? 'Đơn hàng mới' : orderLabels[order.status] || 'Cập nhật đơn hàng');
+      const orderChanged = order.status !== 'pending' || Boolean(payment);
+      return formatEvent(`order-${order.id}-${order.status}-${order.payment_status}`, 'order', `${title} · ${order.code}`,
+        `${Number(order.total_amount).toLocaleString('vi-VN')} ₫ · ${orderLabels[order.status] || order.status}`,
+        orderChanged ? order.updated_at : order.ordered_at || order.created_at,
+        `/orders?search=${encodeURIComponent(order.code)}`, order.payment_status === 'pending_verification' ? 'payment_verify' : undefined);
+    });
+  }
+  if (can(user, 'inventory:read')) {
+    add(`SELECT id, sku, name, stock_quantity, updated_at FROM products
+      WHERE deleted_at IS NULL AND status <> 'discontinued' AND stock_quantity <= low_stock_threshold
+      ORDER BY updated_at DESC, id DESC LIMIT ?`, [limit], (item) => formatEvent(
+      `stock-${item.id}-${item.stock_quantity}-${new Date(item.updated_at).getTime()}`, 'stock',
+      Number(item.stock_quantity) === 0 ? 'Hết hàng' : 'Sắp hết hàng',
+      `${item.name} (${item.sku}) · Còn ${item.stock_quantity}`,
+      item.updated_at, '/inventory', Number(item.stock_quantity) === 0 ? 'out_of_stock' : 'low_stock'));
+  }
+  if (can(user, 'rma:manage') || can(user, 'warranty:read') || can(user, 'finance:refund')) {
+    const constraints = Object.entries(orderScope(user));
+    const where = constraints.length ? ' WHERE ' + constraints.map(([column]) => `o.${column} = ?`).join(' AND ') : '';
+    add(`SELECT r.id, r.code, r.order_code, r.status, r.created_at, r.updated_at, rf.created_at AS refunded_at
+      FROM rmas r LEFT JOIN admin_rma_refunds rf ON rf.rma_id = r.id
+      LEFT JOIN orders o ON o.code = r.order_code${where}
+      ORDER BY GREATEST(r.updated_at, COALESCE(rf.created_at, r.updated_at)) DESC, r.id DESC LIMIT ?`,
+    [...constraints.map(([, value]) => value || null), limit], (row) => formatEvent(
+      `rma-${row.id}-${row.status}-${Boolean(row.refunded_at)}`, 'rma', `Đổi trả · ${row.code}`,
+      `Đơn ${row.order_code} · ${row.refunded_at ? 'Đã ghi nhận hoàn tiền' : row.status}`,
+      row.refunded_at || row.updated_at || row.created_at, '/returns'));
+  }
+  if (can(user, 'tradein:estimate') || can(user, 'order:read:all')) {
+    add('SELECT id, code, brand, model, status, created_at, updated_at FROM trade_ins ORDER BY updated_at DESC, id DESC LIMIT ?',
+      [limit], (row) => formatEvent(`tradein-${row.id}-${row.status}`, 'tradein', `Thu cũ đổi mới · ${row.code}`,
+        `${row.brand || ''} ${row.model || ''} · ${row.status}`, row.updated_at || row.created_at, '/trade-in'));
+  }
+  if (can(user, 'report:read') || can(user, 'review:manage')) {
+    add("SELECT id, product_name, rating, created_at FROM product_reviews WHERE status = 'pending' ORDER BY created_at DESC, id DESC LIMIT ?",
+      [limit], (row) => formatEvent(`review-${row.id}`, 'review', 'Đánh giá mới chờ duyệt',
+        `${row.product_name || 'Sản phẩm'} · ${row.rating} sao`, row.created_at, '/reports?tab=customers'));
+  }
+  const results = await Promise.allSettled(jobs);
+  if (results.length && results.every((result) => result.status === 'rejected')) throw results[0].reason;
+  for (const result of results) {
+    if (result.status === 'rejected') console.warn('Admin notifications source unavailable:', result.reason.message);
+  }
+  const events = results.flatMap((result) => result.status === 'fulfilled' ? result.value : [])
+    .filter(Boolean).sort((a, b) => b.timestamp.localeCompare(a.timestamp)).slice(0, limit);
+  if (!events.length) return events;
+  const [read] = await pool.query('SELECT event_id FROM admin_notification_reads WHERE user_id = ? AND event_id IN (?)',
+    [user.id, events.map((event) => event.id)]);
+  const readIds = new Set(read.map((row) => row.event_id));
+  return events.map((event) => ({ ...event, read: readIds.has(event.id) }));
+}
+
+async function markRead(userId, eventIds) {
+  await pool.query('INSERT IGNORE INTO admin_notification_reads (user_id, event_id) VALUES ?',
+    [eventIds.map((id) => [userId, id])]);
+}
+
+module.exports = { getNotifications, markRead };

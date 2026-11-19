@@ -112,21 +112,7 @@ export const AuthProvider = ({ children }) => {
     if (user.role === 'super_admin') return true;
 
     // Normalize user's permissions array
-    let userPerms = Array.isArray(user.permissions) ? user.permissions : [];
-    if (!userPerms.length && user.role) {
-      // Fallback matrix in case user object was loaded from minimal session
-      const fallbackMap = {
-        sales_manager: ['order:read:all', 'order:write', 'order:discount:approve', 'order:cancel', 'order:print', 'product:read', 'customer:read', 'customer:write', 'promotion:read', 'promotion:write', 'report:sales', 'report:read'],
-        sales_executive: ['order:read:own', 'order:write', 'order:print', 'product:read', 'customer:read', 'customer:write', 'promotion:read'],
-        warehouse_manager: ['inventory:read', 'inventory:write', 'inventory:serial:manage', 'import:batch', 'product:read', 'warranty:read'],
-        accountant: ['cost:read', 'report:read', 'report:sales', 'finance:read', 'finance:reconcile', 'order:read:all', 'inventory:read', 'product:read'],
-        product_manager: ['product:read', 'product:write', 'product:delete', 'catalog:write', 'inventory:read', 'cost:read', 'report:read', 'media:upload', 'import:batch'],
-        data_entry: ['product:read', 'product:write', 'catalog:write', 'inventory:read', 'media:upload'],
-        technical_warranty: ['warranty:read', 'warranty:write', 'rma:manage', 'tradein:estimate', 'product:read', 'inventory:serial:read'],
-        content_seo: ['product:read', 'product:write', 'catalog:write', 'media:upload']
-      };
-      userPerms = fallbackMap[user.role] || [];
-    }
+    const userPerms = Array.isArray(user.permissions) ? user.permissions : [];
 
     if (userPerms.includes('*')) return true;
 

@@ -6,7 +6,7 @@ const router = express.Router();
 router.use(authenticate);
 
 router.get('/', authorize('report:read'), ReviewsController.listReviews);
-router.post('/:id/reply', authorize('report:read'), ReviewsController.replyReview);
-router.patch('/:id/status', authorize('report:read'), ReviewsController.updateStatus);
+router.post('/:id/reply', authorize('review:manage'), ReviewsController.replyReview);
+router.patch('/:id/status', authorize('review:manage'), ReviewsController.updateStatus);
 
 module.exports = router;

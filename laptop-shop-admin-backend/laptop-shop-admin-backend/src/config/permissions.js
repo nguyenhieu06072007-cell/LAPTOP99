@@ -23,7 +23,7 @@ const ROLE_PERMISSIONS = {
     'cost:read', 'report:read', 'media:upload', 'import:batch'
   ],
   accountant: [
-    'cost:read', 'report:read', 'finance:read', 'finance:reconcile', 'report:export',
+    'cost:read', 'report:read', 'finance:read', 'finance:reconcile', 'finance:refund', 'report:export', 'report:send',
     'order:read:all', 'inventory:read', 'product:read'
   ],
   technical_warranty: [
@@ -81,23 +81,32 @@ function permissionMatches(allowed, requested) {
   return false;
 }
 
-function can(userOrRole, permission) {
-  if (!userOrRole || !permission) return false;
-
-  const role = typeof userOrRole === 'string' ? userOrRole : userOrRole.role;
-  const roleName = String(role || '').trim().toLowerCase();
-  if (roleName === 'super_admin') return true;
-
-  const customPerms = typeof userOrRole === 'object' ? normalizePermissionList(userOrRole.custom_permissions) : [];
-  const rolePerms = normalizePermissionList(ROLE_PERMISSIONS[role] || []);
-  const allPerms = [...new Set([...rolePerms, ...customPerms])];
-
-  if (allPerms.includes('*') || allPerms.some((p) => String(p).trim().toLowerCase() === '*')) {
-    return true;
-  }
-
-  const requested = String(permission).trim().toLowerCase();
-  return allPerms.some((p) => permissionMatches(p, requested));
+function effectivePermissions(user) {
+  const role = String(user?.role || '').trim().toLowerCase();
+  if (role === 'super_admin') return ['*'];
+  const inherited = user?.role_permissions == null ? ROLE_PERMISSIONS[role] : user.role_permissions;
+  return [...new Set([...normalizePermissionList(inherited), ...normalizePermissionList(user?.custom_permissions)])];
 }
 
-module.exports = { ROLE_PERMISSIONS, can };
+function can(userOrRole, permission) {
+  if (!userOrRole || !permission) return false;
+  const user = typeof userOrRole === 'string' ? { role: userOrRole } : userOrRole;
+  return effectivePermissions(user).some((allowed) => permissionMatches(allowed, permission));
+}
+
+function orderScope(user) {
+  if (user.role === 'super_admin') return {};
+  const scope = {};
+  if (user.data_visibility === 'own' || (!can(user, 'order:read:all') && can(user, 'order:read:own'))) {
+    scope.assigned_to = user.id;
+  }
+  if (user.data_visibility === 'branch') scope.branch = user.branch || '';
+  return scope;
+}
+
+function inOrderScope(user, order) {
+  return Object.entries(orderScope(user)).every(([key, value]) =>
+    value !== '' && String(order[key]) === String(value));
+}
+
+module.exports = { ROLE_PERMISSIONS, can, effectivePermissions, orderScope, inOrderScope };

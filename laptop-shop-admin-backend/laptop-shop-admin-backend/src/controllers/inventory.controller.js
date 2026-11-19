@@ -13,8 +13,28 @@ const movementSchema = z.object({
 
 const InventoryController = {
   getMovements: asyncHandler(async (req, res) => {
-    const { rows, meta } = await InventoryModel.getMovements({ query: req.query, userRole: req.user.role });
+    const { rows, meta } = await InventoryModel.getMovements({ query: req.query, userRole: req.user });
     res.json({ data: rows, meta });
+  }),
+
+  getReceipts: asyncHandler(async (req, res) => {
+    res.json(await InventoryModel.getReceipts({ query: req.query, user: req.user }));
+  }),
+
+  receiveStock: asyncHandler(async (req, res) => {
+    const body = z.object({
+      request_key: z.string().uuid(),
+      supplier: z.string().trim().min(1).max(150),
+      warehouse: z.string().trim().min(1).max(150),
+      notes: z.string().trim().max(255).optional(),
+      rows: z.array(z.object({
+        sku: z.string().trim().min(1).max(100),
+        quantity: z.number().int().positive().max(10000),
+        unit_cost: z.number().int().min(0).max(1e13).optional(),
+        serials: z.array(z.string().trim().min(1).max(100).transform((value) => value.toUpperCase())).max(500).default([]),
+      })).min(1).max(100),
+    }).parse(req.body);
+    res.status(201).json(await InventoryModel.receiveStock(body, req));
   }),
 
   getLowStock: asyncHandler(async (req, res) => {

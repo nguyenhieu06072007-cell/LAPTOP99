@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticate, authorize } = require('../middlewares/auth');
+const { authenticate, authorize, authorizeAny } = require('../middlewares/auth');
 const { productImages } = require('../middlewares/upload');
 const ProductsController = require('../controllers/products.controller');
 
@@ -21,7 +21,7 @@ router.delete('/:id', authorize('product:delete'), ProductsController.deleteProd
 router.post('/:id/restore', authorize('product:delete'), ProductsController.restoreProduct);
 
 // 4. Product Images
-router.post('/:id/images', authorize('product:write'), productImages, ProductsController.uploadImages);
+router.post('/:id/images', authorizeAny('product:write', 'media:upload'), productImages, ProductsController.uploadImages);
 router.put('/:id/images/:imageId', authorize('product:write'), productImages, ProductsController.replaceImage);
 router.patch('/:id/images/:imageId', authorize('product:write'), ProductsController.setThumbnail);
 router.delete('/:id/images/:imageId', authorize('product:write'), ProductsController.deleteImage);

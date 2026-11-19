@@ -7,10 +7,12 @@ if (!env.JWT_SECRET || env.JWT_SECRET.length < 32) {
 
 const app = require('./app');
 const { pool } = require('./config/db');
+const { ensureAdminSchema } = require('./config/admin-schema');
 
 (async () => {
   try {
     await pool.query('SELECT 1');
+    await ensureAdminSchema(pool);
   } catch (err) {
     console.error('Khong ket noi duoc MySQL:', err.message);
     process.exit(1);
