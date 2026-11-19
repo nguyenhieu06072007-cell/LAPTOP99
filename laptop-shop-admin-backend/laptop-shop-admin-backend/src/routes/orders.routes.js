@@ -18,6 +18,6 @@ router.get('/', authorizeAny('order:read:all', 'order:read:own'), OrdersControll
 router.get('/:id', authorizeAny('order:read:all', 'order:read:own'), OrdersController.getOrder);
 router.post('/', authorize('order:write'), OrdersController.createOrder);
 router.patch('/:id/status', authorize('order:write'), OrdersController.updateOrderStatus);
-router.patch('/:id/reconcile-payment', authorizeAny('finance:reconcile', 'finance:read'), OrdersController.reconcilePayment);
+router.patch('/:id/reconcile-payment', authorize('finance:reconcile'), OrdersController.reconcilePayment);
 
 module.exports = router;

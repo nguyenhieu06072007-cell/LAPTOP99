@@ -17,6 +17,11 @@ if errorlevel 1 (
 
 echo Dang tu dong build va khoi dong cac container (MySQL, Backend, Admin, Storefront)...
 docker compose up -d --build
+if errorlevel 1 (
+    echo [LOI] Khong the khoi dong he thong. Kiem tra cau hinh .env theo DOCKER_HUONG_DAN.md.
+    pause
+    exit /b 1
+)
 
 echo.
 echo ========================================================

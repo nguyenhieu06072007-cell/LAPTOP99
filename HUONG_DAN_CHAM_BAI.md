@@ -8,9 +8,11 @@
 *(Áp dụng khi máy tính của Thầy/Cô đã cài đặt Docker Desktop)*
 
 ### Bước 1: Mở Terminal tại thư mục dự án
-Thầy/Cô mở **Terminal** (hoặc **PowerShell** / **CMD**) tại thư mục gốc của dự án `sprint2`.
+Thầy/Cô mở **Terminal** (hoặc **PowerShell** / **CMD**) tại thư mục gốc chứa `docker-compose.yml`.
 
-### Bước 2: Chạy câu lệnh khởi động
+### Bước 2: Cấu hình và khởi động
+
+Sao chép `.env.example` thành `.env` ở thư mục gốc. Điền mật khẩu MySQL và khóa JWT ngẫu nhiên dài ít nhất 32 ký tự. Nếu đã có volume MySQL, dùng mật khẩu hiện tại của MySQL. Chi tiết nằm trong [hướng dẫn Docker](DOCKER_HUONG_DAN.md).
 ```bash
 docker compose up -d --build
 ```
