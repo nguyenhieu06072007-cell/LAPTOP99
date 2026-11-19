@@ -122,34 +122,36 @@ export default function AdminLayout() {
   const [notifError, setNotifError] = useState(false);
   const seen = useRef(new Set());
   const ready = useRef(false);
-  const readKey = `laptop99-admin-read-notifications:${user?.id}`;
-
-  const getReadIds = () => {
-    try { return new Set(JSON.parse(localStorage.getItem(readKey) || '[]')); }
-    catch { return new Set(); }
-  };
+  const [unreadCount, setUnreadCount] = useState(0);
+  const refreshNotifications = useRef(null);
+  const [markingRead, setMarkingRead] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
     let disposed = false;
     let loadingNotifications = false;
+    let refreshQueued = false;
     let timer;
     const controller = new AbortController();
     ready.current = false;
     seen.current = new Set();
     setNotifications([]);
+    setUnreadCount(0);
     async function refresh() {
-      if (disposed || loadingNotifications) return;
+      if (disposed) return;
+      if (loadingNotifications) {
+        refreshQueued = true;
+        return;
+      }
       loadingNotifications = true;
       try {
         const { data } = await api.get('/notifications', {
           params: { limit: 50 }, timeout: 15000, signal: controller.signal,
         });
         if (disposed) return;
-        const read = getReadIds();
         const events = data.data || [];
         if (ready.current) {
-          const incoming = events.filter((event) => !seen.current.has(event.id) && !event.read && !read.has(event.id));
+          const incoming = events.filter((event) => !seen.current.has(event.id) && !event.read);
           if (incoming.length) {
             toast(incoming.length === 1 ? incoming[0].title : `Có ${incoming.length} thông báo mới`, { icon: '🔔' });
           }
@@ -158,8 +160,9 @@ export default function AdminLayout() {
         if (seen.current.size > 1000) seen.current = new Set([...seen.current].slice(-500));
         ready.current = true;
         setNotifications(events.map((event) => ({
-          ...event, read: event.read || read.has(event.id), time: new Date(event.timestamp).toLocaleString('vi-VN'),
+          ...event, time: new Date(event.timestamp).toLocaleString('vi-VN'),
         })));
+        setUnreadCount(Number(data.unread_count || 0));
         setNotifError(false);
       } catch {
         if (!disposed) setNotifError(true);
@@ -167,34 +170,41 @@ export default function AdminLayout() {
         loadingNotifications = false;
         if (!disposed) {
           clearTimeout(timer);
-          timer = setTimeout(refresh, 10000);
+          if (refreshQueued) {
+            refreshQueued = false;
+            refresh();
+          } else {
+            timer = setTimeout(refresh, 10000);
+          }
         }
       }
     }
     const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
     document.addEventListener('visibilitychange', onVisible);
+    refreshNotifications.current = refresh;
     refresh();
     return () => {
+      refreshNotifications.current = null;
       disposed = true;
       controller.abort();
       clearTimeout(timer);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [isAuthenticated, user?.id, readKey]);
+  }, [isAuthenticated, user?.id]);
 
-  const unreadCount = notifications.filter((item) => !item.read).length;
-  const markRead = (ids) => {
-    const read = getReadIds();
-    ids.forEach((id) => read.add(id));
-    try { localStorage.setItem(readKey, JSON.stringify([...read].slice(-500))); } catch {}
-    setNotifications((prev) => prev.map((event) => read.has(event.id) ? { ...event, read: true } : event));
-    if (ids.length) {
-      api.post('/notifications/read', { ids }).catch(() => setNotifError(true));
+  const markRead = async (selection) => {
+    setMarkingRead(true);
+    try {
+      await api.post('/notifications/read', selection);
+      refreshNotifications.current?.();
+    } catch {
+      toast.error('Không lưu được trạng thái đã đọc. Vui lòng thử lại.');
+    } finally {
+      setMarkingRead(false);
     }
   };
-  const markAllAsRead = () => markRead(notifications.map((event) => event.id));
   const handleNotificationClick = (event) => {
-    markRead([event.id]);
+    if (!event.read) markRead({ ids: [event.id] });
     setNotificationOpen(false);
     if (event.link) navigate(event.link);
   };
@@ -219,6 +229,7 @@ export default function AdminLayout() {
   };
 
   const filteredNotifs = notifications.filter((n) => {
+    if (notificationTab === 'review') return n.type === 'review';
     if (notificationTab === 'stock') return n.type === 'stock';
     if (notificationTab === 'order') return n.type === 'order' || n.type === 'rma' || n.type === 'tradein';
     return true;
@@ -435,7 +446,8 @@ export default function AdminLayout() {
                     </div>
                     {unreadCount > 0 && (
                       <button
-                        onClick={markAllAsRead}
+                        onClick={() => markRead({ all: true })}
+                        disabled={markingRead}
                         className="text-[11px] text-blue-600 hover:underline font-semibold"
                       >
                         Đã đọc tất cả
@@ -447,6 +459,7 @@ export default function AdminLayout() {
                   <div className="flex border-b border-gray-100 bg-gray-50/50 px-2 pt-1 text-[11px]">
                     {[
                       { id: 'all', label: `Tất cả (${notifications.length})` },
+                      { id: 'review', label: 'Đánh giá' },
                       { id: 'stock', label: `Cảnh báo kho (${notifications.filter((n) => n.type === 'stock').length})` },
                       { id: 'order', label: `Đơn & Đổi trả (${notifications.filter((n) => n.type === 'order' || n.type === 'rma' || n.type === 'tradein').length})` },
                     ].map((t) => (
@@ -463,6 +476,10 @@ export default function AdminLayout() {
                       </button>
                     ))}
                   </div>
+
+                  {notifError && notifications.length > 0 && (
+                    <p className="px-3 py-2 text-xs text-amber-700">Chưa lấy được thông báo mới. Sẽ tự thử lại.</p>
+                  )}
 
                   {/* Notification List */}
                   <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
@@ -483,6 +500,9 @@ export default function AdminLayout() {
                         } else if (n.type === 'rma') {
                           badgeColor = 'bg-purple-100 text-purple-700 border-purple-200';
                           badgeText = 'ĐỔI TRẢ';
+                        } else if (n.type === 'review') {
+                          badgeColor = 'bg-violet-100 text-violet-700 border-violet-200';
+                          badgeText = 'ĐÁNH GIÁ';
                         } else if (n.type === 'tradein') {
                           badgeColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
                           badgeText = 'THU CŨ';

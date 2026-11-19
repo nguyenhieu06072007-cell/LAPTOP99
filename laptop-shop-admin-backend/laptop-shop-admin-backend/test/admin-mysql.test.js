@@ -91,4 +91,48 @@ test('admin operations against a fresh MySQL schema and synthetic orders', {
   assert.equal((await call('/notifications/read', 2, 'POST', { ids: [paid.id] })).status, 204);
   assert.equal((await call('/notifications?limit=30', 2)).body.data.find((item) => item.id === paid.id).read, true);
   assert.equal((await call('/notifications?limit=30', 1)).body.data.find((item) => item.id === paid.id).read, false);
+  // The bell counts beyond the display cutoff and keeps the purchase when its status changes.
+  const baseline = (await call('/notifications?limit=1', 1)).body.unread_count;
+  await pool.query(`INSERT INTO orders (id, code, customer_id, customer_name, product_id, product_name, sku, status, payment_status, total_amount, unit_price)
+    VALUES (24, 'TEST-NEW-PURCHASE', 1, 'Test customer', 11, 'Laptop A', 'SKU-A', 'pending', 'unpaid', 10000, 10000)`);
+  const purchased = await call('/notifications?limit=1', 1);
+  assert.equal(purchased.body.data.length, 1);
+  assert.equal(purchased.body.unread_count, baseline + 1);
+  assert.equal((await call('/orders/24/status', 1, 'PATCH', { status: 'confirmed' })).status, 200);
+  assert.equal((await call('/notifications?limit=1', 1)).body.unread_count, baseline + 2);
+  const [review] = await pool.query("INSERT INTO product_reviews (customer_name, product_name, rating, comment) VALUES ('Test customer', 'Laptop A', 5, 'Test review')");
+  assert.equal((await call('/notifications?limit=1', 1)).body.unread_count, baseline + 3);
+  await pool.query("UPDATE product_reviews SET status = 'approved' WHERE id = ?", [review.insertId]);
+  assert.equal((await call('/notifications?limit=1', 1)).body.unread_count, baseline + 3);
+  assert.equal((await call('/notifications/read', 1, 'POST', { all: true })).status, 204);
+  assert.equal((await call('/notifications?limit=1', 1)).body.unread_count, 0);
+  assert.ok((await call('/notifications?limit=1', 2)).body.unread_count > 0);
+
+  const password = 'Test-staff-login-only-8122';
+  for (const [roleId, role, perms] of [
+    [4, 'sales_manager', ['order:read:all']],
+    [5, 'sales_executive', ['order:read:own']],
+    [6, 'warehouse_manager', ['inventory:read']],
+    [7, 'accountant', ['finance:read']],
+    [8, 'product_manager', ['product:read']],
+  ]) {
+    await pool.query('INSERT INTO roles (id, name, permissions) VALUES (?, ?, ?)', [roleId, role, JSON.stringify(perms)]);
+    const email = role + '@example.test';
+    const account = await call('/users', 1, 'POST', { email, password, role_id: roleId, full_name: role });
+    assert.equal(account.status, 201, JSON.stringify(account.body));
+    const login = await fetch(url + '/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const signedIn = await login.json();
+    assert.equal(login.status, 200, JSON.stringify(signedIn));
+    assert.equal(signedIn.data.user.role, role);
+    const me = await fetch(url + '/auth/me', { headers: { Authorization: 'Bearer ' + signedIn.data.token } });
+    assert.equal(me.status, 200);
+    const current = (await me.json()).data;
+    assert.equal(current.role, role);
+    assert.equal(current.permissions.includes('*'), false);
+    assert.ok(perms.every((permission) => current.permissions.includes(permission)));
+  }
+
 });

@@ -61,24 +61,26 @@ test('cancelling a paid order persists refund_pending', async () => {
   assert.equal(calls.find(({ sql }) => sql.startsWith('UPDATE orders')).params[0], 'refund_pending');
 });
 
-test('notifications only load assigned orders and read state for the signed-in employee', async () => {
+test('notifications count all visible unread events server-side and restrict reads to assigned orders', async () => {
   const calls = [];
   query = async (sql, params) => {
     calls.push({ sql, params });
-    if (sql.includes('FROM orders')) return [[{
-      id: 12, code: 'ORD-12', status: 'confirmed', payment_status: 'paid', total_amount: 2000,
-      updated_at: '2026-11-19T02:00:00Z',
+    return [[{
+      type: 'order', event_id: 'order-12-confirmed-paid', is_read: 1, unread_count: 51,
+      payload: { code: 'ORD-12', status: 'confirmed', payment: 'paid', amount: 2000 },
+      occurred_at: '2026-11-19T02:00:00Z',
     }]];
-    return [[{ event_id: 'order-12-confirmed-paid' }]];
   };
-  const events = await Notifications.getNotifications({
-    user: { id: 9, role: 'sales_executive', role_permissions: ['order:read:own'] },
-  });
-  assert.match(calls[0].sql, /WHERE assigned_to = \?/);
-  assert.deepEqual(calls[0].params, [9, 30]);
-  assert.deepEqual(calls[1].params, [9, ['order-12-confirmed-paid']]);
+  const user = { id: 9, role: 'sales_executive', role_permissions: ['order:read:own'] };
+  const { events, unreadCount } = await Notifications.getNotifications({ user, limit: 1 });
+  assert.match(calls[0].sql, /WHERE o.assigned_to = \?/);
+  assert.match(calls[0].sql, /SUM\(r.event_id IS NULL\) OVER/);
+  assert.deepEqual(calls[0].params, [9, 9, 9, 1]);
   assert.equal(events[0].read, true);
+  assert.equal(unreadCount, 51);
   assert.match(events[0].title, /Thanh toán/);
+  await Notifications.markRead(user, { ids: ['order-12-confirmed-paid'] });
+  assert.deepEqual(calls[1].params, [9, 9, 9, 9, ['order-12-confirmed-paid']]);
 });
 
 test('batch stock intake writes a movement and serial through the same transaction', async () => {
