@@ -20,8 +20,8 @@ async function ensureAdminSchema(pool) {
     supplier VARCHAR(150) NOT NULL,
     warehouse VARCHAR(150) NOT NULL,
     request_key CHAR(36) NOT NULL,
-    row_number SMALLINT UNSIGNED NOT NULL,
-    UNIQUE KEY admin_receipt_batch_row (request_key, row_number)
+    batch_line SMALLINT UNSIGNED NOT NULL,
+    UNIQUE KEY admin_receipt_batch_row (request_key, batch_line)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`);
   await pool.query(`CREATE TABLE IF NOT EXISTS admin_inventory_serials (
     serial VARCHAR(100) PRIMARY KEY,

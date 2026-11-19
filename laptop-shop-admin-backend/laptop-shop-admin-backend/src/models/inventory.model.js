@@ -98,14 +98,14 @@ const InventoryModel = {
   async receiveStock({ request_key, supplier, warehouse, notes, rows }, req) {
     const prior = async (db) => {
       const [records] = await db.query(`
-        SELECT r.row_number, m.product_id, m.created_by
+        SELECT r.batch_line, m.product_id, m.created_by
           FROM admin_inventory_receipts r JOIN inventory_movements m ON m.id = r.movement_id
-         WHERE r.request_key = ? ORDER BY r.row_number`, [request_key]);
+         WHERE r.request_key = ? ORDER BY r.batch_line`, [request_key]);
       if (!records.length) return null;
       if (records.some((row) => Number(row.created_by) !== Number(req.user.id))) {
         throw new ApiError(409, 'Mã phiếu nhập đã được sử dụng');
       }
-      return { data: records.map(({ row_number, product_id }) => ({ row_number, product_id })), replayed: true };
+      return { data: records.map(({ batch_line, product_id }) => ({ row_number: batch_line, product_id })), replayed: true };
     };
     try {
       return await withTransaction(async (conn) => {
@@ -127,7 +127,7 @@ const InventoryModel = {
             productId, type: 'import', delta: row.quantity, unitCost: row.unit_cost,
             reason: notes, userId: req.user.id,
           }, req, conn);
-          await conn.query(`INSERT INTO admin_inventory_receipts (movement_id, supplier, warehouse, request_key, row_number)
+          await conn.query(`INSERT INTO admin_inventory_receipts (movement_id, supplier, warehouse, request_key, batch_line)
             VALUES (?, ?, ?, ?, ?)`, [movement.id, supplier, warehouse, request_key, index + 1]);
           if (row.serials.length) {
             await conn.query('INSERT INTO admin_inventory_serials (serial, movement_id) VALUES ?',

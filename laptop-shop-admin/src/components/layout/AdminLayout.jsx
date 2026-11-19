@@ -86,6 +86,7 @@ export default function AdminLayout() {
       const products = productResult.value?.data?.data || [];
       const orders = (orderResult.value?.data?.data || []).map((order) => ({
         id: order.code, customer: order.customer_name, total: order.total_amount,
+        phone: order.customer_phone || '—', product: order.product_name || '—',
       }));
       if (currentSearch === searchSequence.current) setSearchResults({ products, orders });
     } catch (err) {

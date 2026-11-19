@@ -85,7 +85,7 @@ test('batch stock intake writes a movement and serial through the same transacti
   const calls = [];
   const conn = { async query(sql, params) {
     calls.push({ sql, params });
-    if (sql.includes('SELECT r.row_number')) return [[]];
+    if (sql.includes('SELECT r.batch_line')) return [[]];
     if (sql.includes('SELECT id, sku')) return [[{ id: 7, sku: 'ABC' }]];
     if (sql.includes('SELECT id, stock_quantity')) return [[{ id: 7, stock_quantity: 10, cost_price: 100 }]];
     return [{ insertId: 18 }];
