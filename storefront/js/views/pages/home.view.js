@@ -221,6 +221,7 @@ async function viewHome() {
   const curHero = Math.min(cache.heroIdx || 0, Math.max(0, heroCampaigns.length - 1));
   const highlightDeal = hotDeals[0] || all[0];
   const u = me();
+  const customerName = u?.name || u?.full_name || 'Khách hàng';
 
   const brandLogos = [
     { name: 'Apple', slug: 'apple' },
@@ -507,9 +508,9 @@ async function viewHome() {
             ${
               u
                 ? `<div class="mhc-top">
-                    <div class="mhc-avatar">${esc(u.name.charAt(0).toUpperCase())}</div>
+                    <div class="mhc-avatar">${esc(customerName.charAt(0).toUpperCase())}</div>
                     <div style="min-width:0">
-                      <div style="font-weight:800;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Hi, ${esc(u.name)}</div>
+                      <div style="font-weight:800;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Hi, ${esc(customerName)}</div>
                       <span class="bd bad" style="font-size:.62rem;padding:1px 6px">Hạng S-Member VIP</span>
                     </div>
                   </div>

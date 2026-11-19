@@ -391,7 +391,7 @@ if (API.getToken() && db.session) {
   API.get('/auth/me', true)
     .then((res) => {
       if (res && res.data) {
-        db.session.name = res.data.full_name;
+        db.session.name = res.data.name || res.data.full_name || db.session.name;
         db.session.email = res.data.email;
         db.session.phone = res.data.phone;
         db.session.addr = res.data.address;
