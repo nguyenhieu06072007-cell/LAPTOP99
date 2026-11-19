@@ -17,6 +17,7 @@ module.exports = {
   CORS_ORIGINS: (e.CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean),
   UPLOAD_DIR: e.UPLOAD_DIR || 'uploads',
   TRUST_PROXY: Number(e.TRUST_PROXY) || 0,
+  SEPAY_WEBHOOK_TOKEN: e.SEPAY_WEBHOOK_TOKEN || '',
   AI_PROVIDER: e.AI_PROVIDER || 'gemini',
   GEMINI_API_KEY: e.GEMINI_API_KEY || '',
   GEMINI_MODEL: e.GEMINI_MODEL || 'gemini-1.5-flash',

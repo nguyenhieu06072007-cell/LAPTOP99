@@ -185,6 +185,7 @@ async function render() {
     const inner = await storeRoute(r);
     if (mySeq !== renderSeq) return;
     $('#app').innerHTML = storeShell(inner, r);
+    A.watchPayment(document.querySelector('[data-payment-order]')?.dataset.paymentOrder || null);
   } catch (err) {
     if (mySeq !== renderSeq) return;
     const errHtml = `<div class="wrap" style="padding:60px 16px">

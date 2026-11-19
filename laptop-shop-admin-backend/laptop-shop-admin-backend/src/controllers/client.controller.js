@@ -400,7 +400,7 @@ const ClientController = {
 
   getOrderPaymentStatus: asyncHandler(async (req, res) => {
     const code = req.params.code;
-    const result = await ClientModel.getOrderPaymentStatus(code);
+    const result = await ClientModel.getOrderPaymentStatus(req.customer.id, code);
     res.json({
       success: true,
       data: result,
@@ -409,6 +409,7 @@ const ClientController = {
 
   simulateAutoPaid: asyncHandler(async (req, res) => {
     const code = req.params.code;
+    await ClientModel.getOrderPaymentStatus(req.customer.id, code);
     const result = await ClientModel.simulateOrderAutoPaid(code, req.body || {});
     res.json({
       success: true,
@@ -418,6 +419,14 @@ const ClientController = {
   }),
 
   handlePaymentWebhook: asyncHandler(async (req, res) => {
+    const key = env.SEPAY_WEBHOOK_TOKEN;
+    if (!key) throw new ApiError(503, 'Webhook SePay chưa được cấu hình');
+
+    const expected = Buffer.from('Apikey ' + key);
+    const actual = Buffer.from(req.get('authorization') || '');
+    if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
+      throw new ApiError(401, 'Xác thực webhook SePay thất bại');
+    }
     const result = await ClientModel.handlePaymentWebhook(req.body || {});
     res.json(result);
   }),

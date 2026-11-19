@@ -292,7 +292,7 @@ const ClientModel = {
       .join(' | ');
 
     await pool.query(
-      "UPDATE orders SET payment_status = 'pending_verification', payment_verification_status = 'pending_verification', notes = ?, updated_at = NOW() WHERE id = ?",
+      "UPDATE orders SET payment_status = 'pending_verification', payment_verification_status = 'pending_verification', notes = ?, updated_at = NOW() WHERE id = ? AND status != 'cancelled' AND payment_status IN ('pending', 'unpaid', 'pending_verification')",
       [updatedNote, order.id],
     );
 
@@ -309,30 +309,28 @@ const ClientModel = {
   /**
    * Tra cứu trạng thái thanh toán thời gian thực của đơn hàng (phục vụ Polling)
    */
-  async getOrderPaymentStatus(orderCode) {
+  async getOrderPaymentStatus(customerId, orderCode) {
     const [[order]] = await pool.query(
-      'SELECT id, code, total_amount, status, payment_status, payment_verification_status, updated_at FROM orders WHERE code = ? OR id = ?',
-      [orderCode, orderCode],
+      'SELECT code, total_amount, status, payment_method, payment_status, payment_verification_status, updated_at, customer_name, customer_phone, shipping_address FROM orders WHERE code = ? AND customer_id = ?',
+      [orderCode, customerId],
     );
-    if (!order) {
-      return {
-        code: orderCode,
-        paid: false,
-        found: false,
-        message: 'Đang đồng bộ đơn hàng...',
-      };
-    }
+    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng của bạn');
+
     return {
       code: order.code,
       found: true,
-      paid: order.payment_status === 'paid' || order.payment_verification_status === 'verified',
+      paid: order.payment_status === 'paid',
       payment_status: order.payment_status,
       verification_status: order.payment_verification_status,
-      total_amount: order.total_amount,
+      status: order.status,
+      payment_method: order.payment_method,
+      total_amount: Number(order.total_amount),
+      customer_name: order.customer_name,
+      customer_phone: order.customer_phone,
+      shipping_address: order.shipping_address,
       updated_at: order.updated_at,
     };
   },
-
   /**
    * Tự động xác nhận thanh toán đơn hàng (Simulator / Webhook)
    */
@@ -375,46 +373,30 @@ const ClientModel = {
    * Xử lý Webhook biến động số dư từ cổng thanh toán (SePay / Casso)
    */
   async handlePaymentWebhook(payload = {}) {
-    const content = String(payload.content || payload.description || payload.memo || '').trim();
-    const amount = Number(payload.amount || payload.transferAmount || 0);
-
-    const match = content.match(/(?:(?:SEVQR|LAPTOP99)\s+)*(DH-[A-Za-z0-9\-]+|DH[A-Za-z0-9\-]+|\d+)/i);
-    const orderCode = match ? match[1] : null;
-
-    if (!orderCode) {
-      return { success: false, message: 'Không tìm thấy mã đơn hàng trong nội dung chuyển khoản' };
+    const amount = Number(payload.transferAmount);
+    if (payload.transferType !== 'in' || String(payload.accountNumber) !== '888800233939' ||
+        !Number.isSafeInteger(amount) || amount <= 0) {
+      return { success: true, matched: false };
     }
 
-    const [[order]] = await pool.query(
-      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE code = ? OR id = ?',
-      [orderCode, orderCode],
+    const paymentText = [payload.code, payload.content, payload.description].join(' ');
+    const orderCode = paymentText.match(/\bDH-(?:\d{6}-[A-F0-9]{6}|\d{13}-[A-F0-9]{4})\b/i)?.[0];
+    if (!orderCode) return { success: true, matched: false };
+
+    const reference = String(payload.referenceCode || payload.id || '').slice(0, 80);
+    const note = `[SEPAY: Đã đối soát ${amount} đ. Mã giao dịch: ${reference}]`;
+    const [result] = await pool.query(
+      `UPDATE orders
+       SET payment_status = 'paid', payment_verification_status = 'verified',
+           net_received = ?, status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END,
+           notes = CONCAT_WS(' | ', NULLIF(notes, ''), ?), updated_at = NOW()
+       WHERE code = ? AND total_amount = ?
+         AND payment_method IN ('Chuyển khoản VietQR', 'Thanh toán Online QR')
+         AND status IN ('pending', 'confirmed')
+         AND payment_status IN ('pending', 'unpaid', 'pending_verification')`,
+      [amount, note, orderCode, amount],
     );
-
-    if (!order) {
-      return { success: false, message: `Không tìm thấy đơn hàng tương ứng với mã ${orderCode}` };
-    }
-
-    if (order.payment_status === 'paid') {
-      return { success: true, message: 'Đơn hàng này đã được thanh toán trước đó' };
-    }
-
-    const bankGateway = payload.gateway || payload.bankName || 'VietinBank';
-    const bankAcc = payload.accountNumber || '888800233939';
-    const refCode = payload.referenceCode || payload.id || 'N/A';
-    const noteAdd = `[WEBHOOK SEPAY TỰ ĐỘNG: Đã nhận ${amount}đ từ ${bankGateway} ${bankAcc} - Ref: ${refCode}]`;
-    const updatedNote = [order.notes, noteAdd].filter(Boolean).join(' | ');
-
-    await pool.query(
-      "UPDATE orders SET payment_status = 'paid', payment_verification_status = 'verified', status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END, net_received = ?, notes = ?, updated_at = NOW() WHERE id = ?",
-      [amount || order.total_amount, updatedNote, order.id],
-    );
-
-    return {
-      success: true,
-      order_code: order.code,
-      amount,
-      message: 'Xác nhận thanh toán tự động qua Webhook thành công',
-    };
+    return { success: true, matched: result.affectedRows === 1 };
   },
 
   /**

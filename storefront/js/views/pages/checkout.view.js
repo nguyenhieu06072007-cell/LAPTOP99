@@ -209,87 +209,19 @@ function forgotForm() {
   </div>`;
 }
 
-function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
-  const ord =
-    (Array.isArray(db.orders) && db.orders.find((x) => (x.code || x.id) === orderCode)) ||
-    (cache.lastOrder && (cache.lastOrder.code === orderCode || cache.lastOrder.id === orderCode)
-      ? cache.lastOrder
-      : null);
-  const isPaid =
-    ord &&
-    (ord.paid === true || ord.payment_status === 'paid' || ord.payment_verification_status === 'verified');
+function isQrPayment(method) {
+  return method === 'bank' || method === 'card' ||
+    method === 'Chuyển khoản VietQR' || method === 'Thanh toán Online QR';
+}
 
-  if (isPaid) {
-    return `<div id="vietqr-box" style="margin-top:12px;background:linear-gradient(135deg,#ECFDF5 0%,#D1FAE5 100%);border:2px solid #10B981;border-radius:14px;padding:22px;text-align:center;box-shadow:0 8px 24px rgba(16,185,129,0.15)">
-      <div style="width:60px;height:60px;border-radius:50%;background:#10B981;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;margin-bottom:12px;box-shadow:0 4px 14px rgba(16,185,129,0.4)">
-        ✓
-      </div>
-      <h3 style="font-size:1.25rem;font-weight:800;color:#065F46;margin-bottom:6px">XÁC NHẬN THANH TOÁN TỰ ĐỘNG THÀNH CÔNG!</h3>
-      <p style="color:#047857;font-size:.9rem;margin-bottom:12px">
-        Hệ thống đã nhận được <b>${vnd(amount)}</b> vào tài khoản <b>MB Bank 6306072007 (NGUYEN VAN HIEU)</b>.
-      </p>
-      <div style="display:inline-block;background:#fff;border:1px solid #A7F3D0;border-radius:8px;padding:7px 16px;font-size:.84rem;color:#065F46;font-weight:700">
-        Trạng thái: ĐÃ THANH TOÁN TOÀN BỘ · Đơn hàng đang được chuẩn bị đóng gói &amp; xuất kho
-      </div>
-    </div>`;
-  }
-
-  const isVerifying =
-    ord &&
-    !isPaid &&
-    (ord.payment_verification === 'pending_verification' ||
-      ord.payment_verification_status === 'pending_verification' ||
-      ord.payment_status === 'pending_verification');
-
-  if (isVerifying) {
-    return `<div id="vietqr-box" style="margin-top:12px;background:linear-gradient(135deg,#FEF3C7 0%,#FDE68A 100%);border:2px solid #F59E0B;border-radius:14px;padding:22px;text-align:center;box-shadow:0 8px 24px rgba(245,158,11,0.15)">
-      <div style="width:56px;height:56px;border-radius:50%;background:#F59E0B;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;margin-bottom:12px;box-shadow:0 4px 14px rgba(245,158,11,0.4)">
-        ⏳
-      </div>
-      <h3 style="font-size:1.2rem;font-weight:800;color:#92400E;margin-bottom:6px">ĐANG CHỜ KẾ TOÁN ĐỐI SOÁT SAO KÊ NGÂN HÀNG</h3>
-      <p style="color:#B45309;font-size:.88rem;margin-bottom:14px;line-height:1.5">
-        Hệ thống đã nhận được thông báo chuyển khoản <b>${vnd(amount)}</b> của bạn.<br>
-        Kế toán viên đang đối soát biến động số dư tài khoản <b>MB Bank 6306072007 (NGUYEN VAN HIEU)</b>.<br>
-        Đơn hàng sẽ tự động chuyển sang <b>Đã duyệt đơn (Chuẩn bị giao)</b> ngay khi tiền nổi vào tài khoản (thường trong 5-15 phút).
-      </p>
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        <button type="button" class="btn sm" style="background:#fff;border:1px solid #D97706;color:#92400E;font-weight:700" onclick="A.openBankQrModal('${esc(orderCode)}', ${Math.round(amount || 0)})">📱 Xem lại mã VietQR</button>
-        <button type="button" id="btn-simulate-pay" class="btn secondary" style="background:#1D4ED8;color:#fff;border:none;font-weight:700;font-size:12px;padding:8px 14px" onclick="A.simulatePaid('${esc(orderCode)}', ${Math.round(amount || 0)})" title="Mô phỏng ngân hàng bắn Webhook nhận được tiền thật">⚡ Giả lập Quét QR Thành công (Webhook)</button>
-      </div>
-    </div>`;
-  }
-
-  const bankKey = cache.qrBank || 'CTG';
-  const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.CTG;
+function renderBankQrBox(amount, orderCode) {
+  const bankKey = 'CTG';
+  const b = BANK_ACCOUNTS[bankKey];
+  const memo = `SEVQR LAPTOP99 ${orderCode}`;
   const qrUrl = buildVietQrUrl(bankKey, amount, memo);
 
-  if (orderCode && typeof setTimeout !== 'undefined') {
-    setTimeout(() => {
-      if (typeof A !== 'undefined' && A.startPaymentAutoPolling) {
-        A.startPaymentAutoPolling(orderCode, amount);
-      }
-    }, 150);
-  }
-
-  return `<div id="vietqr-box" style="margin-top:12px;background:linear-gradient(180deg,#F8FAFC 0%,#EFF6FF 100%);border:1.5px solid #93C5FD;border-radius:14px;padding:16px">
-    <div class="row between" style="margin-bottom:10px;gap:8px;flex-wrap:wrap">
-      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap">
-        <span style="display:inline-flex;align-items:center;gap:6px;background:#1D4ED8;color:#fff;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:99px;text-transform:uppercase">VietQR · Napas 247</span>
-        <span style="display:inline-flex;align-items:center;gap:6px;background:#DCFCE7;color:#166534;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:99px">
-          <span style="width:7px;height:7px;background:#22C55E;border-radius:50%;display:inline-block"></span> Tự động ghi nhận tiền vào qua SePay Webhook 24/7
-        </span>
-      </div>
-      <div class="xs muted right">Mở App VietinBank / MB Bank / App Ngân hàng bất kỳ hoặc MoMo để quét</div>
-    </div>
-
-    <div class="row" style="gap:6px;margin-bottom:12px;flex-wrap:wrap">
-      ${Object.values(BANK_ACCOUNTS)
-        .map(
-          (bk) => `<button type="button" class="btn sm ${bk.key === bankKey ? 'a' : ''}" style="${bk.key === bankKey ? 'background:#1D4ED8;border-color:#1D4ED8;color:#fff' : 'background:#fff'}" onclick="A.selectQrBank('${bk.key}', ${Math.round(amount || 0)}, '${esc(memo)}', '${esc(orderCode)}')">🏦 ${esc(bk.short)}</button>`,
-        )
-        .join('')}
-    </div>
-
+  return `<div data-payment-order="${esc(orderCode)}" style="margin-top:12px;background:linear-gradient(180deg,#F8FAFC 0%,#EFF6FF 100%);border:1.5px solid #93C5FD;border-radius:14px;padding:16px">
+    <p id="payment-live-status" role="status" style="color:#1D4ED8;font-weight:700;margin-bottom:12px">Đang chờ ngân hàng xác nhận thanh toán…</p>
     <div class="vietqr-grid-box" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;background:#fff;border:1px solid #DBEAFE;border-radius:12px;padding:16px;box-sizing:border-box">
       <div class="vietqr-qr-col" style="flex:0 0 210px;max-width:210px;margin:0 auto;text-align:center;background:#ffffff;padding:10px;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04);box-sizing:border-box">
         <img id="vietqr-img" src="${esc(qrUrl)}" alt="Mã QR Ngân hàng VietQR ${esc(b.short)}" style="width:100%;max-width:190px;height:auto;display:block;margin:0 auto;border-radius:6px">
@@ -325,15 +257,7 @@ function renderBankQrBox(amount, memo = 'LAPTOP99 THANH TOAN', orderCode = '') {
             <button type="button" class="btn sm" style="padding:2px 8px;font-size:.72rem" onclick="A.copy('${esc(memo)}')">Sao chép</button>
           </span>
         </div>
-        <p class="xs muted" style="margin-top:4px;line-height:1.4">💡 Khi quét mã QR trên ứng dụng ngân hàng, <b>Số tiền</b> và <b>Nội dung chuyển khoản</b> sẽ được điền tự động chính xác 100%.</p>
-        ${
-          orderCode
-            ? `<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-                <button type="button" id="btn-confirm-qr" class="btn a" style="background:#059669;border-color:#059669;font-weight:700;flex:1 1 180px;padding:8px 14px;font-size:13px" onclick="A.confirmQrPayment('${esc(orderCode)}')">✓ Tôi đã chuyển khoản xong</button>
-                <button type="button" id="btn-simulate-pay" class="btn secondary" style="background:#EFF6FF;color:#1D4ED8;border:1.5px solid #BFDBFE;font-weight:700;font-size:12px;flex:1 1 180px;padding:8px 12px" onclick="A.simulatePaid('${esc(orderCode)}', ${Math.round(amount || 0)})" title="Mô phỏng tiền thật đã vào tài khoản MBBank">⚡ Giả lập Quét QR Thành công (Test Demo)</button>
-              </div>`
-            : ''
-        }
+        <p class="xs muted" style="margin-top:4px;line-height:1.4">Quét VietQR bằng ứng dụng ngân hàng và giữ nguyên số tiền, nội dung chuyển khoản. Khi giao dịch được xác nhận, trang sẽ tự mở đơn hàng của bạn.</p>
       </div>
     </div>
   </div>`;
@@ -370,7 +294,6 @@ async function viewCheckout() {
   const selectedPay = cache.checkoutPay || 'cod';
 
   const c = await calcCart();
-  const previewMemo = `LAPTOP99 ${u.phone || 'THANHTOAN'}`;
   return `<div class="wrap">
     <nav class="bc"><a href="#/">Trang chủ</a> <span class="sep">›</span> <a href="#/cart">Giỏ hàng</a> <span class="sep">›</span> <span class="cur">Thanh toán &amp; Đặt hàng</span></nav>
     <h1 style="font-size:1.45rem;margin-bottom:14px">Thông tin đặt hàng &amp; Thanh toán</h1>
@@ -410,7 +333,7 @@ async function viewCheckout() {
                 <span>
                   <b class="sm">${v}</b>
                   ${k === 'cod' ? '<br><span class="xs muted">Được mở hộp kiểm tra ngoại hình máy và phụ kiện trước khi thanh toán.</span>' : ''}
-                  ${k === 'bank' ? '<br><span class="xs muted">Hiển thị mã QR Ngân hàng VietQR thật (MB Bank, Vietcombank, Techcombank, BIDV) điền sẵn số tiền đơn hàng.</span>' : ''}
+                  ${k === 'bank' ? '<br><span class="xs muted">Quét VietQR bằng ứng dụng ngân hàng để thanh toán đúng số tiền của đơn.</span>' : ''}
                   ${k === 'card' ? '<br><span class="xs muted">Quét mã QR Ngân hàng Napas 247 / Ví điện tử trực tuyến nhanh chóng, an toàn 24/7.</span>' : ''}
                   ${k === 'installment' ? '<br><span class="xs muted">Hỗ trợ trả góp lãi suất 0% qua thẻ tín dụng hoặc công ty tài chính.</span>' : ''}
                 </span>
@@ -420,9 +343,7 @@ async function viewCheckout() {
               .join('')}
           </div>
 
-          <div id="checkout-qr-container">
-            ${selectedPay === 'bank' || selectedPay === 'card' ? renderBankQrBox(c.total, previewMemo, '') : ''}
-          </div>
+          <p id="checkout-qr-hint" class="xs muted" style="margin-top:10px" ${isQrPayment(selectedPay) ? '' : 'hidden'}>Mã VietQR sẽ xuất hiện sau khi tạo đơn hàng.</p>
         </div>
 
         ${
@@ -457,41 +378,30 @@ async function viewCheckout() {
   </div>`;
 }
 
-function viewDone(r) {
-  const oid = r.parts[1];
-  const u = me() || {};
-  const lastOrd = cache.lastOrder && (cache.lastOrder.id === oid || cache.lastOrder.code === oid) ? cache.lastOrder : null;
-  const isQrPay = lastOrd ? (lastOrd.pay === 'bank' || lastOrd.pay === 'card' || String(lastOrd.pay).includes('QR') || String(lastOrd.pay).includes('Chuyển khoản')) : true;
-  const amount = lastOrd ? (lastOrd.total || lastOrd.totalAmount || 0) : 0;
-  const memo = `LAPTOP99 ${oid}`;
+async function viewDone(r) {
+  const orderCode = r.parts[1];
+  const orderLink = '#/account?tab=orders&order=' + encodeURIComponent(orderCode);
+  if (!API.getToken()) return viewAccount(r);
+
+  const { data: order } = await OrderService.getPaymentStatus(orderCode);
+  const qrPayment = isQrPayment(order.payment_method) && order.total_amount > 0 &&
+    order.status !== 'cancelled';
+  const showQr = qrPayment && order.payment_status !== 'paid';
+  const title = order.status === 'cancelled' ? 'Đơn hàng đã hủy' :
+    order.payment_status === 'paid' ? 'Đã thanh toán' :
+    showQr ? 'Thanh toán qua VietQR' : 'Đặt hàng thành công';
 
   return `<div class="wrap" style="max-width:780px;padding:32px 16px">
-    <div class="card center" style="padding:32px 24px">
-      <div style="width:64px;height:64px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px">${ic('check', 34)}</div>
-      <h1 style="font-size:1.5rem">Đặt hàng thành công!</h1>
-      <p class="muted sm" style="margin:10px 0 18px">Cảm ơn bạn đã mua sắm tại <b>Laptop99</b>. Mã đơn hàng của bạn là <b style="color:var(--acc)">${esc(oid)}</b>.</p>
-      <div style="text-align:left;background:#F8FAFC;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:18px">
-        <p class="xs muted" style="text-transform:uppercase;font-weight:700">📦 Chi tiết người nhận &amp; Địa chỉ giao hàng</p>
-        <div style="margin-top:8px;font-size:.88rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px">
-          <div>👤 <b>Người nhận:</b> ${esc((lastOrd && (lastOrd.name || lastOrd.customer_name)) || u.name)}</div>
-          <div>📞 <b>Số điện thoại:</b> ${esc((lastOrd && (lastOrd.phone || lastOrd.customer_phone)) || u.phone)}</div>
-          <div style="grid-column:1/-1">📍 <b>Địa chỉ nhận hàng:</b> <b style="color:var(--acc)">${esc((lastOrd && (lastOrd.shipping_address || lastOrd.address)) || u.addr || 'Giao hàng tận nơi')}</b></div>
-        </div>
-        <p class="sm" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
-          Hệ thống đã tự động cấp phát mã <b>Serial Number (S/N)</b> chính hãng cho sản phẩm trong đơn hàng <b class="acc">${esc(oid)}</b>${lastOrd && lastOrd.serial_number ? ` (<b style="font-family:monospace;color:#047857">${esc(lastOrd.serial_number)}</b>)` : ''}. Đơn hàng đã được đồng bộ thời gian thực lên hệ thống Quản trị Admin.
-        </p>
-      </div>
-
-      ${
-        isQrPay && amount > 0
-          ? `<div style="text-align:left;margin-bottom:20px">${renderBankQrBox(amount, memo, oid)}</div>`
-          : `<div style="margin-bottom:18px">
-              <button type="button" class="btn sm" style="background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;font-weight:700" onclick="A.openBankQrModal('${esc(oid)}', ${amount || 0})">📱 Mở Mã QR Ngân Hàng (VietQR) để chuyển khoản trước</button>
-            </div>`
-      }
-
-      <div class="row" style="justify-content:center;gap:10px">
-        <a class="btn a" href="#/account?tab=orders">Xem chi tiết đơn hàng</a>
+    <div class="card" style="padding:24px">
+      <h1 style="font-size:1.45rem;margin-bottom:8px">${title}</h1>
+      <p class="sm muted">Mã đơn <b>${esc(order.code)}</b> · ${vnd(order.total_amount)}</p>
+      ${showQr ? renderBankQrBox(order.total_amount, order.code) :
+        qrPayment ? `<p data-payment-order="${esc(order.code)}" role="status">Đang mở đơn hàng…</p>` : ''}
+      ${!showQr && order.shipping_address ? `<p class="sm" style="margin-top:12px">
+        Giao đến ${esc(order.customer_name)} · ${esc(order.customer_phone)}<br>${esc(order.shipping_address)}
+      </p>` : ''}
+      <div class="row" style="margin-top:18px;gap:10px">
+        <a class="btn a" href="${esc(orderLink)}">Xem đơn hàng</a>
         <a class="btn" href="#/products">Tiếp tục mua sắm</a>
       </div>
     </div>
@@ -532,12 +442,15 @@ async function viewAccount(r) {
       }
 
       const map = new Map();
-      for (const ord of [...localOrders, ...L]) {
+      for (const ord of [...L, ...localOrders]) {
         const key = ord.code || ord.id;
         if (key && !map.has(key)) map.set(key, ord);
       }
       const combined = Array.from(map.values());
       combined.sort((a, b) => {
+        const aSelected = (a.code || a.id) === r.q.order;
+        const bSelected = (b.code || b.id) === r.q.order;
+        if (aSelected !== bSelected) return aSelected ? -1 : 1;
         const ta = a.at || a.created_at || (a.ordered_at ? new Date(a.ordered_at).getTime() : 0);
         const tb = b.at || b.created_at || (b.ordered_at ? new Date(b.ordered_at).getTime() : 0);
         return tb - ta;
@@ -560,7 +473,7 @@ async function viewAccount(r) {
             const items = Array.isArray(o.items) && o.items.length ? o.items : [];
             const canCancel = rawStatus === 'pending';
             const canRma = rawStatus === 'delivered';
-            const needQrPay = !isPaid && rawStatus !== 'cancelled';
+            const needQrPay = isQrPayment(payMethodRaw) && !isPaid && rawStatus !== 'cancelled';
             const stepIdx = rawStatus === 'cancelled' ? -1 : rawStatus === 'delivered' ? 3 : rawStatus === 'shipping' ? 2 : rawStatus === 'confirmed' ? 1 : 0;
             const orderTotal = Number(o.total || o.totalAmount || o.total_amount || 0);
 
@@ -691,7 +604,7 @@ async function viewAccount(r) {
           <div class="row between" style="padding:10px 16px;border-top:1px solid var(--line);background:#fff;flex-wrap:wrap;gap:8px">
             <div class="row" style="gap:8px;flex-wrap:wrap">
               ${needQrPay ? `
-                <button type="button" class="btn sm a" style="background:#1D4ED8;border-color:#1D4ED8;color:#fff;font-weight:700" onclick="A.openBankQrModal('${esc(code)}', ${orderTotal}, '${esc(payMethodRaw)}')">
+                <button type="button" class="btn sm a" style="background:#1D4ED8;border-color:#1D4ED8;color:#fff;font-weight:700" onclick="A.openBankQrModal('${esc(code)}')">
                   📱 Quét Mã QR Ngân Hàng (VietQR Napas 247)
                 </button>
               ` : ''}

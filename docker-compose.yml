@@ -61,6 +61,7 @@ services:
       JWT_EXPIRES_IN: "8h"
       CORS_ORIGINS: "http://localhost,http://localhost:80,http://localhost:3000,http://localhost:5173,http://localhost:8080"
       UPLOAD_DIR: "uploads"
+      SEPAY_WEBHOOK_TOKEN: ${SEPAY_WEBHOOK_TOKEN:-}
     ports:
       - "4000:4000"
     volumes:
