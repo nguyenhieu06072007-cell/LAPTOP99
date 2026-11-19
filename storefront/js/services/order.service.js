@@ -20,7 +20,7 @@ const OrderService = {
   },
 
   async getPaymentStatus(code) {
-    return await API.get(`/orders/${encodeURIComponent(code)}/payment-status`);
+    return await API.request(`/orders/${encodeURIComponent(code)}/payment-status`, { timeout: 15000 });
   },
 
   async simulatePaid(code, details = {}) {
