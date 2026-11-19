@@ -144,6 +144,12 @@ const ProductsController = {
   createProduct: asyncHandler(async (req, res) => {
     const body = createSchema.parse(req.body);
     if (!canCost(req)) delete body.cost_price;
+    if (!can(req.user, 'inventory:alert:config')) delete body.low_stock_threshold;
+    if (!can(req.user, 'inventory:write')) {
+      delete body.warehouse_location;
+      delete body.stock_quantity;
+    }
+    if (req.user.data_visibility === 'branch' && req.user.role !== 'super_admin') body.warehouse_location = req.user.branch || null;
     checkPricing({ ...body });
 
     const id = await withTransaction(async (conn) => {
@@ -184,6 +190,8 @@ const ProductsController = {
     const id = toInt(req.params.id);
     const { version, specs, ...rest } = updateSchema.parse(req.body);
     if (!canCost(req)) delete rest.cost_price;
+    if (!can(req.user, 'inventory:alert:config') || req.user.data_visibility === 'branch') delete rest.low_stock_threshold;
+    if (!can(req.user, 'inventory:write') || req.user.data_visibility === 'branch') delete rest.warehouse_location;
 
     await withTransaction(async (conn) => {
       const old = await ProductModel.findByIdForUpdate(conn, id);

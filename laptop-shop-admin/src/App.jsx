@@ -17,6 +17,7 @@ import TradeInPage from './pages/tradein/TradeInPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import CustomerPurchaseHistoryPage from './pages/customers/CustomerPurchaseHistoryPage'
 import FeedbackReportsPage from './pages/reports/FeedbackReportsPage'
+import ReviewModerationPage from './pages/reports/ReviewModerationPage'
 import PromotionCampaignPage from './pages/promotions/PromotionCampaignPage'
 import BannerManagementPage from './pages/banners/BannerManagementPage'
 import UserListPage from './pages/users/UserListPage'
@@ -167,7 +168,7 @@ export default function App() {
         <Route
           path="warranty"
           element={
-            <PermissionRoute permission={['warranty:read', 'inventory:serial:manage', 'inventory:serial:read']}>
+            <PermissionRoute permission={['warranty:read', 'warranty:write', 'inventory:serial:manage', 'inventory:serial:read']}>
               <WarrantySerialPage />
             </PermissionRoute>
           }
@@ -229,10 +230,13 @@ export default function App() {
             </PermissionRoute>
           }
         />
+        <Route path="reviews" element={
+          <PermissionRoute permission="review:manage"><ReviewModerationPage /></PermissionRoute>
+        } />
         <Route
           path="users"
           element={
-            <PermissionRoute permission="user:manage">
+            <PermissionRoute permission={['user:manage', 'role:manage']}>
               <UserListPage />
             </PermissionRoute>
           }

@@ -71,6 +71,9 @@ const UsersController = {
     assertGrant(req.user, b.permissions);
     const roleCode = b.name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
 
+    if (roleCode === 'super_admin' && req.user.role !== 'super_admin') {
+      throw new ApiError(403, 'Mã vai trò dành riêng cho Super Admin');
+    }
     const existing = await UserModel.findRoleByName(roleCode);
     if (existing) {
       throw new ApiError(400, `Mã vai trò '${roleCode}' đã tồn tại trong hệ thống`);

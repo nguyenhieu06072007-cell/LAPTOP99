@@ -20,7 +20,7 @@ import { resolveAdminImageUrl, handleImageError } from '../../utils/imageHelper'
 export default function ProductFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const isEdit = !!id;
 
   const [loading, setLoading] = useState(isEdit);
@@ -42,6 +42,7 @@ export default function ProductFormPage() {
     sale_price: '',
     stock_quantity: 10,
     low_stock_threshold: 3,
+    warehouse_location: '',
     status: 'active',
     is_featured: false,
     is_new: true,
@@ -183,7 +184,8 @@ export default function ProductFormPage() {
             cost_price: p.cost_price || '',
             sale_price: p.sale_price || '',
             stock_quantity: p.stock_quantity || 0,
-            low_stock_threshold: p.low_stock_threshold || 5,
+            low_stock_threshold: p.low_stock_threshold ?? 5,
+            warehouse_location: p.warehouse_location || '',
             status: p.status || 'active',
             is_featured: !!p.is_featured,
             is_new: !!p.is_new,
@@ -301,7 +303,8 @@ export default function ProductFormPage() {
         price: priceNum,
         cost_price: costNum,
         sale_price: saleNum,
-        low_stock_threshold: Number(formData.low_stock_threshold) || 3,
+        ...(can('inventory:alert:config') && user?.data_visibility !== 'branch' ? { low_stock_threshold: Number(formData.low_stock_threshold) } : {}),
+        ...(can('inventory:write') && user?.data_visibility !== 'branch' ? { warehouse_location: formData.warehouse_location || null } : {}),
         status: publishStatus,
         is_featured: formData.is_featured ? 1 : 0,
         is_new: formData.is_new ? 1 : 0,
@@ -743,7 +746,20 @@ export default function ProductFormPage() {
                           className="w-24 px-2 py-1 border border-gray-300 rounded font-semibold text-blue-600 text-[11px]"
                         />
                       </td>
-                      {can('cost:read') && (
+                      {can('inventory:alert:config') && user?.data_visibility !== 'branch' && <label className="text-gray-600">
+                Ngưỡng cảnh báo tồn kho
+                <input type="number" min="0" max="100000" required value={formData.low_stock_threshold}
+                  onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
+                  className="block w-full rounded border p-1.5" />
+              </label>}
+              {can('inventory:write') && user?.data_visibility !== 'branch' && <label className="text-gray-600">
+                Chi nhánh quản lý SKU
+                <input value={formData.warehouse_location} maxLength={50}
+                  placeholder="Nhập đúng tên chi nhánh trên tài khoản"
+                  onChange={(e) => setFormData({ ...formData, warehouse_location: e.target.value })}
+                  className="block w-full rounded border p-1.5" />
+              </label>}
+              {can('cost:read') && (
                         <td className="p-2">
                           <input
                             type="number"

@@ -14,6 +14,7 @@ const formatCurrency = (amount) => {
 
 export default function InventoryPage() {
   const { can } = useAuth();
+  const [savingThreshold, setSavingThreshold] = useState(false);
   const [activeTab, setActiveTab] = useState('movements'); // 'movements' | 'low-stock'
   
   // Movements State
@@ -101,6 +102,23 @@ export default function InventoryPage() {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra');
+    }
+  };
+
+  const saveThreshold = async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const fields = new FormData(form);
+    setSavingThreshold(true);
+    try {
+      await api.patch('/inventory/threshold', { sku: fields.get('sku'), threshold: Number(fields.get('threshold')) });
+      form.reset();
+      if (activeTab === 'low-stock') fetchLowStock();
+      toast.success('Đã cập nhật ngưỡng cảnh báo');
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSavingThreshold(false);
     }
   };
 
@@ -277,6 +295,15 @@ export default function InventoryPage() {
         </div>
       )}
 
+      {can('inventory:alert:config') && <form onSubmit={saveThreshold} className="flex flex-wrap items-end gap-2 rounded border bg-white p-3">
+        <label className="block text-sm">SKU
+          <input name="sku" required maxLength={50} className="block rounded border p-2" />
+        </label>
+        <label className="block text-sm">Ngưỡng cảnh báo
+          <input name="threshold" type="number" required min="0" max="100000" className="block rounded border p-2" />
+        </label>
+        <button disabled={savingThreshold} className="rounded bg-blue-700 px-3 py-2 text-white">Lưu ngưỡng tồn</button>
+      </form>}
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

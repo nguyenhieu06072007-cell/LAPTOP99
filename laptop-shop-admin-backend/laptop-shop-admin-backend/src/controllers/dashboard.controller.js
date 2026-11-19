@@ -10,6 +10,7 @@ const filters = z.object({
 });
 const getData = (user, options) => DashboardModel.getDashboardData({
   ...options, scope: orderScope(user), withCost: can(user, 'cost:read'),
+  withCustomers: can(user, 'customer:read'),
 });
 
 const DashboardController = {

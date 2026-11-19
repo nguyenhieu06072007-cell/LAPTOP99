@@ -51,14 +51,15 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, theme, toggleTh
         { name: 'Đơn hàng & Thanh toán', path: '/orders', icon: HiOutlineShoppingCart, permission: ['order:read:all', 'order:read:own', 'order:write'] },
         { name: 'Kho', path: '/inventory', icon: HiOutlineArchiveBox, permission: 'inventory:read' },
         { name: 'Nhập hàng', path: '/batch-import', icon: HiOutlineArrowDownTray, permission: 'import:batch' },
-        { name: 'Bảo hành (S/N)', path: '/warranty', icon: HiOutlineShieldCheck, permission: ['warranty:read', 'inventory:serial:manage', 'inventory:serial:read'] },
+        { name: 'Bảo hành (S/N)', path: '/warranty', icon: HiOutlineShieldCheck, permission: ['warranty:read', 'warranty:write', 'inventory:serial:manage', 'inventory:serial:read'] },
         { name: 'Đổi trả (RMA)', path: '/returns', icon: HiOutlineArrowPathRoundedSquare, permission: ['rma:manage', 'warranty:read', 'finance:refund'] },
         { name: 'Thu cũ đổi mới', path: '/trade-in', icon: HiOutlineSparkles, permission: ['tradein:estimate', 'order:read:all'] },
         { name: 'Khuyến mãi', path: '/promotions', icon: HiOutlineTicket, permission: 'promotion:read' },
         { name: 'Thiết kế Banner', path: '/banners', icon: HiOutlineDocumentText, permission: ['media:upload', 'catalog:write'] },
         { name: 'Khách hàng', path: '/customers', icon: HiOutlineUsers, permission: 'customer:read' },
         { name: 'Báo cáo', path: '/reports', icon: HiOutlineChartBarSquare, permission: 'report:read' },
-        { name: 'Phân quyền', path: '/users', icon: HiOutlineUserGroup, permission: 'user:manage' },
+        { name: 'Duyệt đánh giá', path: '/reviews', icon: HiOutlineDocumentText, permission: 'review:manage' },
+        { name: 'Phân quyền', path: '/users', icon: HiOutlineUserGroup, permission: ['user:manage', 'role:manage'] },
         { name: 'Audit trail', path: '/audit-logs', icon: HiOutlineClipboardDocumentList, permission: 'audit:read' },
       ],
     },
@@ -93,6 +94,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, theme, toggleTh
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 custom-scrollbar text-[13px]">
           {menuGroups[0].items.map((item) => {
             if (item.permission && !can(item.permission)) return null;
+            if (item.path === '/batch-import' && !can('inventory:write')) return null;
             const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
 
             return (

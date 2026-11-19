@@ -1,7 +1,7 @@
 const { pool } = require('../config/db');
 
 const DashboardModel = {
-  async getDashboardData({ range = '30d', branch = '', category_id = '', withCost = false, scope = {} }) {
+  async getDashboardData({ range = '30d', branch = '', category_id = '', withCost = false, withCustomers = false, scope = {} }) {
     const filter = [];
     for (const [key, value] of Object.entries(scope)) {
       if (key === 'assigned_to') filter.push(`base.assigned_to = ${pool.escape(value)}`);
@@ -219,9 +219,9 @@ const DashboardModel = {
 
       // 2.4 Danh sách 10 đơn gần đây
       const [ro] = await pool.query(`
-        SELECT o.id, o.code, o.customer_name, o.customer_phone, o.product_name,
+        SELECT o.id, o.code, ${withCustomers ? 'o.customer_name, o.customer_phone' : 'NULL AS customer_name, NULL AS customer_phone'}, o.product_name,
                o.total_amount, o.status, o.payment_status, o.ordered_at, o.serial_number,
-               c.tier AS customer_tier
+               ${withCustomers ? 'c.tier' : 'NULL'} AS customer_tier
           FROM ${reportOrders} o
           LEFT JOIN customers c ON c.id = o.customer_id
          WHERE ${dateFilter}
@@ -591,7 +591,7 @@ const DashboardModel = {
       }
 
       // 2.13 Khách hàng: VIP & Retention
-      if (!scoped) try {
+      if (!scoped && withCustomers) try {
         const [spenders] = await pool.query(`SELECT c.id, c.code, c.full_name, c.phone,
             COUNT(o.id) AS order_count, SUM(o.recognized_amount) AS total_spent
           FROM customers c JOIN ${reportOrders} o ON o.customer_id = c.id

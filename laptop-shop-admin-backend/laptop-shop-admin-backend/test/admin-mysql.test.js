@@ -22,8 +22,15 @@ test('admin operations against a fresh MySQL schema and synthetic orders', {
   } finally {
     connection.release();
   }
+  await pool.query('INSERT INTO roles (id, name, permissions) VALUES ?', [[
+    [4, 'sales_manager', JSON.stringify(['order:write', 'order:read:all'])],
+    [6, 'warehouse_manager', JSON.stringify(['inventory:read', 'inventory:write', 'inventory:serial:manage', 'import:batch'])],
+    [7, 'accountant', JSON.stringify(['finance:read', 'finance:reconcile', 'report:read', 'order:read:all'])],
+    [8, 'product_manager', JSON.stringify(['product:read', 'product:write', 'inventory:read', 'import:batch'])],
+  ]]);
   await ensureAdminSchema(pool);
   await ensureAdminSchema(pool);
+
   await pool.query("INSERT INTO roles (id, name, permissions) VALUES (1, 'super_admin', '[\"*\"]'), (2, 'test_sales', '[\"order:read:own\",\"report:read\",\"customer:read\"]'), (3, 'test_finance_read', '[\"finance:read\"]')");
   await pool.query("INSERT INTO users (id, role_id, full_name, email, password_hash) VALUES (1, 1, 'Test admin', 'admin@example.test', '-'), (2, 2, 'Test sales', 'sales@example.test', '-'), (3, 3, 'Read finance', 'finance@example.test', '-')");
   await pool.query("INSERT INTO brands (id, name, slug) VALUES (1, 'Test brand', 'test-brand')");
@@ -116,7 +123,7 @@ test('admin operations against a fresh MySQL schema and synthetic orders', {
     [7, 'accountant', ['finance:read']],
     [8, 'product_manager', ['product:read']],
   ]) {
-    await pool.query('INSERT INTO roles (id, name, permissions) VALUES (?, ?, ?)', [roleId, role, JSON.stringify(perms)]);
+    if (roleId === 5) await pool.query('INSERT INTO roles (id, name, permissions) VALUES (?, ?, ?)', [roleId, role, JSON.stringify(perms)]);
     const email = role + '@example.test';
     const account = await call('/users', 1, 'POST', { email, password, role_id: roleId, full_name: role });
     assert.equal(account.status, 201, JSON.stringify(account.body));
@@ -134,5 +141,69 @@ test('admin operations against a fresh MySQL schema and synthetic orders', {
     assert.equal(current.permissions.includes('*'), false);
     assert.ok(perms.every((permission) => current.permissions.includes(permission)));
   }
+
+  const roleUsers = await call('/users?limit=50', 1);
+  const team = Object.fromEntries(roleUsers.body.data.map(({ role, id }) => [role, id]));
+  await pool.query("UPDATE users SET branch = 'Branch A', data_visibility = 'branch' WHERE id IN (?)", [[team.sales_manager, team.warehouse_manager]]);
+  await pool.query("UPDATE users SET branch = 'Branch A', data_visibility = 'own' WHERE id = ?", [team.sales_executive]);
+  await pool.query("UPDATE products SET warehouse_location = IF(id = 11, 'Branch A', 'Branch B'), low_stock_threshold = 100");
+  const [[{ permissions }]] = await pool.query("SELECT permissions FROM roles WHERE name = 'accountant'");
+  assert.ok(JSON.parse(permissions).includes('finance:refund'));
+  assert.equal((await call('/inventory/low-stock', team.warehouse_manager)).body.data.map((item) => item.sku).join(), 'SKU-A');
+  assert.equal((await call('/inventory/threshold', team.warehouse_manager, 'PATCH', { sku: 'SKU-B', threshold: 1 })).status, 404);
+  assert.equal((await call('/inventory/threshold', team.sales_executive, 'PATCH', { sku: 'SKU-A', threshold: 1 })).status, 403);
+  assert.equal((await call('/inventory/threshold', team.warehouse_manager, 'PATCH', { sku: 'SKU-A', threshold: 15 })).status, 204);
+  const branchReceipt = { ...receipt, request_key: '32345678-1234-4234-8234-123456789abc', warehouse: 'Branch A',
+    rows: [{ sku: 'SKU-A', quantity: 1, serials: ['BRANCH-SERIAL'] }] };
+  assert.equal((await call('/inventory/receipts', team.warehouse_manager, 'POST', { ...branchReceipt, warehouse: 'Branch B' })).status, 403);
+  const branchImport = await call('/inventory/receipts', team.warehouse_manager, 'POST', branchReceipt);
+  assert.equal(branchImport.status, 201, JSON.stringify(branchImport.body));
+  assert.deepEqual((await call('/inventory/receipts', team.warehouse_manager)).body.data.map((row) => row.warehouse), ['Branch A']);
+  assert.equal((await call('/inventory/movements', team.warehouse_manager)).body.data.some((row) => row.sku === 'SKU-B'), false);
+
+  await pool.query(`INSERT INTO orders (id, code, customer_id, customer_name, customer_phone, product_id, product_name, sku,
+    status, payment_status, total_amount, unit_price, serial_number, branch, items_json)
+    VALUES (25, 'TEST-WEB-QUEUE', 1, 'Test customer', '0900000000', 11, 'Laptop A', 'SKU-A', 'confirmed', 'unpaid', 10000, 10000,
+      'CHỜ XUẤT KHO', 'Toàn hệ thống (HQ)', JSON_ARRAY(JSON_OBJECT('pid', 11, 'qty', 1, 'serials', JSON_ARRAY('CHỜ XUẤT KHO'))))`);
+  const queue = await call('/orders/assignment-queue', team.sales_manager);
+  assert.equal(queue.status, 200, JSON.stringify(queue.body));
+  assert.ok(queue.body.data.some((row) => row.code === 'TEST-WEB-QUEUE' && row.customer_phone === undefined));
+  assert.equal((await call('/orders/assignment-queue', team.sales_executive)).status, 403);
+  assert.equal((await call('/orders/25/assignee', team.sales_manager, 'PATCH', { staff_id: 2 })).status, 403);
+  const assigned = await call('/orders/25/assignee', team.sales_manager, 'PATCH', { staff_id: team.sales_executive });
+  assert.equal(assigned.status, 204, JSON.stringify(assigned.body));
+  assert.equal((await call('/orders/25', team.sales_executive)).body.data.branch, 'Branch A');
+  assert.ok((await call('/notifications', team.sales_executive)).body.data.some((item) => item.id.startsWith('order-assigned-25-')));
+  assert.equal((await call('/orders/25/status', team.sales_manager, 'PATCH', { status: 'shipping' })).status, 409);
+  assert.equal((await call('/orders/25/serials', team.sales_executive, 'PATCH', { lines: [['BRANCH-SERIAL']] })).status, 403);
+  assert.ok((await call('/orders/serial-queue', team.warehouse_manager)).body.data.some((row) => row.code === 'TEST-WEB-QUEUE'));
+  const serialized = await call('/orders/25/serials', team.warehouse_manager, 'PATCH', { lines: [['BRANCH-SERIAL']] });
+  assert.equal(serialized.status, 204, JSON.stringify(serialized.body));
+  assert.equal((await call('/orders/25/status', team.sales_manager, 'PATCH', { status: 'shipping' })).status, 200);
+  assert.equal((await call('/orders/25/status', team.sales_manager, 'PATCH', { status: 'delivered' })).status, 200);
+
+  await pool.query('UPDATE users SET custom_permissions = ? WHERE id = ?', [JSON.stringify(['warranty:read', 'warranty:write']), team.warehouse_manager]);
+  const warranty = { order_code: 'TEST-WEB-QUEUE', serial: 'BRANCH-SERIAL', issue: "Will not power on" };
+  assert.equal((await call('/orders/warranty/cases', team.sales_executive, 'POST', warranty)).status, 403);
+  const received = await call('/orders/warranty/cases', team.warehouse_manager, 'POST', warranty);
+  assert.equal(received.status, 201, JSON.stringify(received.body));
+  assert.equal((await call('/orders/warranty/cases', team.warehouse_manager, 'POST', warranty)).status, 409);
+  assert.equal((await call('/orders/warranty/cases/' + received.body.data.id, team.warehouse_manager, 'PATCH', {
+    status: 'repairing', note: 'Diagnosed power supply',
+  })).status, 204);
+  const cases = await call('/orders/warranty/cases?order_code=TEST-WEB-QUEUE&serial=BRANCH-SERIAL', team.warehouse_manager);
+  assert.equal(cases.body.data[0].history.length, 2);
+
+  await pool.query('UPDATE users SET custom_permissions = ? WHERE id = ?', [JSON.stringify(['review:manage', 'role:manage']), team.sales_executive]);
+  assert.equal((await call('/users/roles', team.sales_executive)).status, 200);
+  assert.equal((await call('/users', team.sales_executive)).status, 403);
+  assert.equal((await call('/users/roles', team.sales_executive, 'POST', { name: 'reviewer', display_name: 'Reviewer', permissions: ['review:manage'] })).status, 201);
+  assert.equal((await call('/reviews', team.sales_executive)).status, 200);
+  assert.equal((await call('/reviews/' + review.insertId + '/status', team.sales_executive, 'PATCH', { status: 'hidden' })).status, 200);
+  assert.equal((await call('/dashboard', team.sales_executive)).status, 403);
+  const financeReport = await call('/dashboard?range=all', team.accountant);
+  assert.equal(financeReport.status, 200, JSON.stringify(financeReport.body));
+  assert.deepEqual(financeReport.body.data.customer_metrics.topSpenders, []);
+  assert.ok(financeReport.body.data.recent_orders.every((order) => order.customer_phone === null));
 
 });

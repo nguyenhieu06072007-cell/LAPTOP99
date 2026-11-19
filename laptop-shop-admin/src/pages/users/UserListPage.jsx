@@ -28,7 +28,6 @@ import {
   HiExclamationTriangle,
   HiClipboardDocumentCheck,
 } from 'react-icons/hi2';
-import { Navigate } from 'react-router-dom';
 
 const BRANCH_OPTIONS = [
   'Toàn hệ thống (HQ)',
@@ -56,12 +55,10 @@ const BADGE_COLORS = {
 export default function UserListPage() {
   const { user: currentUser, can } = useAuth();
 
-  if (!can('user:manage')) {
-    return <Navigate to="/" replace />;
-  }
+  const mayManageUsers = can('user:manage');
 
   // Active Main Tab: 'users' | 'roles' | 'matrix' | 'security'
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState(mayManageUsers ? 'users' : 'roles');
 
   // Users State
   const [users, setUsers] = useState([]);
@@ -116,8 +113,8 @@ export default function UserListPage() {
   }, []);
 
   useEffect(() => {
-    fetchUsers();
-  }, [search, roleFilter, branchFilter, statusFilter, page]);
+    if (mayManageUsers) fetchUsers();
+  }, [search, roleFilter, branchFilter, statusFilter, page, mayManageUsers]);
 
   const fetchInitialData = async () => {
     try {
@@ -389,18 +386,18 @@ export default function UserListPage() {
             <HiShieldCheck className="w-4 h-4 text-purple-600" />
             <span>+ Tạo Vai trò mới</span>
           </button>
-          <button
+          {mayManageUsers && <button
             onClick={() => handleOpenUserModal()}
             className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition"
           >
             <HiPlus className="w-4 h-4" />
             <span>Thêm Nhân viên mới</span>
-          </button>
+          </button>}
         </div>
       </div>
 
       {/* KPI Overview Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {mayManageUsers && <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white p-3.5 rounded-xl border border-gray-200/80 shadow-xs flex items-center space-x-3">
           <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
             👥
@@ -440,12 +437,12 @@ export default function UserListPage() {
             <div className="text-lg font-black text-amber-700">{financialAccessCount} tài khoản (Bảo mật)</div>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Main Feature Tabs Navigation */}
       <div className="bg-white rounded-xl border border-gray-200/80 shadow-xs overflow-hidden">
         <div className="flex border-b border-gray-200 bg-gray-50/60 overflow-x-auto text-xs font-semibold">
-          <button
+          {mayManageUsers && <button
             onClick={() => setActiveTab('users')}
             className={`flex items-center gap-2 py-3 px-5 border-b-2 transition whitespace-nowrap ${
               activeTab === 'users'
@@ -455,7 +452,7 @@ export default function UserListPage() {
           >
             <HiUserGroup className="w-4 h-4" />
             <span>1. Quản lý Nhân sự & Phân quyền ({users.length})</span>
-          </button>
+          </button>}
 
           <button
             onClick={() => setActiveTab('roles')}
@@ -495,7 +492,7 @@ export default function UserListPage() {
         </div>
 
         {/* TAB 1: USERS LIST & MANAGEMENT */}
-        {activeTab === 'users' && (
+        {mayManageUsers && activeTab === 'users' && (
           <div className="p-4 space-y-4">
             {/* Filter Bar */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">

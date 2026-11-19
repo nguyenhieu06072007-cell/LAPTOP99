@@ -1,5 +1,7 @@
 const { z } = require('zod');
 const InventoryModel = require('../models/inventory.model');
+const { withTransaction } = require('../config/db');
+const { writeAudit } = require('../services/audit');
 const { ApiError, asyncHandler } = require('../utils/helpers');
 
 const movementSchema = z.object({
@@ -38,8 +40,27 @@ const InventoryController = {
   }),
 
   getLowStock: asyncHandler(async (req, res) => {
-    const rows = await InventoryModel.getLowStock();
+    const rows = await InventoryModel.getLowStock(req.user);
     res.json({ data: rows });
+  }),
+
+  setThreshold: asyncHandler(async (req, res) => {
+    const { sku, threshold } = z.object({
+      sku: z.string().trim().min(1).max(50),
+      threshold: z.number().int().min(0).max(100000),
+    }).parse(req.body);
+    const branch = InventoryModel.inventoryBranch(req.user);
+    await withTransaction(async (conn) => {
+      const [[product]] = await conn.query(`SELECT id, low_stock_threshold FROM products
+        WHERE sku = ? AND deleted_at IS NULL${branch === null ? '' : ' AND warehouse_location = ?'} FOR UPDATE`,
+      branch === null ? [sku] : [sku, branch || null]);
+      if (!product) throw new ApiError(404, 'Không tìm thấy SKU trong phạm vi kho');
+      if (product.low_stock_threshold === threshold) return;
+      await conn.query('UPDATE products SET low_stock_threshold = ? WHERE id = ?', [threshold, product.id]);
+      await writeAudit(conn, req, { action: 'set_stock_threshold', entity: 'product', entityId: product.id,
+        oldValues: { threshold: product.low_stock_threshold }, newValues: { threshold } });
+    });
+    res.status(204).end();
   }),
 
   createMovement: asyncHandler(async (req, res) => {

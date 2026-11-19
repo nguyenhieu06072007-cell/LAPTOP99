@@ -75,12 +75,12 @@ test('notifications count all visible unread events server-side and restrict rea
   const { events, unreadCount } = await Notifications.getNotifications({ user, limit: 1 });
   assert.match(calls[0].sql, /WHERE o.assigned_to = \?/);
   assert.match(calls[0].sql, /SUM\(r.event_id IS NULL\) OVER/);
-  assert.deepEqual(calls[0].params, [9, 9, 9, 1]);
+  assert.deepEqual(calls[0].params, [9, 9, 9, 9, 1]);
   assert.equal(events[0].read, true);
   assert.equal(unreadCount, 51);
   assert.match(events[0].title, /Thanh toán/);
   await Notifications.markRead(user, { ids: ['order-12-confirmed-paid'] });
-  assert.deepEqual(calls[1].params, [9, 9, 9, 9, ['order-12-confirmed-paid']]);
+  assert.deepEqual(calls[1].params, [9, 9, 9, 9, 9, ['order-12-confirmed-paid']]);
 });
 
 test('batch stock intake writes a movement and serial through the same transaction', async () => {

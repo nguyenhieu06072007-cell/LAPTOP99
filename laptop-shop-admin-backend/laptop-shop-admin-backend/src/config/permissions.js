@@ -4,7 +4,7 @@
 const ROLE_PERMISSIONS = {
   super_admin: ['*'],
   sales_manager: [
-    'order:read:all', 'order:write', 'order:discount:approve', 'order:cancel', 'order:print',
+    'order:read:all', 'order:write', 'order:discount:approve', 'order:assign', 'order:cancel', 'order:print',
     'product:read', 'customer:read', 'customer:write',
     'promotion:read', 'promotion:write', 'report:read', 'report:sales'
   ],
@@ -23,7 +23,7 @@ const ROLE_PERMISSIONS = {
     'cost:read', 'report:read', 'media:upload', 'import:batch'
   ],
   accountant: [
-    'cost:read', 'report:read', 'finance:read', 'finance:reconcile', 'finance:refund', 'report:export', 'report:send',
+    'cost:read', 'report:read', 'finance:read', 'finance:reconcile', 'finance:refund', 'report:export', 'report:send', 'report:sales',
     'order:read:all', 'inventory:read', 'product:read'
   ],
   technical_warranty: [
@@ -109,4 +109,4 @@ function inOrderScope(user, order) {
     value !== '' && String(order[key]) === String(value));
 }
 
-module.exports = { ROLE_PERMISSIONS, can, effectivePermissions, orderScope, inOrderScope };
+module.exports = { ROLE_PERMISSIONS, normalizePermissionList, can, effectivePermissions, orderScope, inOrderScope };

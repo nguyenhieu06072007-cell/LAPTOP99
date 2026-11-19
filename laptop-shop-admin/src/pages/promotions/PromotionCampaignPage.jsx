@@ -1,3 +1,4 @@
+import { useAuth } from '../../contexts/AuthContext';
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../api/axios';
 import {
@@ -30,6 +31,8 @@ const getTypeColor = (type) => {
 };
 
 export default function PromotionCampaignPage() {
+  const { can } = useAuth();
+  const mayEdit = can('promotion:write');
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -183,13 +186,13 @@ export default function PromotionCampaignPage() {
           </p>
         </div>
 
-        <button
+        {mayEdit && <button
           onClick={() => handleOpenModal()}
           className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-xs transition flex items-center space-x-1.5 self-start sm:self-auto"
         >
           <HiOutlinePlus className="w-4 h-4" />
           <span>+ Set up Chương trình Mới</span>
-        </button>
+        </button>}
       </div>
 
       {/* KPI Stats */}
@@ -319,7 +322,7 @@ export default function PromotionCampaignPage() {
 
                 <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
                   <button
-                    onClick={() => togglePromoStatus(p)}
+                    disabled={!mayEdit} onClick={() => togglePromoStatus(p)}
                     className={`px-3 py-1.5 rounded text-xs font-semibold transition ${
                       p.status === 'active'
                         ? 'bg-amber-50 hover:bg-amber-100 text-amber-800'
@@ -331,14 +334,14 @@ export default function PromotionCampaignPage() {
 
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleOpenModal(p)}
+                      hidden={!mayEdit} onClick={() => handleOpenModal(p)}
                       className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
                       title="Chỉnh sửa"
                     >
                       <HiOutlinePencil className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => deletePromo(p)}
+                      hidden={!mayEdit} onClick={() => deletePromo(p)}
                       className="p-1.5 text-red-600 hover:bg-red-50 rounded"
                       title="Xoá"
                     >

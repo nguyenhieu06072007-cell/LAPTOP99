@@ -19,7 +19,7 @@ const ReviewsController = {
     if (['customer', 'staff'].includes(q.source)) {
       where.push('r.source = ?'); params.push(q.source);
     }
-    if (['pending', 'replied', 'hidden'].includes(q.status)) {
+    if (['pending', 'approved', 'replied', 'hidden'].includes(q.status)) {
       where.push('r.status = ?'); params.push(q.status);
     }
     if (['positive', 'neutral', 'negative'].includes(q.sentiment)) {
@@ -65,7 +65,7 @@ const ReviewsController = {
   updateStatus: asyncHandler(async (req, res) => {
     const id = toInt(req.params.id);
     const { status } = z.object({
-      status: z.enum(['pending', 'replied', 'hidden']),
+      status: z.enum(['pending', 'approved', 'replied', 'hidden']),
     }).parse(req.body);
 
     await withTransaction(async (conn) => {

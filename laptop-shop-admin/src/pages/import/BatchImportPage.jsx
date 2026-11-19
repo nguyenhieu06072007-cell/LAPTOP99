@@ -65,7 +65,8 @@ async function parseFiles(workbook, zipFile) {
 }
 
 export default function BatchImportPage() {
-  const { can } = useAuth();
+  const { can, user } = useAuth();
+  const lockedWarehouse = user?.data_visibility === 'branch' && user?.role !== 'super_admin';
   const [mode, setMode] = useState('manual');
   const [supplier, setSupplier] = useState('');
   const [warehouse, setWarehouse] = useState('');
@@ -108,7 +109,7 @@ export default function BatchImportPage() {
       }];
       if (rows.some((row) => row.image) && !canUpload) throw new Error('Tài khoản không có quyền tải ảnh sản phẩm.');
       const payload = {
-        supplier, warehouse, notes,
+        supplier, warehouse: lockedWarehouse ? user.branch : warehouse, notes,
         rows: rows.map(({ sku, quantity, unit_cost, serials }) => ({ sku, quantity, unit_cost, serials })),
       };
       const fingerprint = JSON.stringify(payload);
@@ -154,7 +155,7 @@ export default function BatchImportPage() {
           </div>
           <fieldset disabled={busy} className="grid gap-3 md:grid-cols-2">
             <label>Nhà cung cấp <input className={inputClass} required maxLength={150} value={supplier} onChange={(e) => setSupplier(e.target.value)} /></label>
-            <label>Kho nhận <input className={inputClass} required maxLength={150} value={warehouse} onChange={(e) => setWarehouse(e.target.value)} /></label>
+            <label>Kho nhận <input className={inputClass} required maxLength={150} value={lockedWarehouse ? user.branch || '' : warehouse} readOnly={lockedWarehouse} onChange={(e) => setWarehouse(e.target.value)} /></label>
             <label className="md:col-span-2">Ghi chú <input className={inputClass} maxLength={255} value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
             {mode === 'manual' ? <>
               <label>SKU hiện có <input className={inputClass} required value={sku} onChange={(e) => setSku(e.target.value)} /></label>

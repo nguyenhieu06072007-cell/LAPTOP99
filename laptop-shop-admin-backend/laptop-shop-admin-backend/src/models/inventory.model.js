@@ -3,6 +3,10 @@ const { ApiError, paging, pageMeta, toInt } = require('../utils/helpers');
 const { can } = require('../config/permissions');
 const { writeAudit } = require('../services/audit');
 
+function inventoryBranch(user) {
+  return user?.role !== 'super_admin' && user?.data_visibility === 'branch' ? user.branch || '' : null;
+}
+
 const InventoryModel = {
   async getMovements({ query, userRole }) {
     const { page, limit, offset } = paging(query);
@@ -12,14 +16,17 @@ const InventoryModel = {
     if (['import', 'export', 'adjust', 'return'].includes(query.type)) { where.push('m.type = ?'); params.push(query.type); }
     if (query.from && !Number.isNaN(Date.parse(query.from))) { where.push('m.created_at >= ?'); params.push(new Date(query.from)); }
     if (query.to && !Number.isNaN(Date.parse(query.to))) { where.push('m.created_at <= ?'); params.push(new Date(query.to)); }
+    const branch = inventoryBranch(userRole);
+    const joins = `FROM inventory_movements m JOIN products p ON p.id = m.product_id
+      LEFT JOIN admin_inventory_receipts r ON r.movement_id = m.id`;
+    if (branch !== null) { where.push('COALESCE(r.warehouse, p.warehouse_location) = ?'); params.push(branch || null); }
     const w = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
-    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM inventory_movements m ${w}`, params);
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total ${joins} ${w}`, params);
     const [rows] = await pool.query(
       `SELECT m.id, m.product_id, p.sku, p.name AS product_name, m.type, m.quantity,
               m.stock_before, m.stock_after, m.unit_cost, m.reason, m.created_at, u.full_name AS created_by
-         FROM inventory_movements m
-         JOIN products p ON p.id = m.product_id
+         ${joins}
          LEFT JOIN users u ON u.id = m.created_by
          ${w} ORDER BY m.id DESC LIMIT ? OFFSET ?`, [...params, limit, offset]);
 
@@ -27,7 +34,8 @@ const InventoryModel = {
     return { rows, meta: pageMeta(page, limit, total) };
   },
 
-  async getLowStock() {
+  async getLowStock(user) {
+    const branch = inventoryBranch(user);
     const [rows] = await pool.query(
       `SELECT p.id, p.sku, p.name, b.name AS brand, p.stock_quantity, p.low_stock_threshold,
               p.warehouse_location, p.status,
@@ -35,15 +43,18 @@ const InventoryModel = {
          FROM products p JOIN brands b ON b.id = p.brand_id
         WHERE p.deleted_at IS NULL AND p.status <> 'discontinued'
           AND p.stock_quantity <= p.low_stock_threshold
-        ORDER BY p.stock_quantity, p.name`);
+          ${branch === null ? '' : 'AND p.warehouse_location = ?'}
+        ORDER BY p.stock_quantity, p.name`, branch === null ? [] : [branch || null]);
     return rows;
   },
 
   async createMovement({ productId, type, delta, unitCost, reason, userId }, req, connection) {
     const write = async (conn) => {
+      const branch = inventoryBranch(req.user);
       const [[p]] = await conn.query(
-        'SELECT id, stock_quantity, cost_price FROM products WHERE id = ? AND deleted_at IS NULL FOR UPDATE',
-        [productId]
+        `SELECT id, stock_quantity, cost_price FROM products WHERE id = ? AND deleted_at IS NULL
+          ${branch === null ? '' : 'AND warehouse_location = ?'} FOR UPDATE`,
+        branch === null ? [productId] : [productId, branch || null]
       );
       if (!p) throw new ApiError(404, 'Không tìm thấy sản phẩm');
 
@@ -69,7 +80,10 @@ const InventoryModel = {
 
   async getReceipts({ query, user }) {
     const { page, limit, offset } = paging(query);
-    const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM admin_inventory_receipts');
+    const branch = inventoryBranch(user);
+    const filter = branch === null ? '' : 'WHERE r.warehouse = ?';
+    const params = branch === null ? [] : [branch || null];
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM admin_inventory_receipts r ${filter}`, params);
     const [rows] = await pool.query(`
       SELECT r.movement_id, r.supplier, r.warehouse, r.request_key, m.quantity, m.created_at,
              m.unit_cost, p.name, p.sku, u.full_name AS created_by
@@ -77,7 +91,7 @@ const InventoryModel = {
         JOIN inventory_movements m ON m.id = r.movement_id
         JOIN products p ON p.id = m.product_id
         LEFT JOIN users u ON u.id = m.created_by
-       ORDER BY r.movement_id DESC LIMIT ? OFFSET ?`, [limit, offset]);
+       ${filter} ORDER BY r.movement_id DESC LIMIT ? OFFSET ?`, [...params, limit, offset]);
     if (rows.length) {
       const [serials] = await pool.query('SELECT movement_id, serial FROM admin_inventory_serials WHERE movement_id IN (?) ORDER BY serial',
         [rows.map((row) => row.movement_id)]);
@@ -96,6 +110,10 @@ const InventoryModel = {
   },
 
   async receiveStock({ request_key, supplier, warehouse, notes, rows }, req) {
+    const branch = inventoryBranch(req.user);
+    if (branch !== null && (!branch || warehouse !== branch)) {
+      throw new ApiError(403, 'Kho nhận phải thuộc chi nhánh của tài khoản');
+    }
     const prior = async (db) => {
       const [records] = await db.query(`
         SELECT r.batch_line, m.product_id, m.created_by
@@ -147,4 +165,5 @@ const InventoryModel = {
 };
 
 module.exports = InventoryModel;
+module.exports.inventoryBranch = inventoryBranch;
 

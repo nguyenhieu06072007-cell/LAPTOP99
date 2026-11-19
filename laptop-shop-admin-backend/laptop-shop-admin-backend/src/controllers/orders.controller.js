@@ -77,7 +77,7 @@ const OrdersController = {
 
     const list = [];
     for (const o of orders) {
-      const isDelivered = o.status === 'delivered';
+      const isDelivered = ['delivered', 'completed'].includes(o.status);
       const baseDate = new Date(o.delivered_at || o.ordered_at);
       const purchaseStr = baseDate.toLocaleDateString('vi-VN');
 
@@ -391,7 +391,7 @@ const OrdersController = {
 
     await withTransaction(async (conn) => {
       const [[old]] = await conn.query(
-        'SELECT id, code, status, customer_id, total_amount, payment_status, payment_method, assigned_to, branch FROM orders WHERE id = ? FOR UPDATE',
+        'SELECT id, code, status, customer_id, total_amount, payment_status, payment_method, assigned_to, branch, serial_number FROM orders WHERE id = ? FOR UPDATE',
         [id],
       );
       if (!old) throw new ApiError(404, 'Không tìm thấy đơn hàng');
@@ -419,6 +419,10 @@ const OrdersController = {
       const allowed = OrderService.ALLOWED_ORDER_TRANSITIONS[old.status] || [];
       if (!allowed.includes(status) && status !== old.status) {
         throw new ApiError(400, `Không thể chuyển trạng thái từ "${old.status}" sang "${status}"`);
+      }
+
+      if (status === 'shipping' && old.serial_number === 'CHỜ XUẤT KHO') {
+        throw new ApiError(409, 'Thủ kho cần gán serial trước khi chuyển sang giao hàng');
       }
 
       // Đơn chuyển sang delivered: Cập nhật delivered_at, xử lý COD độc lập

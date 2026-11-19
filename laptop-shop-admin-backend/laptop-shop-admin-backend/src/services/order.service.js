@@ -116,6 +116,7 @@ const OrderService = {
 
     const updatedNotes = [order.notes, cancelNote].filter(Boolean).join(' | ');
 
+    await conn.query('DELETE FROM admin_order_serials WHERE order_id = ?', [orderId]);
     await conn.query(
       'UPDATE orders SET status = "cancelled", payment_status = ?, notes = ? WHERE id = ?',
       [newPaymentStatus, updatedNotes, order.id]

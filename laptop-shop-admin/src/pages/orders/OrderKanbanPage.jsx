@@ -1,3 +1,4 @@
+import FulfillmentQueue from './FulfillmentQueue';
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../api/axios';
 import { useSearchParams } from 'react-router-dom';
@@ -22,7 +23,7 @@ const formatVND = (v) =>
 
 const COLUMNS = [
   { id: 'pending', title: '1. Chờ duyệt', color: 'border-amber-400', badge: 'bg-amber-100 text-amber-800' },
-  { id: 'confirmed', title: '2. Đã xác nhận (Gán S/N)', color: 'border-blue-500', badge: 'bg-blue-100 text-blue-800' },
+  { id: 'confirmed', title: '2. Đã xác nhận', color: 'border-blue-500', badge: 'bg-blue-100 text-blue-800' },
   { id: 'shipping', title: '3. Đang giao hàng', color: 'border-purple-500', badge: 'bg-purple-100 text-purple-800' },
   { id: 'delivered', title: '4. Đã giao thành công', color: 'border-emerald-500', badge: 'bg-emerald-100 text-emerald-800' },
 ];
@@ -35,6 +36,7 @@ export default function OrderKanbanPage() {
   const defaultSearch = params.get('search') || '';
   const mayWrite = can('order:write');
   const maySeePayments = can(['finance:read', 'finance:reconcile', 'finance:refund', 'report:sales', 'report:read']);
+  const [showAssignment, setShowAssignment] = useState(false);
   const [paymentReference, setPaymentReference] = useState('');
   const [acting, setActing] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState('kanban');
@@ -187,6 +189,12 @@ export default function OrderKanbanPage() {
           </button>
         </div>
       </div>
+
+      {can('order:assign') && <div className="space-y-2">
+        <button className="rounded border bg-white px-3 py-2 font-semibold" aria-expanded={showAssignment}
+          onClick={() => setShowAssignment(!showAssignment)}>Phân công đơn hàng</button>
+        {showAssignment && <FulfillmentQueue mode="assignment" onSaved={fetchOrders} />}
+      </div>}
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 bg-white rounded-xl shadow-2xs overflow-hidden px-2">

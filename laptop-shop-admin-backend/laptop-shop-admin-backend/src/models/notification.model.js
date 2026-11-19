@@ -1,4 +1,5 @@
 const { pool } = require('../config/db');
+const { inventoryBranch } = require('./inventory.model');
 const { can, orderScope } = require('../config/permissions');
 
 const orderLabels = {
@@ -30,13 +31,17 @@ function scopedEvents(user) {
     const fields = "'code', o.code, 'status', o.status, 'payment', o.payment_status, 'amount', o.total_amount";
     add('order_new', "CONCAT('order-', o.id, '-pending-unpaid')", 'COALESCE(o.ordered_at, o.created_at)',
       fields, 'orders o', conditions, values);
+    add('order_assigned', "CONCAT('order-assigned-', o.id, '-', o.assigned_to)", 'oa.created_at',
+      fields, 'admin_order_assignments oa JOIN orders o ON o.id = oa.order_id', conditions, values);
     add('order', "CONCAT('order-', o.id, '-', o.status, '-', o.payment_status)", 'o.updated_at',
       fields, 'orders o', [...conditions, "(o.status <> 'pending' OR o.payment_status <> 'unpaid')"], values);
   }
   if (can(user, 'inventory:read')) {
+    const branch = inventoryBranch(user);
     add('stock', "CONCAT('stock-', id, '-', stock_quantity, '-', FLOOR(UNIX_TIMESTAMP(updated_at) * 1000))",
       'updated_at', "'name', name, 'sku', sku, 'quantity', stock_quantity", 'products',
-      ["deleted_at IS NULL", "status <> 'discontinued'", 'stock_quantity <= low_stock_threshold']);
+      ["deleted_at IS NULL", "status <> 'discontinued'", 'stock_quantity <= low_stock_threshold', ...(branch === null ? [] : ['warehouse_location = ?'])],
+      branch === null ? [] : [branch || null]);
   }
   if (can(user, 'rma:manage') || can(user, 'warranty:read') || can(user, 'finance:refund')) {
     add('rma', "CONCAT('rma-', r.id, '-', r.status, '-', IF(rf.created_at IS NULL, 'false', 'true'))",
@@ -60,10 +65,11 @@ function presentEvent(row) {
   const payload = typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload;
   const base = { id: row.event_id, type: row.type, timestamp: new Date(row.occurred_at).toISOString(), read: Boolean(row.is_read) };
   switch (row.type) {
+    case 'order_assigned':
     case 'order_new':
     case 'order': {
       const isNew = row.type === 'order_new';
-      const title = isNew ? 'Đơn hàng mới' : paymentLabels[payload.payment] || orderLabels[payload.status] || 'Cập nhật đơn hàng';
+      const title = row.type === 'order_assigned' ? 'Đơn hàng được phân công' : isNew ? 'Đơn hàng mới' : paymentLabels[payload.payment] || orderLabels[payload.status] || 'Cập nhật đơn hàng';
       return { ...base, type: 'order', title: `${title} · ${payload.code}`,
         message: `${Number(payload.amount).toLocaleString('vi-VN')} ₫ · ${isNew ? 'Đã đặt hàng' : orderLabels[payload.status] || payload.status}`,
         link: `/orders?search=${encodeURIComponent(payload.code)}`,
@@ -95,7 +101,9 @@ async function getNotifications({ user, limit = 30 }) {
     FROM (${sql}) e LEFT JOIN admin_notification_reads r ON r.user_id = ? AND r.event_id = e.event_id
     WHERE e.occurred_at IS NOT NULL
     ORDER BY e.occurred_at DESC, e.event_id DESC LIMIT ?`, [...params, user.id, limit]);
-  return { events: rows.map(presentEvent), unreadCount: Number(rows[0]?.unread_count || 0) };
+  return { events: rows.map((row) => ({
+    ...presentEvent(row), ...(row.type === 'review' && can(user, 'review:manage') ? { link: '/reviews' } : {}),
+  })), unreadCount: Number(rows[0]?.unread_count || 0) };
 }
 
 async function markRead(user, { ids, all }) {

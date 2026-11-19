@@ -50,6 +50,7 @@ const PERMISSIONS_CATALOG = [
       { id: 'order:read:own', name: 'Chỉ xem đơn của chính mình', desc: 'Bảo mật Data Visibility: Sale chỉ thấy đơn do mình phụ trách' },
       { id: 'order:write', name: 'Tạo & Chuyển trạng thái đơn', desc: 'Cập nhật từ Chờ duyệt -> Đã xác nhận -> Đang giao' },
       { id: 'order:discount:approve', name: 'Duyệt chiết khấu / Giảm giá', desc: 'Phê duyệt giá bán ưu đãi ngoài chương trình' },
+      { id: 'order:assign', name: 'Phân công đơn hàng', desc: 'Nhận đơn web và giao cho nhân viên thuộc phạm vi phụ trách' },
       { id: 'order:cancel', name: 'Huỷ đơn & Hoàn hàng', desc: 'Huỷ đơn và hoàn trả sản phẩm vào kho' },
       { id: 'order:print', name: 'In hoá đơn VAT & Vận đơn', desc: 'Kết xuất PDF hoá đơn VAT, phiếu xuất kho' },
     ],
