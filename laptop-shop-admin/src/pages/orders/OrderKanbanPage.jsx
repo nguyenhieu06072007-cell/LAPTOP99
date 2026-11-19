@@ -14,6 +14,8 @@ import {
 } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { useAuth } from '../../contexts/AuthContext';
 
 const formatVND = (v) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
@@ -28,11 +30,15 @@ const COLUMNS = [
 const NEXT_STATUS = { pending: 'confirmed', confirmed: 'shipping', shipping: 'delivered' };
 
 export default function OrderKanbanPage() {
+  const { can } = useAuth();
+  const canReconcile = can('finance:reconcile');
   const [activeMainTab, setActiveMainTab] = useState('kanban');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [paymentFilter, setPaymentFilter] = useState('');
+  const [paymentToReconcile, setPaymentToReconcile] = useState(null);
+  const [isReconciling, setIsReconciling] = useState(false);
   const [searchVal, setSearchVal] = useState('');
 
   // Create order modal
@@ -78,21 +84,28 @@ export default function OrderKanbanPage() {
 
   const moveOrder = async (orderId, newStatus) => {
     try {
-      await api.patch(`/orders/${orderId}/status`, { status: newStatus });
-      const targetOrd = orders.find(o => o.id === orderId);
-      if (newStatus === 'confirmed' && targetOrd && (targetOrd.payment_status === 'pending_verification' || targetOrd.payment_verification_status === 'pending_verification')) {
-        try {
-          await api.patch(`/orders/${orderId}/reconcile-payment`, {});
-        } catch(e) {}
-      }
-      setOrders(prev => prev.map(o => o.id === orderId ? {
-        ...o,
-        status: newStatus,
-        payment_status: (newStatus === 'confirmed' && (o.payment_status === 'pending_verification' || o.payment_verification_status === 'pending_verification')) ? 'paid' : o.payment_status
-      } : o));
-      toast.success(`Đã cập nhật trạng thái đơn`);
+      const res = await api.patch(`/orders/${orderId}/status`, { status: newStatus });
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...res.data.data } : o));
+      toast.success('Đã cập nhật trạng thái đơn');
     } catch (err) {
       toast.error(err.message || 'Lỗi cập nhật trạng thái');
+    }
+  };
+
+  const reconcilePayment = async () => {
+    if (!paymentToReconcile || isReconciling) return;
+    const { id } = paymentToReconcile;
+    setPaymentToReconcile(null);
+    setIsReconciling(true);
+    try {
+      const res = await api.patch(`/orders/${id}/reconcile-payment`, {});
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, ...res.data.data } : o));
+      await fetchFinanceSummary();
+      toast.success('Đã xác nhận thanh toán');
+    } catch (err) {
+      toast.error(err.response?.data?.error?.message || err.message || 'Lỗi đối soát thanh toán');
+    } finally {
+      setIsReconciling(false);
     }
   };
 
@@ -381,6 +394,16 @@ export default function OrderKanbanPage() {
                         ) : (
                           <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-bold text-[10px]">● Chờ thanh toán</span>
                         )}
+                        {canReconcile && o.status !== 'cancelled' && o.payment_status !== 'paid' && (
+                          <button
+                            type="button"
+                            onClick={() => setPaymentToReconcile(o)}
+                            disabled={isReconciling}
+                            className="block mt-2 font-semibold text-blue-700 disabled:opacity-50"
+                          >
+                            Xác nhận đã thu tiền
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -390,6 +413,14 @@ export default function OrderKanbanPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={Boolean(paymentToReconcile)}
+        title="Xác nhận đã thu tiền"
+        message={`Xác nhận đã thực nhận ${formatVND(paymentToReconcile?.total_amount)} cho đơn ${paymentToReconcile?.code}?`}
+        onConfirm={reconcilePayment}
+        onCancel={() => setPaymentToReconcile(null)}
+      />
 
       {/* Modal In phiếu */}
       {selectedOrder && (

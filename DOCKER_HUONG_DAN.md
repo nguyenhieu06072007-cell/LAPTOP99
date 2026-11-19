@@ -21,8 +21,12 @@ Dự án **Laptop99** đã được chuẩn hóa và đóng gói hoàn chỉnh b
 ### Yêu cầu tiên quyết:
 * Máy tính đã cài đặt **Docker Desktop** (Tải tại: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)).
 
-### Bước 1: Khởi động toàn bộ hệ thống (Chỉ 1 câu lệnh)
-Mở cửa sổ dòng lệnh (Terminal / PowerShell / Command Prompt) tại thư mục gốc của dự án (`sprint2`) và gõ:
+### Bước 1: Cấu hình và khởi động hệ thống
+Tại thư mục gốc chứa `docker-compose.yml`, sao chép `.env.example` thành `.env`. Điền `MYSQL_ROOT_PASSWORD` và `JWT_SECRET` ngẫu nhiên dài ít nhất 32 ký tự. Chỉ điền `SEPAY_WEBHOOK_TOKEN` nếu sử dụng webhook SePay. Giữ tệp `.env` trên máy chạy hệ thống.
+
+Nếu đã có volume MySQL, dùng mật khẩu hiện tại của MySQL trong `.env` để khởi động. Khi đổi mật khẩu, hãy đổi trên MySQL trước rồi cập nhật `.env`. Việc đổi biến khởi tạo trong Compose không cập nhật mật khẩu của volume đã có.
+
+Sau khi cấu hình, chạy:
 
 ```bash
 docker compose up -d --build
@@ -55,11 +59,11 @@ Sau khi lệnh chạy xong (khoảng 30 giây đến 1 phút cho lần đầu ti
 
 3. **Backend REST API:**
    - Địa chỉ: `http://localhost:4000/api`
-   - Kiểm tra Healthcheck: `http://localhost:4000/api/health`
+   - Kiểm tra Healthcheck: `http://localhost:4000/health`
 
 4. **Kết nối Database MySQL trực tiếp (nếu cần chấm CSDL):**
    - Host: `localhost` | Port: `3306`
-   - User: `root` | Password: `root` | Database: `laptop_shop`
+   - User: `root` | Mật khẩu: `MYSQL_ROOT_PASSWORD` trong `.env` | Database: `laptop_shop`
 
 ---
 

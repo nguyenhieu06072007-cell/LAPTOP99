@@ -272,38 +272,51 @@ const ClientModel = {
    * KHÔNG tự động duyệt xuất kho để phòng chống gian lận (Anti-fraud) khi tiền chưa vào tài khoản.
    */
   async confirmCustomerOrderPayment(customerId, orderCode, bankInfo = '') {
-    const [[order]] = await pool.query(
-      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE (code = ? OR id = ?) AND (customer_id = ? OR customer_id IS NULL)',
-      [orderCode, orderCode, customerId],
-    );
-    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng của bạn');
+    return withTransaction(async (conn) => {
+      const [[order]] = await conn.query(
+        'SELECT id, code, status, payment_status, payment_verification_status, notes FROM orders WHERE (code = ? OR id = ?) AND customer_id = ? FOR UPDATE',
+        [orderCode, orderCode, customerId],
+      );
+      if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng của bạn');
 
-    if (order.status === 'cancelled') {
-      throw new ApiError(400, 'Đơn hàng này đã bị hủy, không thể xác nhận chuyển khoản');
-    }
+      if (order.status === 'cancelled') {
+        throw new ApiError(400, 'Đơn hàng này đã bị hủy, không thể xác nhận chuyển khoản');
+      }
 
-    const updatedNote = [
-      order.notes,
-      bankInfo
-        ? `[KHÁCH HÀNG BÁO ĐÃ CHUYỂN KHOẢN: ${bankInfo} - Đang chờ kế toán đối soát sao kê ngân hàng]`
-        : '[KHÁCH HÀNG BÁO ĐÃ CHUYỂN KHOẢN: Đang chờ kế toán đối soát biến động số dư MB Bank 6306072007 (NGUYEN VAN HIEU)]',
-    ]
-      .filter(Boolean)
-      .join(' | ');
+      if (order.payment_status === 'paid') {
+        return {
+          code: order.code,
+          paid: true,
+          payment_status: 'paid',
+          verification_status: order.payment_verification_status,
+          status: order.status,
+          message: 'Đơn hàng đã được xác nhận thanh toán.',
+        };
+      }
 
-    await pool.query(
-      "UPDATE orders SET payment_status = 'pending_verification', payment_verification_status = 'pending_verification', notes = ?, updated_at = NOW() WHERE id = ? AND status != 'cancelled' AND payment_status IN ('pending', 'unpaid', 'pending_verification')",
-      [updatedNote, order.id],
-    );
+      const updatedNote = [
+        order.notes,
+        bankInfo
+          ? `[KHÁCH HÀNG BÁO ĐÃ CHUYỂN KHOẢN: ${bankInfo} - Đang chờ kế toán đối soát sao kê ngân hàng]`
+          : '[KHÁCH HÀNG BÁO ĐÃ CHUYỂN KHOẢN: Đang chờ kế toán đối soát biến động số dư MB Bank 6306072007 (NGUYEN VAN HIEU)]',
+      ]
+        .filter(Boolean)
+        .join(' | ');
 
-    return {
-      code: order.code,
-      paid: false,
-      payment_status: 'pending_verification',
-      verification_status: 'pending_verification',
-      status: order.status,
-      message: 'Đã ghi nhận thông báo chuyển khoản! Kế toán Laptop99 đang đối soát sao kê ngân hàng và sẽ duyệt đơn trong 5-15 phút.',
-    };
+      await conn.query(
+        "UPDATE orders SET payment_status = 'pending_verification', payment_verification_status = 'pending_verification', notes = ?, updated_at = NOW() WHERE id = ? AND status != 'cancelled' AND payment_status IN ('pending', 'unpaid', 'pending_verification')",
+        [updatedNote, order.id],
+      );
+
+      return {
+        code: order.code,
+        paid: false,
+        payment_status: 'pending_verification',
+        verification_status: 'pending_verification',
+        status: order.status,
+        message: 'Đã ghi nhận thông báo chuyển khoản! Kế toán Laptop99 đang đối soát sao kê ngân hàng và sẽ duyệt đơn trong 5-15 phút.',
+      };
+    });
   },
 
   /**

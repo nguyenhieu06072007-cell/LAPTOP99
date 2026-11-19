@@ -9,7 +9,7 @@
 #   1. Storefront Khách hàng: http://localhost:3000 hoặc http://localhost:8080
 #   2. Frontend Quản trị Admin: http://localhost:5173
 #   3. Backend REST API:        http://localhost:4000/api
-#   4. Database MySQL:          localhost:3306 (user: root, pass: root, db: laptop_shop)
+#   4. Database MySQL:          localhost:3306 (user: root, db: laptop_shop)
 # ==============================================================================
 
 version: '3.8'
@@ -24,7 +24,7 @@ services:
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Dien MYSQL_ROOT_PASSWORD trong .env}
       MYSQL_DATABASE: laptop_shop
     ports:
       - "3306:3306"
@@ -32,7 +32,9 @@ services:
       - mysql_data:/var/lib/mysql
       - ./laptop_shop.sql:/docker-entrypoint-initdb.d/01-laptop_shop.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      test:
+        - CMD-SHELL
+        - 'MYSQL_PWD="$${MYSQL_ROOT_PASSWORD}" mysql --protocol=TCP -h 127.0.0.1 -u root -e "SELECT 1" >/dev/null 2>&1'
       interval: 5s
       timeout: 5s
       retries: 10
@@ -54,10 +56,10 @@ services:
       DB_HOST: mysql
       DB_PORT: 3306
       DB_USER: root
-      DB_PASSWORD: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Dien MYSQL_ROOT_PASSWORD trong .env}
       DB_NAME: laptop_shop
       DB_SSL: "false"
-      JWT_SECRET: "laptop99_cmc_secret_key_2026_super_secure"
+      JWT_SECRET: ${JWT_SECRET:?Dien JWT_SECRET trong .env}
       JWT_EXPIRES_IN: "8h"
       CORS_ORIGINS: "http://localhost,http://localhost:80,http://localhost:3000,http://localhost:5173,http://localhost:8080"
       UPLOAD_DIR: "uploads"

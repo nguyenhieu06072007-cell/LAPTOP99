@@ -241,6 +241,10 @@ const OrdersController = {
    */
   createOrder: asyncHandler(async (req, res) => {
     const body = createSchema.parse(req.body);
+    const isPaid = body.payment_status === 'paid';
+    if (isPaid && !can(req.user, 'finance:reconcile')) {
+      throw new ApiError(403, 'Bạn không có quyền ghi nhận thanh toán (finance:reconcile)');
+    }
 
     const id = await withTransaction(async (conn) => {
       let unitPrice = 0;
@@ -296,7 +300,6 @@ const OrdersController = {
       const code = await generateUniqueCode(conn, 'orders', 'DH');
 
       // 4. Xác định tiền thực nhận: Chỉ ghi nhận thực nhận khi đã thanh toán thực tế
-      const isPaid = body.payment_status === 'paid';
       const netReceived = isPaid ? Math.max(0, finalTotal - (body.gateway_fee || 0)) : 0;
 
       const row = {
@@ -413,7 +416,7 @@ const OrdersController = {
    * Nghiệp vụ đối soát thanh toán dành riêng cho Kế toán / Quản trị viên
    */
   reconcilePayment: asyncHandler(async (req, res) => {
-    if (!can(req.user, 'finance:reconcile') && !can(req.user, 'finance:read') && req.user.role !== 'super_admin') {
+    if (!can(req.user, 'finance:reconcile')) {
       throw new ApiError(403, 'Bạn không có quyền thực hiện đối soát thanh toán (finance:reconcile)');
     }
 
