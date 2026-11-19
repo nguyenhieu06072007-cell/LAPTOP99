@@ -24,6 +24,7 @@ Xem [hướng dẫn Docker](docs/DOCKER_HUONG_DAN.md) để nạp cơ sở dữ 
 | [`laptop_shop.sql`](laptop_shop.sql) | Lược đồ và dữ liệu mẫu MySQL cho lần khởi tạo đầu tiên. |
 | [`uploads/`](uploads/) | Ảnh sản phẩm và nội dung phục vụ cửa hàng. |
 | [`docs/`](docs/) | Hướng dẫn vận hành, chấm bài và tài liệu prompt của nhóm. |
+| [`screenshots/`](screenshots/) | Ảnh chụp giao diện và ảnh thử nghiệm từ các lần kiểm tra dự án. |
 
 Frontend và API được tích hợp trên `main`. Xem [phân công và đối chiếu nhánh thành viên](DONG_GOP_THANH_VIEN.md) để mở đúng nhánh, commit và thư mục cần xem.
 
