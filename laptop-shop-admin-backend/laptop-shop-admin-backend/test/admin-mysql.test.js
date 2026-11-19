@@ -159,7 +159,12 @@ test('admin operations against a fresh MySQL schema and synthetic orders', {
   const branchImport = await call('/inventory/receipts', team.warehouse_manager, 'POST', branchReceipt);
   assert.equal(branchImport.status, 201, JSON.stringify(branchImport.body));
   assert.deepEqual((await call('/inventory/receipts', team.warehouse_manager)).body.data.map((row) => row.warehouse), ['Branch A']);
-  assert.equal((await call('/inventory/movements', team.warehouse_manager)).body.data.some((row) => row.sku === 'SKU-B'), false);
+  const otherReceipt = { ...branchReceipt, warehouse: 'Branch B', request_key: '42345678-1234-4234-8234-123456789abc',
+    rows: [{ sku: 'SKU-B', quantity: 1, serials: [] }] };
+  assert.equal((await call('/inventory/receipts', 1, 'POST', otherReceipt)).status, 201);
+  const branchMovements = await call('/inventory/movements', team.warehouse_manager);
+  assert.equal(branchMovements.status, 200, JSON.stringify(branchMovements.body));
+  assert.deepEqual(branchMovements.body.data.map((row) => row.sku), ['SKU-A']);
 
   await pool.query(`INSERT INTO orders (id, code, customer_id, customer_name, customer_phone, product_id, product_name, sku,
     status, payment_status, total_amount, unit_price, serial_number, branch, items_json)

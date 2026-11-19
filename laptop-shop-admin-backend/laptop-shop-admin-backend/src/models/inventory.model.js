@@ -19,7 +19,10 @@ const InventoryModel = {
     const branch = inventoryBranch(userRole);
     const joins = `FROM inventory_movements m JOIN products p ON p.id = m.product_id
       LEFT JOIN admin_inventory_receipts r ON r.movement_id = m.id`;
-    if (branch !== null) { where.push('COALESCE(r.warehouse, p.warehouse_location) = ?'); params.push(branch || null); }
+    if (branch !== null) {
+      where.push('(r.warehouse = ? OR (r.movement_id IS NULL AND p.warehouse_location = ?))');
+      params.push(branch || null, branch || null);
+    }
     const w = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
     const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total ${joins} ${w}`, params);
