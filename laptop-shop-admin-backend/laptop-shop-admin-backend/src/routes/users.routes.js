@@ -1,19 +1,19 @@
 const express = require('express');
-const { authenticate, authorize } = require('../middlewares/auth');
+const { authenticate, authorize, authorizeAny } = require('../middlewares/auth');
 const UsersController = require('../controllers/users.controller');
 
 const router = express.Router();
-router.use(authenticate, authorize('user:manage')); // chỉ super_admin
+router.use(authenticate);
 
-router.get('/permissions-catalog', UsersController.getPermissionsCatalog);
-router.get('/roles', UsersController.getRoles);
-router.post('/roles', UsersController.createRole);
-router.put('/roles/:id', UsersController.updateRole);
+router.get('/permissions-catalog', authorizeAny('user:manage', 'role:manage'), UsersController.getPermissionsCatalog);
+router.get('/roles', authorizeAny('user:manage', 'role:manage'), UsersController.getRoles);
+router.post('/roles', authorize('role:manage'), UsersController.createRole);
+router.put('/roles/:id', authorize('role:manage'), UsersController.updateRole);
 
-router.get('/', UsersController.getUsers);
-router.post('/', UsersController.createUser);
-router.put('/:id', UsersController.updateUser);
-router.patch('/:id/status', UsersController.updateStatus);
-router.post('/:id/reset-password', UsersController.resetPassword);
+router.get('/', authorize('user:manage'), UsersController.getUsers);
+router.post('/', authorize('user:manage'), UsersController.createUser);
+router.put('/:id', authorize('user:manage'), UsersController.updateUser);
+router.patch('/:id/status', authorize('user:manage'), UsersController.updateStatus);
+router.post('/:id/reset-password', authorize('user:manage'), UsersController.resetPassword);
 
 module.exports = router;

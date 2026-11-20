@@ -23,7 +23,7 @@ const authenticate = asyncHandler(async (req, res, next) => {
   }
 
   const [rows] = await pool.query(
-    `SELECT u.id, u.email, u.full_name, u.status, u.locked_until, u.branch, u.data_visibility, u.custom_permissions, r.name AS role
+    `SELECT u.id, u.role_id, u.email, u.full_name, u.status, u.locked_until, u.branch, u.data_visibility, u.custom_permissions, r.name AS role, r.permissions AS role_permissions
        FROM users u JOIN roles r ON r.id = u.role_id WHERE u.id = ?`,
     [payload.sub],
   );
@@ -44,6 +44,8 @@ const authenticate = asyncHandler(async (req, res, next) => {
     email: u.email,
     full_name: u.full_name,
     role: u.role,
+    role_id: u.role_id,
+    role_permissions: u.role_permissions,
     branch: u.branch,
     data_visibility: u.data_visibility,
     custom_permissions: customPerms,

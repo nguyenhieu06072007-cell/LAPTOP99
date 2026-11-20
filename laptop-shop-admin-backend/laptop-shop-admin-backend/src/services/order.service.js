@@ -110,15 +110,16 @@ const OrderService = {
     let newPaymentStatus = order.payment_status;
     let cancelNote = `[Hủy đơn: ${reason || 'Không có lý do'}]`;
     if (order.payment_status === 'paid') {
-      newPaymentStatus = 'unpaid'; // Giữ unpaid hoặc refund_pending trong ghi chú
+      newPaymentStatus = 'refund_pending';
       cancelNote += ' [ĐÃ THANH TOÁN: Chờ kế toán thực hiện hoàn tiền]';
     }
 
     const updatedNotes = [order.notes, cancelNote].filter(Boolean).join(' | ');
 
+    await conn.query('DELETE FROM admin_order_serials WHERE order_id = ?', [orderId]);
     await conn.query(
-      'UPDATE orders SET status = "cancelled", notes = ? WHERE id = ?',
-      [updatedNotes, order.id]
+      'UPDATE orders SET status = "cancelled", payment_status = ?, notes = ? WHERE id = ?',
+      [newPaymentStatus, updatedNotes, order.id]
     );
 
     // 5. Cập nhật lại chỉ số chi tiêu và hạng khách hàng

@@ -1,3 +1,4 @@
+const { effectivePermissions } = require('../config/permissions');
 const { pool } = require('../config/db');
 const { escapeLike, pageMeta } = require('../utils/helpers');
 
@@ -15,17 +16,17 @@ const PERMISSIONS_CATALOG = [
       { id: 'product:read', name: 'Xem danh sách sản phẩm', desc: 'Xem thông tin cơ bản của các dòng máy' },
       { id: 'product:write', name: 'Thêm & Sửa sản phẩm', desc: 'Tạo sản phẩm mới, cập nhật giá bán, thông số cấu hình' },
       { id: 'product:delete', name: 'Xoá sản phẩm', desc: 'Xoá hoặc lưu trữ sản phẩm không còn kinh doanh' },
-      { id: 'cost:read', name: 'Xem giá vốn / Giá nhập', desc: 'Bảo mật: Chỉ Kế toán, Super Admin mới được thấy giá nhập và biên lợi nhuận' },
+      { id: 'cost:read', name: 'Xem giá vốn / Giá nhập', desc: 'Xem giá nhập, giá vốn và biên lợi nhuận khi được cấp quyền' },
       { id: 'catalog:write', name: 'Quản lý Hãng & Danh mục', desc: 'Thêm/sửa danh mục laptop, thương hiệu, banner & bộ lọc' },
     ],
   },
   {
     module: 'media_import',
     module_name: 'Hình ảnh & Batch Import',
-    description: 'Xử lý media WebP, watermark logo, nạp file ZIP/Excel hàng loạt',
+    description: 'Tải ảnh và nhập tồn cho SKU hiện có từ Excel và ZIP',
     permissions: [
-      { id: 'media:upload', name: 'Upload & Đóng dấu ảnh', desc: 'Upload ảnh thật, tự động nén WebP và chèn logo bản quyền' },
-      { id: 'import:batch', name: 'Nhập liệu hàng loạt (ZIP/Excel)', desc: 'Upload file Excel thông số và file ZIP tự map hàng nghìn ảnh' },
+      { id: 'media:upload', name: 'Tải ảnh sản phẩm', desc: 'Đăng ảnh JPG, PNG hoặc WEBP theo SKU' },
+      { id: 'import:batch', name: 'Nhập liệu hàng loạt (ZIP/Excel)', desc: 'Nhập số lượng, serial và ảnh theo SKU có sẵn' },
     ],
   },
   {
@@ -35,6 +36,7 @@ const PERMISSIONS_CATALOG = [
     permissions: [
       { id: 'inventory:read', name: 'Xem tồn kho', desc: 'Xem số lượng khả dụng, tồn kho thực tế theo từng SKU' },
       { id: 'inventory:write', name: 'Tạo phiếu Nhập / Xuất kho', desc: 'Tạo và duyệt phiếu nhập từ hãng, phiếu xuất giao khách' },
+      { id: 'inventory:serial:read', name: 'Xem thông tin serial', desc: 'Tìm serial gắn với đơn hàng và thời hạn bảo hành' },
       { id: 'inventory:serial:manage', name: 'Quản lý Serial (S/N) & IMEI', desc: 'Gắn mã S/N duy nhất cho từng máy vật lý' },
       { id: 'inventory:alert:config', name: 'Cấu hình cảnh báo kho đỏ', desc: 'Cài đặt ngưỡng tồn kho tối thiểu' },
     ],
@@ -48,6 +50,7 @@ const PERMISSIONS_CATALOG = [
       { id: 'order:read:own', name: 'Chỉ xem đơn của chính mình', desc: 'Bảo mật Data Visibility: Sale chỉ thấy đơn do mình phụ trách' },
       { id: 'order:write', name: 'Tạo & Chuyển trạng thái đơn', desc: 'Cập nhật từ Chờ duyệt -> Đã xác nhận -> Đang giao' },
       { id: 'order:discount:approve', name: 'Duyệt chiết khấu / Giảm giá', desc: 'Phê duyệt giá bán ưu đãi ngoài chương trình' },
+      { id: 'order:assign', name: 'Phân công đơn hàng', desc: 'Nhận đơn web và giao cho nhân viên thuộc phạm vi phụ trách' },
       { id: 'order:cancel', name: 'Huỷ đơn & Hoàn hàng', desc: 'Huỷ đơn và hoàn trả sản phẩm vào kho' },
       { id: 'order:print', name: 'In hoá đơn VAT & Vận đơn', desc: 'Kết xuất PDF hoá đơn VAT, phiếu xuất kho' },
     ],
@@ -71,7 +74,22 @@ const PERMISSIONS_CATALOG = [
       { id: 'report:read', name: 'Xem Dashboard & Báo cáo tổng', desc: 'Biểu đồ doanh thu thực, tỷ trọng sản phẩm bán chạy' },
       { id: 'finance:read', name: 'Xem dòng tiền & Lợi nhuận gộp', desc: 'Xem doanh thu ròng, chi phí vốn và lợi nhuận từng đơn' },
       { id: 'finance:reconcile', name: 'Đối soát cổng thanh toán', desc: 'Đối soát VNPAY, MoMo, Chuyển khoản ngân hàng' },
-      { id: 'report:export', name: 'Xuất file Báo cáo Excel/PDF', desc: 'Tải về báo cáo kiểm toán doanh thu, tồn kho' },
+      { id: 'finance:refund', name: 'Ghi nhận hoàn tiền', desc: 'Ghi số tiền và mã chứng từ của khoản đã hoàn' },
+      { id: 'report:sales', name: 'Xem tổng hợp dòng tiền bán hàng', desc: 'Xem số đã thu, COD và phí đối soát trong phạm vi đơn được cấp' },
+      { id: 'report:export', name: 'In hoặc xuất báo cáo CSV', desc: 'Xuất dữ liệu báo cáo mà tài khoản được xem' },
+      { id: 'report:send', name: 'Gửi báo cáo qua email', desc: 'Gửi bản tổng hợp theo kỳ, chi nhánh và danh mục đã chọn' },
+    ],
+  },
+  {
+    module: 'customer_content',
+    module_name: 'Khách hàng, khuyến mãi và đánh giá',
+    description: 'Chi tiết quyền thao tác với hồ sơ khách hàng và nội dung bán hàng',
+    permissions: [
+      { id: 'customer:read', name: 'Xem hồ sơ khách hàng', desc: 'Xem hồ sơ và lịch sử mua hàng' },
+      { id: 'customer:write', name: 'Cập nhật hồ sơ khách hàng', desc: 'Tạo hoặc sửa thông tin khách hàng' },
+      { id: 'promotion:read', name: 'Xem khuyến mãi', desc: 'Xem điều kiện và lịch áp dụng' },
+      { id: 'promotion:write', name: 'Quản lý khuyến mãi', desc: 'Tạo, sửa, bật hoặc tắt chương trình khuyến mãi' },
+      { id: 'review:manage', name: 'Duyệt và trả lời đánh giá', desc: 'Duyệt, ẩn và trả lời đánh giá sản phẩm' },
     ],
   },
   {
@@ -82,7 +100,6 @@ const PERMISSIONS_CATALOG = [
       { id: 'user:manage', name: 'Quản lý Tài khoản & Phân quyền', desc: 'Tạo tài khoản nhân viên, thiết lập vai trò, cấp quyền trực tiếp' },
       { id: 'role:manage', name: 'Tạo & Chỉnh sửa Vai trò (Roles)', desc: 'Tạo nhóm vai trò mới, cấu hình ma trận quyền hạn' },
       { id: 'audit:read', name: 'Xem Nhật ký hệ thống (Audit Trail)', desc: 'Kiểm tra vết thao tác của nhân viên chống gian lận' },
-      { id: 'security:policy', name: 'Cấu hình Chính sách Bảo mật', desc: 'Bật 2FA bắt buộc, ẩn số điện thoại khách hàng, timeout' },
     ],
   },
 ];
@@ -101,7 +118,7 @@ const UserModel = {
 
   async findForLogin(email) {
     const [rows] = await pool.query(
-      `SELECT u.*, r.name AS role FROM users u JOIN roles r ON r.id = u.role_id WHERE u.email = ?`,
+      `SELECT u.*, r.name AS role, r.permissions AS role_permissions FROM users u JOIN roles r ON r.id = u.role_id WHERE u.email = ?`,
       [email]
     );
     return rows[0] || null;
@@ -137,7 +154,7 @@ const UserModel = {
     );
     return rows.map((r) => ({
       ...r,
-      permissions: parsePerms(r.permissions),
+      permissions: effectivePermissions({ role: r.name, role_permissions: r.permissions }),
     }));
   },
 
@@ -196,7 +213,7 @@ const UserModel = {
         ...u,
         custom_permissions: customPerms,
         role_permissions: rolePerms,
-        all_permissions: [...new Set([...rolePerms, ...customPerms])],
+        all_permissions: effectivePermissions(u),
       };
     });
 
@@ -215,7 +232,7 @@ const UserModel = {
       ...user,
       custom_permissions: customPerms,
       role_permissions: rolePerms,
-      all_permissions: [...new Set([...rolePerms, ...customPerms])],
+      all_permissions: effectivePermissions(user),
     };
   },
 

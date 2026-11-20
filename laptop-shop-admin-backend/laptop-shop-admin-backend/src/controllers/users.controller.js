@@ -4,13 +4,36 @@ const { pool } = require('../config/db');
 const { ApiError, asyncHandler, paging, toInt, diff } = require('../utils/helpers');
 const { writeAudit } = require('../services/audit');
 const UserModel = require('../models/user.model');
+const { can, effectivePermissions } = require('../config/permissions');
+
+const knownPermissions = new Set(UserModel.PERMISSIONS_CATALOG.flatMap((group) => group.permissions.map((entry) => entry.id)));
+const permissionSchema = z.array(z.string().max(100)).max(100);
+function assertGrant(actor, permissions = []) {
+  if (actor.role === 'super_admin') return;
+  if (permissions.some((permission) => !knownPermissions.has(permission) || !can(actor, permission))) {
+    throw new ApiError(403, 'Bạn không thể cấp quyền ngoài phạm vi của mình');
+  }
+}
+async function assertUserTarget(actor, targetId) {
+  const target = await UserModel.findUserById(targetId);
+  if (!target) throw new ApiError(404, 'Không tìm thấy tài khoản');
+  if (actor.role !== 'super_admin' && target.role === 'super_admin') {
+    throw new ApiError(403, 'Chỉ Super Admin có quyền thao tác với tài khoản Super Admin');
+  }
+  assertGrant(actor, target.all_permissions);
+}
+async function assertRoleGrant(actor, roleId) {
+  const role = await UserModel.findRoleById(roleId);
+  if (!role) throw new ApiError(404, 'Không tìm thấy vai trò được chọn');
+  assertGrant(actor, effectivePermissions({ role: role.name, role_permissions: role.permissions }));
+}
 
 const createRoleSchema = z.object({
   name: z.string().trim().min(2).max(50),
   display_name: z.string().trim().min(2).max(100),
   description: z.string().trim().max(255).nullish(),
   badge_color: z.string().trim().default('blue'),
-  permissions: z.array(z.string()).default([]),
+  permissions: permissionSchema.default([]),
 });
 
 const createSchema = z.object({
@@ -21,7 +44,7 @@ const createSchema = z.object({
   role_id: z.number().int().positive(),
   branch: z.string().trim().nullish(),
   data_visibility: z.enum(['all', 'branch', 'own']).default('all'),
-  custom_permissions: z.array(z.string()).nullish(),
+  custom_permissions: permissionSchema.nullish(),
 });
 
 const updateSchema = z.object({
@@ -30,7 +53,7 @@ const updateSchema = z.object({
   role_id: z.number().int().positive().optional(),
   branch: z.string().trim().nullable().optional(),
   data_visibility: z.enum(['all', 'branch', 'own']).optional(),
-  custom_permissions: z.array(z.string()).nullable().optional(),
+  custom_permissions: permissionSchema.nullable().optional(),
 });
 
 const UsersController = {
@@ -45,8 +68,12 @@ const UsersController = {
 
   createRole: asyncHandler(async (req, res) => {
     const b = createRoleSchema.parse(req.body);
+    assertGrant(req.user, b.permissions);
     const roleCode = b.name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
 
+    if (roleCode === 'super_admin' && req.user.role !== 'super_admin') {
+      throw new ApiError(403, 'Mã vai trò dành riêng cho Super Admin');
+    }
     const existing = await UserModel.findRoleByName(roleCode);
     if (existing) {
       throw new ApiError(400, `Mã vai trò '${roleCode}' đã tồn tại trong hệ thống`);
@@ -70,11 +97,13 @@ const UsersController = {
 
   updateRole: asyncHandler(async (req, res) => {
     const id = toInt(req.params.id);
-    const { display_name, description, badge_color, permissions } = req.body;
+    const { display_name, description, badge_color, permissions } = createRoleSchema.omit({ name: true }).partial().parse(req.body);
 
     const oldRole = await UserModel.findRoleById(id);
     if (!oldRole) throw new ApiError(404, 'Không tìm thấy vai trò');
 
+    assertGrant(req.user, effectivePermissions({ role: oldRole.name, role_permissions: oldRole.permissions }));
+    if (permissions) assertGrant(req.user, permissions);
     if (oldRole.name === 'super_admin' && permissions && !permissions.includes('*')) {
       throw new ApiError(400, 'Không thể thu hồi toàn quyền của vai trò Super Admin');
     }
@@ -113,6 +142,8 @@ const UsersController = {
   createUser: asyncHandler(async (req, res) => {
     const b = createSchema.parse(req.body);
 
+    await assertRoleGrant(req.user, b.role_id);
+    assertGrant(req.user, b.custom_permissions || []);
     const existingEmail = await UserModel.findUserByEmail(b.email);
     if (existingEmail) {
       throw new ApiError(400, 'Địa chỉ email này đã được sử dụng cho một tài khoản khác');
@@ -144,6 +175,9 @@ const UsersController = {
       throw new ApiError(400, 'Không thể tự đổi vai trò của chính mình');
     }
 
+    await assertUserTarget(req.user, id);
+    if (b.role_id) await assertRoleGrant(req.user, b.role_id);
+    assertGrant(req.user, b.custom_permissions || []);
     const old = await UserModel.findUserRawById(id);
     if (!old) throw new ApiError(404, 'Không tìm thấy tài khoản');
 
@@ -159,6 +193,7 @@ const UsersController = {
     const { status } = z.object({ status: z.enum(['active', 'locked']) }).parse(req.body);
     if (id === req.user.id) throw new ApiError(400, 'Không thể tự khoá chính mình');
 
+    await assertUserTarget(req.user, id);
     const ok = await UserModel.updateStatus(id, status);
     if (!ok) throw new ApiError(404, 'Không tìm thấy tài khoản');
 
@@ -170,7 +205,9 @@ const UsersController = {
 
   resetPassword: asyncHandler(async (req, res) => {
     const id = toInt(req.params.id);
-    const body = req.body && req.body.new_password ? req.body : { new_password: 'Laptop@' + Math.floor(100000 + Math.random() * 900000) };
+    await assertUserTarget(req.user, id);
+    const { new_password } = z.object({ new_password: z.string().min(12).max(72) }).parse(req.body);
+    const body = { new_password };
     const hash = await bcrypt.hash(body.new_password, 10);
     const ok = await UserModel.resetPassword(id, hash);
     if (!ok) throw new ApiError(404, 'Không tìm thấy tài khoản');

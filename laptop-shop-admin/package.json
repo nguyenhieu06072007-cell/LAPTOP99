@@ -18,13 +18,15 @@
     "vitest": "^2.1.9"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.7.0",
     "axios": "^1.20.0",
+    "jszip": "^3.10.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-hot-toast": "^2.6.1",
     "react-icons": "^5.7.0",
     "react-router-dom": "^6.30.6",
+    "read-excel-file": "^9.3.17",
     "recharts": "^3.10.1"
   }
 }

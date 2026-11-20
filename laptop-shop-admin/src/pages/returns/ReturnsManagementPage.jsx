@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import {
@@ -12,6 +13,10 @@ const formatVND = (v) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
 
 export default function ReturnsManagementPage() {
+  const { can } = useAuth();
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReference, setRefundReference] = useState('');
+  const [refunding, setRefunding] = useState(false);
   const [returnsList, setReturnsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -35,6 +40,9 @@ export default function ReturnsManagementPage() {
         reason_detail: r.reason || '',
         status: r.status || 'Chờ duyệt',
         total_amount: Number(r.total_amount || 0),
+        payment_status: r.payment_status,
+        refund_amount: r.refund_amount,
+        refund_reference: r.refund_reference,
       }));
       setReturnsList(rows);
       if (rows.length > 0 && !selectedReturn) {
@@ -60,7 +68,31 @@ export default function ReturnsManagementPage() {
       }
       toast.success(`Đã cập nhật phiếu ${rma.code} sang "${newStatus}"`);
     } catch (err) {
-      toast.error('Lỗi cập nhật trạng thái RMA');
+      toast.error(err.message || 'Lỗi cập nhật trạng thái RMA');
+    }
+  };
+
+  const recordRefund = async (event) => {
+    event.preventDefault();
+    if (refunding || !selectedReturn) return;
+    const id = selectedReturn.id;
+    setRefunding(true);
+    try {
+      const { data } = await api.patch(`/orders/rmas/${id}/refund`, {
+        amount: Number(refundAmount), reference: refundReference.trim(),
+      });
+      const update = (row) => row?.id === id ? {
+        ...row, refund_amount: data.data.amount, refund_reference: data.data.reference,
+      } : row;
+      setReturnsList((previous) => previous.map(update));
+      setSelectedReturn(update);
+      setRefundAmount('');
+      setRefundReference('');
+      toast.success('Đã ghi nhận hoàn tiền theo chứng từ');
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setRefunding(false);
     }
   };
 
@@ -188,7 +220,7 @@ export default function ReturnsManagementPage() {
                   {filteredReturns.map((item) => (
                     <tr
                       key={item.id}
-                      onClick={() => setSelectedReturn(item)}
+                      onClick={() => { setSelectedReturn(item); setRefundAmount(''); setRefundReference(''); }}
                       className={`hover:bg-blue-50/40 cursor-pointer transition ${
                         selectedReturn?.id === item.id ? 'bg-blue-50/60' : ''
                       }`}
@@ -246,20 +278,24 @@ export default function ReturnsManagementPage() {
                 <p><b>Lý do khách báo:</b> {selectedReturn.reason_detail}</p>
                 <p><b>Giá trị đơn:</b> <span className="font-bold text-rose-600">{formatVND(selectedReturn.total_amount)}</span></p>
               </div>
-              <div className="pt-3 border-t flex gap-2">
-                <button
-                  onClick={() => handleUpdateStatus(selectedReturn, 'Đã duyệt')}
-                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded"
-                >
-                  ✓ Duyệt yêu cầu
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus(selectedReturn, 'Từ chối')}
-                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded"
-                >
-                  ✕ Từ chối
-                </button>
-              </div>
+              {selectedReturn.refund_reference && <p>Đã ghi nhận hoàn {formatVND(selectedReturn.refund_amount)} · {selectedReturn.refund_reference}</p>}
+              {can('finance:refund') && selectedReturn.type === 'Trả' && selectedReturn.status === 'Đã duyệt' &&
+                selectedReturn.payment_status === 'paid' && !selectedReturn.refund_reference && (
+                <form className="grid gap-2 border-t pt-3" onSubmit={recordRefund}>
+                  <p>Ghi nhận khoản đã hoàn qua ngân hàng hoặc cổng thanh toán.</p>
+                  <input required min={1} max={selectedReturn.total_amount} type="number" className="rounded border p-2" placeholder="Số tiền đã hoàn" value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} />
+                  <input required maxLength={100} className="rounded border p-2" placeholder="Mã tham chiếu hoàn tiền" value={refundReference} onChange={(e) => setRefundReference(e.target.value)} />
+                  <button disabled={refunding} className="rounded bg-blue-600 p-2 text-white">Ghi nhận đã hoàn tiền</button>
+                </form>
+              )}
+              {can(['rma:manage', 'warranty:write']) && ['Chờ duyệt', 'Đã duyệt'].includes(selectedReturn.status) && (
+                <div className="flex gap-2 border-t pt-3">
+                  {selectedReturn.status === 'Chờ duyệt'
+                    ? <button className="rounded bg-emerald-600 px-3 py-2 text-white" onClick={() => handleUpdateStatus(selectedReturn, 'Đã duyệt')}>Duyệt yêu cầu</button>
+                    : <button className="rounded bg-blue-600 px-3 py-2 text-white" onClick={() => handleUpdateStatus(selectedReturn, 'Hoàn tất')}>Hoàn tất phiếu</button>}
+                  {!selectedReturn.refund_reference && <button className="rounded bg-red-600 px-3 py-2 text-white" onClick={() => handleUpdateStatus(selectedReturn, 'Từ chối')}>Từ chối</button>}
+                </div>
+              )}
             </div>
           ) : (
             <div className="py-12 text-center text-gray-400">

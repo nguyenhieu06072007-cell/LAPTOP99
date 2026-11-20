@@ -24,7 +24,7 @@ import {
 import toast from 'react-hot-toast';
 import { resolveAdminImageUrl, handleImageError } from '../utils/imageHelper';
 
-const formatVND = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
+const formatVND = (v) => v == null ? '—' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
 
 export default function DashboardPage() {
   const { can } = useAuth();
@@ -43,12 +43,13 @@ export default function DashboardPage() {
   const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const [dashRes, lowStockRes] = await Promise.all([
-        api.get('/dashboard', { params: { range: timeRange } }),
-        api.get('/inventory/low-stock'),
+      const [dash, stock] = await Promise.allSettled([
+        can('report:read') ? api.get('/dashboard', { params: { range: timeRange } }) : null,
+        can('inventory:read') ? api.get('/inventory/low-stock') : null,
       ]);
-      setData(dashRes.data.data);
-      setLowStockItems(lowStockRes.data.data || []);
+      setData(dash.value?.data?.data || null);
+      setLowStockItems(stock.value?.data?.data || []);
+      if (dash.status === 'rejected' || stock.status === 'rejected') toast.error('Không tải được một phần dữ liệu tổng quan');
     } catch (err) {
       toast.error('Lỗi khi tải dữ liệu báo cáo tổng quan');
     } finally {
@@ -96,10 +97,10 @@ export default function DashboardPage() {
   const topSold = data?.top_sold || [];
 
   // Doanh thu thật từ bảng orders (total_revenue), fallback về top_sold
-  const realRevenue = data?.total_revenue ?? 0;
-  const totalOrders = data?.total_orders ?? 0;
-  const newOrders = data?.new_orders ?? 0;
-  const totalCustomers = data?.total_customers ?? 0;
+  const realRevenue = data?.total_revenue ?? null;
+  const totalOrders = data?.total_orders ?? '—';
+  const newOrders = data?.new_orders ?? '—';
+  const totalCustomers = data?.total_customers ?? '—';
   const recentOrders = data?.recent_orders || [];
 
   return (
@@ -251,7 +252,7 @@ export default function DashboardPage() {
               {formatVND(realRevenue)}
             </h3>
             <p className="text-[11px] text-emerald-600 font-medium mt-1">
-              Từ {totalOrders} đơn khách đặt ({formatVND(data?.delivered_revenue || 0)} đã giao)
+              Theo ngày đặt · {data?.paid_orders ?? 0} đơn đã thu ({formatVND(data?.delivered_revenue || 0)} đã giao)
             </p>
           </div>
         </div>
@@ -415,7 +416,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="py-2.5 text-center font-bold text-gray-700">{p.sold_count}</td>
                       <td className="py-2.5 text-right font-semibold text-blue-600">
-                        {formatVND(p.price * (p.sold_count || 1))}
+                        {formatVND(p.total_revenue)}
                       </td>
                     </tr>
                   ))}

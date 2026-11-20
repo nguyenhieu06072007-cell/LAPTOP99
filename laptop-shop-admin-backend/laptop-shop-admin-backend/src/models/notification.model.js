@@ -1,166 +1,119 @@
 const { pool } = require('../config/db');
+const { inventoryBranch } = require('./inventory.model');
+const { can, orderScope } = require('../config/permissions');
 
-function timeAgo(date) {
-  if (!date) return 'Vừa xong';
-  const now = new Date();
-  const past = new Date(date);
-  const diffMs = now - past;
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
-
-  if (diffSec < 60) return 'Vừa xong';
-  if (diffMin < 60) return `${diffMin} phút trước`;
-  if (diffHr < 24) return `${diffHr} giờ trước`;
-  if (diffDay === 1) return 'Hôm qua';
-  if (diffDay < 7) return `${diffDay} ngày trước`;
-  return past.toLocaleDateString('vi-VN');
-}
-
-function formatVnd(amount) {
-  return Number(amount || 0).toLocaleString('vi-VN') + ' ₫';
-}
-
-const NotificationModel = {
-  async getNotifications({ limit = 20 } = {}) {
-    const notifs = [];
-
-    // 1. Orders from customers (Storefront actions)
-    try {
-      const [orders] = await pool.query(
-        `SELECT id, code, customer_name, product_name, total_amount, status, payment_status, payment_verification_status, ordered_at, created_at
-           FROM orders
-          ORDER BY ordered_at DESC
-          LIMIT 12`
-      );
-
-      orders.forEach((o) => {
-        const orderDate = o.ordered_at || o.created_at;
-        if (o.payment_verification_status === 'pending_verification') {
-          notifs.push({
-            id: `pay-${o.id}`,
-            type: 'order',
-            title: `Xác nhận chuyển khoản: ${o.code}`,
-            message: `Khách hàng ${o.customer_name} đã xác nhận chuyển khoản cho đơn #${o.code} (${formatVnd(o.total_amount)}) - Chờ đối soát.`,
-            time: timeAgo(orderDate),
-            timestamp: new Date(orderDate).toISOString(),
-            read: false,
-            link: '/orders',
-          });
-        } else {
-          let statusText = 'Mới đặt hàng';
-          let isRead = false;
-          if (o.status === 'confirmed') {
-            statusText = 'Đã duyệt';
-          } else if (o.status === 'shipping') {
-            statusText = 'Đang giao';
-          } else if (o.status === 'delivered') {
-            statusText = 'Giao thành công';
-            isRead = true;
-          } else if (o.status === 'cancelled') {
-            statusText = 'Đã hủy đơn';
-            isRead = true;
-          }
-
-          notifs.push({
-            id: `ord-${o.id}`,
-            type: 'order',
-            title: o.status === 'pending' ? `Đơn hàng mới: ${o.code}` : `Đơn hàng: ${o.code}`,
-            message: `Khách hàng ${o.customer_name} đặt ${o.product_name || 'laptop'} (${formatVnd(o.total_amount)}) · ${statusText}`,
-            time: timeAgo(orderDate),
-            timestamp: new Date(orderDate).toISOString(),
-            read: isRead,
-            link: '/orders',
-          });
-        }
-      });
-    } catch (err) {
-      console.error('Error fetching orders for notifications:', err.message);
-    }
-
-    // 2. Real Low Stock & Out of Stock Alerts
-    try {
-      const [lowStock] = await pool.query(
-        `SELECT id, name, sku, stock_quantity, low_stock_threshold, updated_at
-           FROM products
-          WHERE stock_quantity <= low_stock_threshold AND deleted_at IS NULL
-          ORDER BY stock_quantity ASC
-          LIMIT 8`
-      );
-
-      lowStock.forEach((p) => {
-        const isOutOfStock = p.stock_quantity === 0;
-        notifs.push({
-          id: `stock-${p.id}`,
-          type: 'stock',
-          title: isOutOfStock ? 'Hết hàng trong kho (Out of Stock)' : 'Cảnh báo tồn kho tối thiểu',
-          message: `Sản phẩm "${p.name}" (SKU: ${p.sku}) ${isOutOfStock ? 'hiện đã hết hàng trong kho.' : `chỉ còn ${p.stock_quantity} máy trong kho (ngưỡng: ${p.low_stock_threshold}).`}`,
-          time: timeAgo(p.updated_at),
-          timestamp: new Date(p.updated_at || Date.now()).toISOString(),
-          read: false,
-          link: '/inventory',
-        });
-      });
-    } catch (err) {
-      console.error('Error fetching low stock for notifications:', err.message);
-    }
-
-    // 3. Customer RMA (Return & Warranty) Requests
-    try {
-      const [rmas] = await pool.query(
-        `SELECT id, code, order_code, product_name, type, reason, status, created_at
-           FROM rmas
-          ORDER BY created_at DESC
-          LIMIT 5`
-      );
-
-      rmas.forEach((r) => {
-        notifs.push({
-          id: `rma-${r.id}`,
-          type: 'rma',
-          title: `Yêu cầu đổi trả ${r.code} (${r.status})`,
-          message: `Đơn #${r.order_code} (${r.product_name}): ${r.reason}`,
-          time: timeAgo(r.created_at),
-          timestamp: new Date(r.created_at).toISOString(),
-          read: r.status === 'Hoàn tất' || r.status === 'Từ chối',
-          link: '/returns',
-        });
-      });
-    } catch (err) {
-      console.error('Error fetching RMAs for notifications:', err.message);
-    }
-
-    // 4. Customer Trade-In Requests
-    try {
-      const [tradeIns] = await pool.query(
-        `SELECT id, code, customer_name, brand, model, status, created_at
-           FROM trade_ins
-          ORDER BY created_at DESC
-          LIMIT 5`
-      );
-
-      tradeIns.forEach((t) => {
-        notifs.push({
-          id: `tradein-${t.id}`,
-          type: 'tradein',
-          title: `Thu cũ đổi mới: ${t.code}`,
-          message: `Khách hàng ${t.customer_name} gửi yêu cầu định giá máy ${t.brand} ${t.model} (${t.status}).`,
-          time: timeAgo(t.created_at),
-          timestamp: new Date(t.created_at).toISOString(),
-          read: t.status === 'Đã duyệt' || t.status === 'Đã đóng',
-          link: '/trade-in',
-        });
-      });
-    } catch (err) {
-      // Optional table, ignore if not present
-    }
-
-    // Sort all notifications chronologically (newest first)
-    notifs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    return notifs.slice(0, limit);
-  },
+const orderLabels = {
+  pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', shipping: 'Đang giao',
+  delivered: 'Đã giao', completed: 'Hoàn tất', cancelled: 'Đã hủy',
+};
+const paymentLabels = {
+  pending_verification: 'Khách báo đã chuyển khoản',
+  paid: 'Thanh toán đã được xác nhận',
+  collecting: 'Chờ đối soát COD',
+  refund_pending: 'Chờ hoàn tiền',
+  refunded: 'Đã ghi nhận hoàn tiền',
 };
 
-module.exports = NotificationModel;
+function scopedEvents(user) {
+  const sources = [];
+  const params = [];
+  const scope = Object.entries(orderScope(user));
+  // A UNION keeps counting, listing and marking notifications read under the same permission rules.
+  function add(type, id, date, payload, from, conditions = [], values = []) {
+    sources.push(`SELECT '${type}' AS type, CONVERT(${id} USING utf8mb4) COLLATE utf8mb4_bin AS event_id, ${date} AS occurred_at,
+      JSON_OBJECT(${payload}) AS payload FROM ${from}
+      ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''}`);
+    params.push(...values);
+  }
+  if (can(user, 'order:read:all') || can(user, 'order:read:own')) {
+    const conditions = scope.map(([column]) => `o.${column} = ?`);
+    const values = scope.map(([, value]) => value || null);
+    const fields = "'code', o.code, 'status', o.status, 'payment', o.payment_status, 'amount', o.total_amount";
+    add('order_new', "CONCAT('order-', o.id, '-pending-unpaid')", 'COALESCE(o.ordered_at, o.created_at)',
+      fields, 'orders o', conditions, values);
+    add('order_assigned', "CONCAT('order-assigned-', o.id, '-', o.assigned_to)", 'oa.created_at',
+      fields, 'admin_order_assignments oa JOIN orders o ON o.id = oa.order_id', conditions, values);
+    add('order', "CONCAT('order-', o.id, '-', o.status, '-', o.payment_status)", 'o.updated_at',
+      fields, 'orders o', [...conditions, "(o.status <> 'pending' OR o.payment_status <> 'unpaid')"], values);
+  }
+  if (can(user, 'inventory:read')) {
+    const branch = inventoryBranch(user);
+    add('stock', "CONCAT('stock-', id, '-', stock_quantity, '-', FLOOR(UNIX_TIMESTAMP(updated_at) * 1000))",
+      'updated_at', "'name', name, 'sku', sku, 'quantity', stock_quantity", 'products',
+      ["deleted_at IS NULL", "status <> 'discontinued'", 'stock_quantity <= low_stock_threshold', ...(branch === null ? [] : ['warehouse_location = ?'])],
+      branch === null ? [] : [branch || null]);
+  }
+  if (can(user, 'rma:manage') || can(user, 'warranty:read') || can(user, 'finance:refund')) {
+    add('rma', "CONCAT('rma-', r.id, '-', r.status, '-', IF(rf.created_at IS NULL, 'false', 'true'))",
+      'COALESCE(rf.created_at, r.updated_at, r.created_at)',
+      "'code', r.code, 'orderCode', r.order_code, 'status', r.status, 'refunded', rf.created_at IS NOT NULL",
+      'rmas r LEFT JOIN admin_rma_refunds rf ON rf.rma_id = r.id LEFT JOIN orders o ON o.code = r.order_code',
+      scope.map(([column]) => `o.${column} = ?`), scope.map(([, value]) => value || null));
+  }
+  if (can(user, 'tradein:estimate') || can(user, 'order:read:all')) {
+    add('tradein', "CONCAT('tradein-', id, '-', status)", 'COALESCE(updated_at, created_at)',
+      "'code', code, 'brand', brand, 'model', model, 'status', status", 'trade_ins');
+  }
+  if (can(user, 'report:read') || can(user, 'review:manage')) {
+    add('review', "CONCAT('review-', id)", 'created_at',
+      "'name', product_name, 'rating', rating, 'status', status", 'product_reviews');
+  }
+  return { sql: sources.join(' UNION ALL '), params };
+}
+
+function presentEvent(row) {
+  const payload = typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload;
+  const base = { id: row.event_id, type: row.type, timestamp: new Date(row.occurred_at).toISOString(), read: Boolean(row.is_read) };
+  switch (row.type) {
+    case 'order_assigned':
+    case 'order_new':
+    case 'order': {
+      const isNew = row.type === 'order_new';
+      const title = row.type === 'order_assigned' ? 'Đơn hàng được phân công' : isNew ? 'Đơn hàng mới' : paymentLabels[payload.payment] || orderLabels[payload.status] || 'Cập nhật đơn hàng';
+      return { ...base, type: 'order', title: `${title} · ${payload.code}`,
+        message: `${Number(payload.amount).toLocaleString('vi-VN')} ₫ · ${isNew ? 'Đã đặt hàng' : orderLabels[payload.status] || payload.status}`,
+        link: `/orders?search=${encodeURIComponent(payload.code)}`,
+        subType: !isNew && payload.payment === 'pending_verification' ? 'payment_verify' : undefined };
+    }
+    case 'stock': {
+      const empty = Number(payload.quantity) === 0;
+      return { ...base, title: empty ? 'Hết hàng' : 'Sắp hết hàng',
+        message: `${payload.name} (${payload.sku}) · Còn ${payload.quantity}`,
+        link: '/inventory', subType: empty ? 'out_of_stock' : 'low_stock' };
+    }
+    case 'rma':
+      return { ...base, title: `Đổi trả · ${payload.code}`,
+        message: `Đơn ${payload.orderCode} · ${payload.refunded ? 'Đã ghi nhận hoàn tiền' : payload.status}`, link: '/returns' };
+    case 'tradein':
+      return { ...base, title: `Thu cũ đổi mới · ${payload.code}`,
+        message: `${payload.brand || ''} ${payload.model || ''} · ${payload.status}`, link: '/trade-in' };
+    case 'review':
+      return { ...base, title: payload.status === 'pending' ? 'Đánh giá mới chờ duyệt' : 'Đánh giá sản phẩm',
+        message: `${payload.name || 'Sản phẩm'} · ${payload.rating} sao`, link: '/reports?tab=customers' };
+  }
+}
+
+async function getNotifications({ user, limit = 30 }) {
+  const { sql, params } = scopedEvents(user);
+  if (!sql) return { events: [], unreadCount: 0 };
+  const [rows] = await pool.query(`SELECT e.*, r.event_id IS NOT NULL AS is_read,
+    SUM(r.event_id IS NULL) OVER () AS unread_count
+    FROM (${sql}) e LEFT JOIN admin_notification_reads r ON r.user_id = ? AND r.event_id = e.event_id
+    WHERE e.occurred_at IS NOT NULL
+    ORDER BY e.occurred_at DESC, e.event_id DESC LIMIT ?`, [...params, user.id, limit]);
+  return { events: rows.map((row) => ({
+    ...presentEvent(row), ...(row.type === 'review' && can(user, 'review:manage') ? { link: '/reviews' } : {}),
+  })), unreadCount: Number(rows[0]?.unread_count || 0) };
+}
+
+async function markRead(user, { ids, all }) {
+  const { sql, params } = scopedEvents(user);
+  if (!sql) return;
+  await pool.query(`INSERT IGNORE INTO admin_notification_reads (user_id, event_id)
+    SELECT ?, e.event_id FROM (${sql}) e
+    LEFT JOIN admin_notification_reads r ON r.user_id = ? AND r.event_id = e.event_id
+    WHERE e.occurred_at IS NOT NULL AND r.event_id IS NULL${all ? '' : ' AND e.event_id IN (?)'}`,
+  [user.id, ...params, user.id, ...(all ? [] : [ids])]);
+}
+
+module.exports = { getNotifications, markRead };

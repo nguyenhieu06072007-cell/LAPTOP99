@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import {
@@ -13,6 +14,8 @@ const formatVND = (v) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(v || 0);
 
 export default function TradeInPage() {
+  const { can } = useAuth();
+  const [quotes, setQuotes] = useState({});
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,7 +68,11 @@ export default function TradeInPage() {
   }, []);
 
   const handleApproveTradeIn = async (item) => {
-    const finalPrice = Number(item.final_price || item.estimated_price || 0);
+    const input = quotes[item.id];
+    const finalPrice = Number(input);
+    if (input == null || String(input).trim() === '' || !Number.isSafeInteger(finalPrice) || finalPrice < 0) {
+      return toast.error('Nhập giá thu mua đã thẩm định');
+    }
     try {
       await api.patch(`/orders/tradeins/${item.id}/status`, {
         status: 'Đã định giá',
@@ -244,7 +251,9 @@ export default function TradeInPage() {
                       )}
                     </div>
 
-                    {c.status !== 'Đã định giá' && (
+                    {can('tradein:estimate') && c.status === 'Chờ định giá' && (
+                      <div className="flex gap-2">
+                      <input aria-label="Giá thu mua đã thẩm định" type="number" min={0} className="rounded border px-2" value={quotes[c.id] ?? ''} onChange={(e) => setQuotes({ ...quotes, [c.id]: e.target.value })} />
                       <button
                         onClick={() => handleApproveTradeIn(c)}
                         className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold flex items-center gap-1"
@@ -252,6 +261,7 @@ export default function TradeInPage() {
                         <HiOutlineCheckCircle className="w-4 h-4" />
                         <span>Duyệt giá thu mua</span>
                       </button>
+                      </div>
                     )}
                   </div>
                 </div>

@@ -6,5 +6,6 @@ const router = express.Router();
 router.use(authenticate);
 
 router.get('/', NotificationsController.getNotifications);
+router.post('/read', NotificationsController.markRead);
 
 module.exports = router;

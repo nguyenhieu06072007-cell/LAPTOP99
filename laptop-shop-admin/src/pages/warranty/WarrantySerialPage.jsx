@@ -1,3 +1,6 @@
+import { useAuth } from '../../contexts/AuthContext';
+import FulfillmentQueue from '../orders/FulfillmentQueue';
+import WarrantyCases from './WarrantyCases';
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import {
@@ -11,20 +14,21 @@ import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 export default function WarrantySerialPage() {
+  const { can } = useAuth();
+  const [showQueue, setShowQueue] = useState(false);
   const [serialList, setSerialList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchSerial, setSearchSerial] = useState('');
   const [searchedItem, setSearchedItem] = useState(null);
 
-  const fetchSerials = async () => {
+  const fetchSerials = async (search) => {
     try {
       setLoading(true);
-      const res = await api.get('/orders/serials/list');
+      const res = await api.get('/orders/serials/list', { params: { search } });
       const rows = res.data?.data || [];
       setSerialList(rows);
-      if (rows.length > 0 && !searchedItem) {
-        setSearchedItem(rows[0]);
-      }
+      setSearchedItem(rows[0] || null);
+      return rows;
     } catch (err) {
       toast.error('Không thể tải danh sách Serial bảo hành từ đơn hàng');
     } finally {
@@ -36,26 +40,12 @@ export default function WarrantySerialPage() {
     fetchSerials();
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const q = searchSerial.trim().toLowerCase();
-    if (!q) {
-      toast.error('Vui lòng nhập Serial Number (S/N) hoặc Mã đơn hàng');
-      return;
-    }
-    const found = serialList.find(
-      (s) =>
-        s.serial.toLowerCase().includes(q) ||
-        (s.order_code || '').toLowerCase().includes(q) ||
-        (s.customer || '').toLowerCase().includes(q)
-    );
-    if (found) {
-      setSearchedItem(found);
-      toast.success(`Đã tìm thấy thông tin bảo hành S/N: ${found.serial}`);
-    } else {
-      setSearchedItem(null);
-      toast.error(`Không tìm thấy mã Serial "${searchSerial}" trong các đơn hàng thực tế`);
-    }
+  const handleSearch = async (event) => {
+    event.preventDefault();
+    const search = searchSerial.trim();
+    if (!search) return toast.error('Nhập serial hoặc mã đơn hàng');
+    const rows = await fetchSerials(search);
+    if (rows?.length === 0) toast.error('Không tìm thấy serial hoặc đơn hàng');
   };
 
   if (loading) return <LoadingSpinner fullPage text="Đang đồng bộ Serial Number (S/N) từ đơn hàng khách..." />;
@@ -68,7 +58,7 @@ export default function WarrantySerialPage() {
             Quản lý Bảo hành & Truy vết Serial Number (S/N) Thực Tế ({serialList.length} máy)
           </h2>
           <p className="text-[11px] text-gray-500 mt-1">
-            Đồng bộ 100% với các mã Serial Number (S/N) được cấp phát tự động khi khách hàng đặt đơn trên trang khách hàng.
+            Tra cứu serial được gán cho đơn và theo dõi hồ sơ bảo hành.
           </p>
         </div>
         <button
@@ -82,6 +72,12 @@ export default function WarrantySerialPage() {
           <span>Làm mới S/N</span>
         </button>
       </div>
+
+      {can('inventory:serial:manage') && <div className="space-y-2">
+        <button aria-expanded={showQueue} onClick={() => setShowQueue(!showQueue)}
+          className="rounded border bg-white px-3 py-2 font-semibold">Đơn chờ gán serial</button>
+        {showQueue && <FulfillmentQueue mode="serial" />}
+      </div>}
 
       {/* Search Serial bar */}
       <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-2xs">
@@ -135,7 +131,7 @@ export default function WarrantySerialPage() {
           <div className="flex justify-between items-start pb-3 border-b border-gray-100">
             <div>
               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">
-                {searchedItem.status === 'active' ? 'Bảo hành điện tử còn hiệu lực' : 'Đã hết hạn bảo hành'}
+                {searchedItem.status === 'active' ? 'Bảo hành điện tử còn hiệu lực' : searchedItem.status === 'pending_activation' ? 'Chờ giao máy' : 'Đã hết hạn bảo hành'}
               </span>
               <h3 className="font-bold text-gray-900 text-sm mt-1">{searchedItem.product}</h3>
               <p className="font-mono text-blue-600 mt-0.5">
@@ -163,6 +159,11 @@ export default function WarrantySerialPage() {
               <p className="font-semibold text-gray-800">Bảo hành chính hãng & 1 đổi 1 trong 15 ngày</p>
             </div>
           </div>
+
+          {can(['warranty:read', 'warranty:write']) && <WarrantyCases
+            key={searchedItem.order_code + ':' + searchedItem.serial} serial={searchedItem.serial}
+            orderCode={searchedItem.order_code} mayWrite={can('warranty:write')}
+            delivered={['delivered', 'completed'].includes(searchedItem.order_status)} />}
 
           {/* History */}
           <div className="space-y-2">

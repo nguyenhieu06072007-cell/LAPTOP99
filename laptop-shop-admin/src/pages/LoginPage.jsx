@@ -6,8 +6,8 @@ import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('admin@laptopshop.vn');
-  const [password, setPassword] = useState('Admin@123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -17,21 +17,6 @@ export default function LoginPage() {
   const [isOtpMode, setIsOtpMode] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpCountdown, setOtpCountdown] = useState(60);
-
-  const demoAccounts = [
-    { role: '👑 Super Admin', email: 'admin@laptopshop.vn', desc: 'Toàn quyền 100% chức năng' },
-    { role: '💼 Trưởng phòng Sale', email: 'salesmgr@laptopshop.vn', desc: 'Xem tất cả đơn, duyệt chiết khấu' },
-    { role: '🛒 Nhân viên Sale', email: 'sales@laptopshop.vn', desc: 'Tạo đơn cá nhân, ẩn giá nhập' },
-    { role: '📦 Thủ kho', email: 'warehouse@laptopshop.vn', desc: 'Quản lý kho, nhập hàng, ẩn doanh thu' },
-    { role: '💰 Kế toán', email: 'accountant@laptopshop.vn', desc: 'Xem giá nhập, tài chính, đối soát' },
-    { role: '💻 Quản lý SP', email: 'product@laptopshop.vn', desc: 'Quản lý laptop, hãng, danh mục' },
-  ];
-
-  const selectDemoRole = (acc) => {
-    setEmail(acc.email);
-    setPassword('Admin@123456');
-    toast.success(`Đã chọn: ${acc.role} (${acc.email})`);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -248,35 +233,10 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Quick Demo Role Selector for Examination / Live Demo */}
-        <div className="mt-5 pt-4 border-t border-gray-200 bg-gray-50/60 -mx-6 -mb-6 p-4 sm:p-5 sm:-mx-8 sm:-mb-8">
-          <div className="flex flex-wrap items-center justify-between gap-1 mb-2.5">
-            <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
-              <span className="text-amber-500">⚡</span> Chọn nhanh vai trò thử nghiệm phân quyền (Live Demo RBAC):
-            </span>
-            <span className="text-[11px] text-gray-500 font-mono">
-              Mật khẩu: <span className="font-bold text-blue-600">Admin@123456</span>
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-            {demoAccounts.map((acc) => (
-              <button
-                key={acc.email}
-                type="button"
-                onClick={() => selectDemoRole(acc)}
-                className={`p-2 rounded-lg border text-left transition hover:shadow-xs flex flex-col justify-between ${
-                  email === acc.email
-                    ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-400'
-                    : 'bg-white border-gray-200 hover:border-blue-300'
-                }`}
-                title={acc.desc}
-              >
-                <span className="text-[11px] font-bold text-gray-800 leading-tight truncate">{acc.role}</span>
-                <span className="text-[10px] text-gray-400 truncate mt-1">{acc.email.split('@')[0]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <p className="mt-4 border-t border-gray-200 pt-4 text-center text-xs text-gray-600">
+          Đăng nhập bằng email và mật khẩu của tài khoản nhân viên. Super Admin có thể tạo tài khoản,
+          gán vai trò hoặc đặt lại mật khẩu trong mục Phân quyền &amp; Tài khoản.
+        </p>
       </div>
     </div>
   );

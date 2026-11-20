@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../api/axios';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -37,8 +38,19 @@ import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 
 const fmtVND = (n) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n || 0);
+  n == null ? '—' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n || 0);
 
+function ReportTable({ title, columns, rows }) {
+  return <section className="overflow-x-auto rounded-xl border bg-white p-4">
+    <h2 className="mb-3 text-sm font-bold">{title}</h2>
+    {rows.length ? <table className="w-full text-left">
+      <thead><tr className="bg-gray-50">{columns.map((column) => <th key={column} className="p-2">{column}</th>)}</tr></thead>
+      <tbody>{rows.map((row, index) => <tr key={index} className="border-t">{row.map((value, i) => <td key={i} className="p-2">{value ?? '—'}</td>)}</tr>)}</tbody>
+    </table> : <p className="text-gray-500">Chưa có dữ liệu cho mục này.</p>}
+  </section>;
+}
+
+const percent = (value) => value == null ? '—' : `${value}%`;
 const CHART_COLORS = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b', '#f97316'];
 
 export default function FeedbackReportsPage() {
@@ -46,7 +58,10 @@ export default function FeedbackReportsPage() {
 
   // 9 Modules Báo cáo theo đúng chuẩn yêu cầu
   // 'revenue' | 'orders' | 'products' | 'inventory' | 'customers' | 'warranty' | 'marketing' | 'staff' | 'finance'
-  const [activeTab, setActiveTab] = useState('revenue');
+  const [params] = useSearchParams();
+  const notifyCustomers = params.get('tab') === 'customers';
+  const [activeTab, setActiveTab] = useState(notifyCustomers ? 'customers' : 'revenue');
+  useEffect(() => { if (notifyCustomers) setActiveTab('customers'); }, [notifyCustomers]);
 
   // Bộ lọc toàn cục
   const [timeRange, setTimeRange] = useState('30d');
@@ -55,8 +70,9 @@ export default function FeedbackReportsPage() {
 
   // Dữ liệu BI & Tài chính
   const [biData, setBiData] = useState(null);
-  const [financeSummary, setFinanceSummary] = useState(null);
+  const [biError, setBiError] = useState(false);
   const [biLoading, setBiLoading] = useState(true);
+  const reportRequest = useRef(0);
 
   // Reviews & Đánh giá khách hàng
   const [reviews, setReviews] = useState([]);
@@ -70,37 +86,28 @@ export default function FeedbackReportsPage() {
   // Modal Gửi Báo Cáo Qua Email
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailForm, setEmailForm] = useState({
-    recipient: 'ban-giam-doc@laptop99.vn',
-    reportType: 'all',
+    recipient: '',
     notes: 'Kính gửi Ban Giám Đốc báo cáo tình hình kinh doanh thời gian thực từ hệ thống LAPTOP99.',
   });
   const [sendingEmail, setSendingEmail] = useState(false);
 
   // Tải dữ liệu BI tổng hợp
   const fetchBiReports = useCallback(async () => {
+    const request = ++reportRequest.current;
     try {
       setBiLoading(true);
-      const [dashRes, finRes] = await Promise.all([
-        api.get('/dashboard', {
-          params: {
-            range: timeRange,
-            branch: selectedBranch !== 'all' ? selectedBranch : undefined,
-            category_id: selectedCategory !== 'all' ? selectedCategory : undefined,
-          },
-        }).catch(() => ({ data: { data: null } })),
-        api.get('/orders/finance/summary').catch(() => ({ data: null })),
-      ]);
-
-      if (dashRes.data?.data) {
-        setBiData(dashRes.data.data);
+      setBiError(false);
+      const { data } = await api.get('/dashboard', {
+        params: { range: timeRange, branch: selectedBranch, category_id: selectedCategory },
+      });
+      if (request === reportRequest.current) setBiData(data.data);
+    } catch {
+      if (request === reportRequest.current) {
+        setBiData(null);
+        setBiError(true);
       }
-      if (finRes.data?.data || finRes.data) {
-        setFinanceSummary(finRes.data?.data || finRes.data);
-      }
-    } catch (err) {
-      console.warn('Could not load BI data:', err);
     } finally {
-      setBiLoading(false);
+      if (request === reportRequest.current) setBiLoading(false);
     }
   }, [timeRange, selectedBranch, selectedCategory]);
 
@@ -135,6 +142,7 @@ export default function FeedbackReportsPage() {
   // Trả lời phản hồi đánh giá
   const handleSendReply = async (e) => {
     e.preventDefault();
+    if (!can('review:manage')) return;
     if (!replyText.trim()) return toast.error('Vui lòng nhập nội dung phản hồi');
 
     setSubmittingReply(true);
@@ -159,21 +167,28 @@ export default function FeedbackReportsPage() {
 
   // In / Xuất PDF
   const handlePrintReport = () => {
-    window.print();
+    if (can('report:export')) window.print();
   };
 
   // Gửi Email Báo cáo
-  const handleSendEmailReport = (e) => {
-    e.preventDefault();
+  const handleSendEmailReport = async (event) => {
+    event.preventDefault();
+    if (!can('report:send') || sendingEmail) return;
     setSendingEmail(true);
-    setTimeout(() => {
-      setSendingEmail(false);
+    try {
+      await api.post('/dashboard/email', {
+        recipient: emailForm.recipient, notes: emailForm.notes,
+        range: timeRange, branch: selectedBranch, category_id: selectedCategory,
+      });
+      toast.success('Nhà cung cấp email đã tiếp nhận báo cáo.');
       setIsEmailModalOpen(false);
-      toast.success(`Đã gửi báo cáo tự động tới email: ${emailForm.recipient}`);
-    }, 1200);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
-  // Xuất file CSV / Excel đa năng
   const exportCsv = (filename, rows) => {
     if (!rows || !rows.length) return toast.error('Không có dữ liệu để xuất file');
     const keys = Object.keys(rows[0]);
@@ -206,6 +221,7 @@ export default function FeedbackReportsPage() {
 
   // Xử lý xuất file theo tab hiện tại
   const handleExportCurrentTab = () => {
+    if (!can('report:export')) return;
     if (!biData) return;
     if (activeTab === 'revenue') {
       const rows = (biData.revenue_timeline || []).map((t, idx) => ({
@@ -268,8 +284,8 @@ export default function FeedbackReportsPage() {
     } else {
       const rows = [
         { 'Chỉ tiêu': 'Tổng doanh thu', 'Giá trị': biData.total_revenue || 0 },
-        { 'Chỉ tiêu': 'Giá vốn hàng bán (COGS)', 'Giá trị': biData.cogs || 0 },
-        { 'Chỉ tiêu': 'Lợi nhuận gộp', 'Giá trị': biData.gross_profit || 0 },
+        { 'Chỉ tiêu': 'Giá vốn hàng bán (COGS)', 'Giá trị': biData.cogs ?? 'Chưa có dữ liệu hoặc quyền xem' },
+        { 'Chỉ tiêu': 'Lợi nhuận gộp', 'Giá trị': biData.gross_profit ?? 'Chưa có dữ liệu hoặc quyền xem' },
         { 'Chỉ tiêu': 'Tổng đơn hàng', 'Giá trị': biData.total_orders || 0 },
       ];
       exportCsv('Bao_Cao_Tong_Quan_LAPTOP99', rows);
@@ -277,94 +293,29 @@ export default function FeedbackReportsPage() {
   };
 
   // Tính toán các chỉ số phái sinh
-  const totalRevenue = Number(biData?.total_revenue || financeSummary?.total_paid || 0);
-  const totalOrders = Number(biData?.total_orders || financeSummary?.total_orders || 0);
-  const deliveredRevenue = Number(biData?.delivered_revenue || financeSummary?.delivered_revenue || 0);
-  const codPending = Number(financeSummary?.total_cod_pending || 0);
-  const aov = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
-  const cogs = Number(biData?.cogs || Math.round(totalRevenue * 0.78));
-  const grossProfit = Number(biData?.gross_profit || Math.max(0, totalRevenue - cogs));
-  const grossMarginPct = totalRevenue > 0 ? Math.round((grossProfit / totalRevenue) * 100) : 22;
+  const totalRevenue = Number(biData?.total_revenue ?? 0);
+  const totalOrders = Number(biData?.total_orders ?? 0);
+  const deliveredRevenue = Number(biData?.delivered_revenue ?? 0);
+  const codPending = Number(biData?.cod_pending ?? 0);
+  const paidOrders = Number(biData?.paid_orders ?? 0);
+  const aov = paidOrders ? Math.round(totalRevenue / paidOrders) : null;
+  const cogs = biData?.cogs ?? null;
+  const grossProfit = biData?.gross_profit ?? null;
+  const grossMarginPct = grossProfit != null && totalRevenue > 0 ? Math.round(grossProfit / totalRevenue * 100) : null;
+  const prevPeriod = biData?.prev_period || {};
+  const channelsData = biData?.channels || [];
+  const paymentMethodsData = biData?.payment_methods || [];
+  const regionsData = biData?.regions || [];
+  const stockByRamData = biData?.stock_by_ram || [];
+  const stockByStorageData = biData?.stock_by_storage || [];
+  const stockByCpuData = biData?.stock_by_cpu || [];
+  const stockByGpuData = biData?.stock_by_gpu || [];
 
-  const prevPeriod = biData?.prev_period || {
-    revenue: Math.round(totalRevenue * 0.88),
-    orders: Math.round(totalOrders * 0.9),
-    revenue_change_pct: 12,
-    orders_change_pct: 10,
-  };
-
-  // Kênh bán hàng
-  const channelsData = (biData?.channels && biData.channels.length > 0)
-    ? biData.channels
-    : [
-        { channel: 'Website LAPTOP99', order_count: Math.round(totalOrders * 0.55), revenue: Math.round(totalRevenue * 0.58) },
-        { channel: 'Showroom Hà Nội', order_count: Math.round(totalOrders * 0.25), revenue: Math.round(totalRevenue * 0.24) },
-        { channel: 'Showroom TP.HCM', order_count: Math.round(totalOrders * 0.15), revenue: Math.round(totalRevenue * 0.14) },
-        { channel: 'Sàn TMĐT / MXH', order_count: Math.round(totalOrders * 0.05), revenue: Math.round(totalRevenue * 0.04) },
-      ];
-
-  // Phương thức thanh toán
-  const paymentMethodsData = (biData?.payment_methods && biData.payment_methods.length > 0)
-    ? biData.payment_methods
-    : [
-        { method: 'Chuyển khoản VietQR 24/7', count: Math.round(totalOrders * 0.48), revenue: Math.round(totalRevenue * 0.52) },
-        { method: 'COD (Tiền mặt nhận hàng)', count: Math.round(totalOrders * 0.32), revenue: Math.round(totalRevenue * 0.28) },
-        { method: 'Trả góp 0% qua thẻ', count: Math.round(totalOrders * 0.14), revenue: Math.round(totalRevenue * 0.16) },
-        { method: 'Quẹt thẻ POS tại quầy', count: Math.round(totalOrders * 0.06), revenue: Math.round(totalRevenue * 0.04) },
-      ];
-
-  // Khu vực giao hàng
-  const regionsData = (biData?.regions && biData.regions.length > 0)
-    ? biData.regions
-    : [
-        { region: 'Miền Bắc (Hà Nội & lân cận)', order_count: Math.round(totalOrders * 0.45), revenue: Math.round(totalRevenue * 0.46) },
-        { region: 'Miền Nam (TP.HCM & lân cận)', order_count: Math.round(totalOrders * 0.35), revenue: Math.round(totalRevenue * 0.34) },
-        { region: 'Miền Trung (Đà Nẵng & lân cận)', order_count: Math.round(totalOrders * 0.12), revenue: Math.round(totalRevenue * 0.12) },
-        { region: 'Khu vực Tỉnh/Thành khác', order_count: Math.round(totalOrders * 0.08), revenue: Math.round(totalRevenue * 0.08) },
-      ];
-
-  // Tồn kho theo cấu hình thông số kỹ thuật thực tế (RAM, SSD, CPU, GPU)
-  const stockByRamData = (biData?.stock_by_ram && biData.stock_by_ram.length > 0)
-    ? biData.stock_by_ram
-    : [
-        { label: '16GB RAM', units: 695 },
-        { label: '8GB RAM', units: 328 },
-        { label: '32GB RAM', units: 45 },
-        { label: '18GB RAM', units: 10 },
-      ];
-
-  const stockByStorageData = (biData?.stock_by_storage && biData.stock_by_storage.length > 0)
-    ? biData.stock_by_storage
-    : [
-        { label: '512GB SSD', units: 833 },
-        { label: '1024GB SSD', units: 164 },
-        { label: '256GB SSD', units: 80 },
-        { label: '2048GB SSD', units: 1 },
-      ];
-
-  const stockByCpuData = (biData?.stock_by_cpu && biData.stock_by_cpu.length > 0)
-    ? biData.stock_by_cpu
-    : [
-        { label: 'Intel Core i5', units: 423 },
-        { label: 'Intel Core i7', units: 187 },
-        { label: 'Intel Core Ultra', units: 132 },
-        { label: 'Apple Silicon', units: 106 },
-        { label: 'AMD Ryzen 5', units: 93 },
-        { label: 'AMD Ryzen 7', units: 45 },
-        { label: 'Intel Core i9', units: 16 },
-        { label: 'Dòng CPU khác', units: 25 },
-      ];
-
-  const stockByGpuData = (biData?.stock_by_gpu && biData.stock_by_gpu.length > 0)
-    ? biData.stock_by_gpu
-    : [
-        { label: 'Onboard Graphics', units: 523 },
-        { label: 'RTX 4050', units: 123 },
-        { label: 'RTX 4060', units: 107 },
-        { label: 'Apple GPU', units: 106 },
-        { label: 'RTX 3050', units: 85 },
-        { label: 'Dòng GPU khác', units: 83 },
-      ];
+  if (biLoading) return <LoadingSpinner fullPage text="Đang tải số liệu báo cáo…" />;
+  if (biError) return <div role="alert" className="rounded border bg-white p-4">
+    <p>Không tải được số liệu báo cáo.</p>
+    <button className="mt-2 rounded bg-blue-600 px-3 py-2 text-white" onClick={fetchBiReports}>Thử lại</button>
+  </div>;
 
   return (
     <div className="space-y-4 text-xs font-sans pb-12 print:p-0 print:space-y-2">
@@ -397,32 +348,32 @@ export default function FeedbackReportsPage() {
             <HiOutlineArrowPath className={`w-4 h-4 ${biLoading ? 'animate-spin text-blue-600' : ''}`} />
           </button>
 
-          <button
+          {can('report:export') && <button
             onClick={handlePrintReport}
             className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-bold transition flex items-center gap-1.5"
             title="In trang báo cáo hoặc lưu dưới dạng PDF"
           >
             <HiOutlinePrinter className="w-4 h-4 text-gray-600" />
             <span>In / Xuất PDF</span>
-          </button>
+          </button>}
 
-          <button
+          {can('report:send') && <button
             onClick={() => setIsEmailModalOpen(true)}
             className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-bold border border-purple-200 transition flex items-center gap-1.5"
             title="Gửi báo cáo qua Email cho Ban Giám Đốc"
           >
             <HiOutlineEnvelope className="w-4 h-4 text-purple-600" />
             <span>Gửi Email Báo Cáo</span>
-          </button>
+          </button>}
 
-          <button
+          {can('report:export') && <button
             onClick={handleExportCurrentTab}
             className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-xs transition flex items-center space-x-1.5"
-            title="Tải file Excel / CSV về máy"
+            title="Tải file CSV về máy"
           >
             <HiOutlineArrowDownTray className="w-4 h-4" />
-            <span>Xuất Excel / CSV</span>
-          </button>
+            <span>Xuất CSV</span>
+          </button>}
         </div>
       </div>
 
@@ -441,8 +392,8 @@ export default function FeedbackReportsPage() {
               { id: 'today', label: 'Hôm nay' },
               { id: '7d', label: '7 ngày qua' },
               { id: '30d', label: '30 ngày' },
-              { id: 'quarter', label: 'Quý này' },
-              { id: 'year', label: 'Cả năm' },
+              { id: 'quarter', label: '90 ngày' },
+              { id: 'year', label: '365 ngày' },
               { id: 'all', label: 'Toàn thời gian' },
             ].map((t) => (
               <button
@@ -532,6 +483,7 @@ export default function FeedbackReportsPage() {
       {/* ============================================================== */}
       {activeTab === 'revenue' && (
         <div className="space-y-4">
+          <p className="text-gray-600">Số liệu bán hàng theo ngày đặt. Với bộ lọc danh mục, doanh thu tính toàn bộ các đơn có chứa sản phẩm thuộc danh mục đã chọn. Tồn kho là ảnh chụp hiện tại toàn hệ thống.</p>
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
@@ -543,7 +495,7 @@ export default function FeedbackReportsPage() {
               </div>
               <div className="text-lg font-black text-blue-700 mt-1">{fmtVND(totalRevenue)}</div>
               <div className="flex items-center gap-1 text-[10px] mt-1">
-                {prevPeriod.revenue_change_pct >= 0 ? (
+                {prevPeriod.revenue_change_pct == null ? <span>Chưa có kỳ tham chiếu</span> : prevPeriod.revenue_change_pct >= 0 ? (
                   <span className="text-emerald-600 font-bold flex items-center">
                     <HiOutlineArrowTrendingUp className="w-3 h-3 mr-0.5" /> +{prevPeriod.revenue_change_pct}%
                   </span>
@@ -564,7 +516,7 @@ export default function FeedbackReportsPage() {
                 </span>
               </div>
               <div className="text-lg font-black text-amber-700 mt-1">{fmtVND(cogs)}</div>
-              <div className="text-[10px] text-gray-400 mt-1">Chiếm ~{100 - grossMarginPct}% tổng doanh thu</div>
+              <div className="text-[10px] text-gray-400 mt-1">{grossMarginPct == null ? 'Chưa có giá vốn đầy đủ' : `Chiếm ${100 - grossMarginPct}% doanh thu`}</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
@@ -575,7 +527,7 @@ export default function FeedbackReportsPage() {
                 </span>
               </div>
               <div className="text-lg font-black text-emerald-600 mt-1">{fmtVND(grossProfit)}</div>
-              <div className="text-[10px] text-emerald-700 font-bold mt-1">Biên lợi nhuận gộp: {grossMarginPct}%</div>
+              <div className="text-[10px] text-emerald-700 font-bold mt-1">Biên lợi nhuận gộp: {percent(grossMarginPct)}</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
@@ -586,7 +538,7 @@ export default function FeedbackReportsPage() {
                 </span>
               </div>
               <div className="text-lg font-black text-purple-700 mt-1">{fmtVND(aov)}</div>
-              <div className="text-[10px] text-gray-400 mt-1">Bình quân chi tiêu / khách</div>
+              <div className="text-[10px] text-gray-400 mt-1">Bình quân mỗi đơn đã thanh toán</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
@@ -714,7 +666,7 @@ export default function FeedbackReportsPage() {
                 </div>
 
                 <div className="p-3 bg-blue-50/60 rounded-lg border border-blue-100 text-[11px] text-blue-900 leading-relaxed">
-                  💡 <strong>Gợi ý kinh doanh:</strong> Doanh thu thuần đạt đà tăng trưởng tốt, đề xuất đẩy mạnh thêm các dòng máy Laptop Đồ họa & Gaming có biên lợi nhuận cao (&gt; 25%) để tối đa hóa dòng tiền.
+                  Đối chiếu doanh thu theo kỳ và theo phương thức thanh toán.
                 </div>
               </div>
             </div>
@@ -732,24 +684,24 @@ export default function FeedbackReportsPage() {
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
               <span className="text-[11px] text-gray-500 font-medium">Tổng số đơn hàng</span>
               <div className="text-xl font-black text-gray-900 mt-1">{totalOrders} <span className="text-xs font-normal text-gray-500">đơn</span></div>
-              <div className="text-[10px] text-emerald-600 font-bold mt-1">Đã giao thành công: {financeSummary?.delivered_orders || Math.round(totalOrders * 0.9)}</div>
+              <div className="text-[10px] text-emerald-600 font-bold mt-1">Đã giao thành công: {biData?.delivered_orders ?? '—'}</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
               <span className="text-[11px] text-gray-500 font-medium">Tỷ lệ hủy đơn</span>
-              <div className="text-xl font-black text-rose-600 mt-1">{biData?.order_issues?.cancel_rate || 4}%</div>
-              <div className="text-[10px] text-gray-400 mt-1">{biData?.order_issues?.cancelled_count || 3} đơn bị hủy</div>
+              <div className="text-xl font-black text-rose-600 mt-1">{biData?.order_issues?.cancel_rate ?? 0}%</div>
+              <div className="text-[10px] text-gray-400 mt-1">{biData?.order_issues?.cancelled_count ?? 0} đơn bị hủy</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
               <span className="text-[11px] text-gray-500 font-medium">Tỷ lệ đổi trả hàng (RMA)</span>
-              <div className="text-xl font-black text-amber-600 mt-1">{biData?.order_issues?.return_rate || 2}%</div>
-              <div className="text-[10px] text-gray-400 mt-1">Nằm trong ngưỡng an toàn (&lt; 3%)</div>
+              <div className="text-xl font-black text-amber-600 mt-1">{biData?.order_issues?.return_rate ?? 0}%</div>
+              <div className="text-[10px] text-gray-400 mt-1">{biData?.order_issues?.returned_count ?? 0} đơn có phiếu đổi trả hoàn tất</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
               <span className="text-[11px] text-gray-500 font-medium">Thời gian giao hàng TB</span>
-              <div className="text-xl font-black text-blue-600 mt-1">{biData?.order_issues?.avg_delivery_hours || 24} <span className="text-xs font-normal text-gray-500">giờ</span></div>
+              <div className="text-xl font-black text-blue-600 mt-1">{biData?.order_issues?.avg_delivery_hours ?? '—'} <span className="text-xs font-normal text-gray-500">giờ</span></div>
               <div className="text-[10px] text-gray-400 mt-1">Từ lúc đặt tới lúc nhận máy</div>
             </div>
           </div>
@@ -976,7 +928,7 @@ export default function FeedbackReportsPage() {
                   <div key={p.id} className="flex justify-between items-center p-2.5 bg-amber-50/40 rounded-lg border border-amber-100 text-xs">
                     <div>
                       <span className="font-bold text-gray-900 block">{p.name}</span>
-                      <span className="text-[10px] text-gray-500 font-mono">Lượt xem: {p.view_count || 120} lượt</span>
+                      <span className="text-[10px] text-gray-500 font-mono">Lượt xem: {p.view_count ?? 0} lượt</span>
                     </div>
                     <div className="text-right">
                       <span className="text-amber-700 font-bold block">Tỷ lệ mua: {p.conversion_rate || '1.8'}%</span>
@@ -1203,29 +1155,29 @@ export default function FeedbackReportsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
               <span className="text-[11px] text-gray-500 font-medium">Tổng khách hàng hệ thống</span>
-              <div className="text-xl font-black text-gray-900 mt-1">{biData?.total_customers || 120} <span className="text-xs font-normal text-gray-500">người</span></div>
-              <div className="text-[10px] text-blue-600 font-bold mt-1">Tỷ lệ mua lại: {biData?.customer_metrics?.retentionRate || 38}%</div>
+              <div className="text-xl font-black text-gray-900 mt-1">{biData?.total_customers ?? '—'} <span className="text-xs font-normal text-gray-500">người</span></div>
+              <div className="text-[10px] text-blue-600 font-bold mt-1">Tỷ lệ mua lại: {percent(biData?.customer_metrics?.retentionRate)}</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
               <span className="text-[11px] text-gray-500 font-medium">Khách hàng VIP (&gt;100Tr)</span>
-              <div className="text-xl font-black text-amber-600 mt-1">12 <span className="text-xs font-normal text-amber-500">hội viên</span></div>
+              <div className="text-xl font-black text-amber-600 mt-1">{biData?.customer_metrics?.vipCount ?? '—'} <span className="text-xs font-normal text-amber-500">hội viên</span></div>
               <div className="text-[10px] text-gray-400 mt-1">Được hưởng đặc quyền VIP care</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
               <span className="text-[11px] text-gray-500 font-medium">Khách mới vs Khách quay lại</span>
-              <div className="text-xl font-black text-purple-700 mt-1">62% / 38%</div>
-              <div className="text-[10px] text-gray-400 mt-1">Độ trung thành thương hiệu cao</div>
+              <div className="text-xl font-black text-purple-700 mt-1"> {(biData?.customer_metrics?.newVsReturning || []).map(({ value }) => percent(value)).join(' / ') || '—'}</div>
+              <div className="text-[10px] text-gray-400 mt-1">Tỷ lệ theo hồ sơ khách hàng</div>
             </div>
 
             <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
               <span className="text-[11px] text-gray-500 font-medium">Đánh giá sao trung bình</span>
               <div className="text-xl font-black text-amber-500 mt-1 flex items-center gap-1">
-                <span>4.9</span>
+                <span>{biData?.customer_metrics?.averageRating ?? '—'}</span>
                 <HiStar className="w-5 h-5 text-amber-400 inline" />
               </div>
-              <div className="text-[10px] text-gray-400 mt-1">Từ 350+ đánh giá người dùng</div>
+              <div className="text-[10px] text-gray-400 mt-1">{biData?.customer_metrics?.reviewCount ?? 0} đánh giá đã công khai</div>
             </div>
           </div>
 
@@ -1336,307 +1288,30 @@ export default function FeedbackReportsPage() {
       )}
 
       {/* ============================================================== */}
-      {/* TAB 6: BÁO CÁO BẢO HÀNH & HẬU MÃI (RMA)                        */}
-      {/* ============================================================== */}
-      {activeTab === 'warranty' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Tổng yêu cầu RMA</span>
-              <div className="text-xl font-black text-rose-600 mt-1">18 <span className="text-xs font-normal text-gray-500">phiếu</span></div>
-              <div className="text-[10px] text-gray-400 mt-1">Đổi mới / Sửa chữa theo Serial</div>
-            </div>
+      {activeTab === 'warranty' && <div className="grid gap-4 md:grid-cols-2">
+        <ReportTable title="Phiếu đổi trả theo trạng thái" columns={['Trạng thái', 'Số phiếu']}
+          rows={(biData?.warranty_metrics?.rma_by_status || []).map((row) => [row.status, row.count])} />
+        <ReportTable title="Lý do khách gửi yêu cầu" columns={['Lý do', 'Số phiếu']}
+          rows={(biData?.warranty_metrics?.common_defects || []).map((row) => [row.reason, row.count])} />
+      </div>}
 
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Thời gian xử lý TB</span>
-              <div className="text-xl font-black text-blue-600 mt-1">2.4 <span className="text-xs font-normal text-gray-500">ngày</span></div>
-              <div className="text-[10px] text-emerald-600 font-bold mt-1">Đạt cam kết SLA 72h</div>
-            </div>
+      {activeTab === 'marketing' && <ReportTable title="Mã giảm giá đã dùng trong kỳ" columns={['Mã', 'Tên', 'Trạng thái', 'Đơn đã áp dụng', 'Doanh thu đã thu']}
+        rows={(biData?.promo_stats || []).map((row) => [row.code, row.title, row.status, row.used_count, fmtVND(row.revenue)])} />}
 
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Doanh thu Dịch vụ phụ</span>
-              <div className="text-xl font-black text-emerald-600 mt-1">12.500.000 ₫</div>
-              <div className="text-[10px] text-gray-400 mt-1">Cài win, vệ sinh, nâng cấp RAM</div>
-            </div>
+      {activeTab === 'staff' && <ReportTable title="Doanh số theo nhân viên được phân công" columns={['Nhân viên', 'Vai trò', 'Chi nhánh', 'Đơn phụ trách', 'Doanh thu đã thu', 'Doanh thu đơn đã giao']}
+        rows={(biData?.staff_sales || []).map((row) => [row.full_name, row.role, row.branch, row.order_count, fmtVND(row.total_sales), fmtVND(row.delivered_sales)])} />}
 
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Tỷ lệ hài lòng sau bảo hành</span>
-              <div className="text-xl font-black text-purple-700 mt-1">98.5%</div>
-              <div className="text-[10px] text-gray-400 mt-1">Khách đánh giá 5 sao</div>
-            </div>
-          </div>
+      {activeTab === 'finance' && <ReportTable title="Đối soát theo kỳ" columns={['Chỉ tiêu', 'Giá trị']}
+        rows={biData ? [
+          ['Doanh thu đã thu sau hoàn tiền', fmtVND(totalRevenue)],
+          ['Doanh thu đơn đã giao', fmtVND(deliveredRevenue)],
+          ['COD chờ thu', fmtVND(codPending)],
+          ['Phí giao dịch đã ghi nhận', fmtVND(biData.gateway_fees)],
+          ['Giá vốn tính theo giá nhập đang lưu', fmtVND(cogs)],
+          ['Lợi nhuận gộp theo giá nhập đang lưu', fmtVND(grossProfit)],
+          ['Thuế VAT và chi phí vận hành', 'Chưa có dữ liệu kế toán'],
+        ] : []} />}
 
-          {/* Common Defects & Services */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-              <h2 className="text-sm font-bold text-gray-900 mb-3">Thống Kê Các Lỗi Kỹ Thuật Thường Gặp Của Laptop</h2>
-              <div className="space-y-2.5">
-                {[
-                  { defect: 'Màn hình bị sọc / nhấp nháy', count: 6, pct: 33 },
-                  { defect: 'Liệt phím / bàn phím kẹt phím', count: 4, pct: 22 },
-                  { defect: 'Chai pin / sạc không vào điện', count: 3, pct: 17 },
-                  { defect: 'Quạt tản nhiệt kêu to / nóng máy', count: 3, pct: 17 },
-                  { defect: 'Lỗi Windows / màn hình xanh BSOD', count: 2, pct: 11 },
-                ].map((d, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-semibold text-gray-800">{d.defect}</span>
-                      <span className="font-mono text-gray-500">{d.count} máy ({d.pct}%)</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-rose-500 rounded-full" style={{ width: `${d.pct}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-              <h2 className="text-sm font-bold text-gray-900 mb-3">Doanh Thu Các Gói Dịch Vụ Phụ & Nâng Cấp</h2>
-              <div className="space-y-2.5">
-                {[
-                  { service: 'Vệ sinh laptop tra keo gốm tản nhiệt', count: 45, revenue: 6750000 },
-                  { service: 'Nâng cấp dung lượng RAM 16GB / 32GB', count: 18, revenue: 16200000 },
-                  { service: 'Nâng cấp ổ cứng SSD NVMe 1TB / 2TB', count: 12, revenue: 14400000 },
-                  { service: 'Cài đặt hệ điều hành Windows bản quyền & Office', count: 32, revenue: 3200000 },
-                ].map((s, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-2.5 bg-gray-50 rounded-lg">
-                    <div>
-                      <span className="font-semibold text-gray-800 block">{s.service}</span>
-                      <span className="text-[10px] text-gray-400">Đã phục vụ: {s.count} lượt</span>
-                    </div>
-                    <span className="font-black text-emerald-600 font-mono">{fmtVND(s.revenue)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
-      {/* TAB 7: BÁO CÁO MARKETING & KHUYẾN MÃI                          */}
-      {/* ============================================================== */}
-      {activeTab === 'marketing' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Doanh thu qua Voucher</span>
-              <div className="text-xl font-black text-purple-700 mt-1">{fmtVND(totalRevenue * 0.35)}</div>
-              <div className="text-[10px] text-purple-600 font-bold mt-1">Chiếm 35% doanh thu toàn hệ thống</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Tỷ lệ chuyển đổi (CR)</span>
-              <div className="text-xl font-black text-emerald-600 mt-1">3.45%</div>
-              <div className="text-[10px] text-gray-400 mt-1">Lượt mua / lượt truy cập website</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Giỏ hàng bỏ quên</span>
-              <div className="text-xl font-black text-amber-600 mt-1">14.2%</div>
-              <div className="text-[10px] text-gray-400 mt-1">Đã cấu hình email nhắc giỏ hàng</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Chỉ số ROAS Quảng cáo</span>
-              <div className="text-xl font-black text-blue-600 mt-1">6.8x</div>
-              <div className="text-[10px] text-emerald-600 font-bold mt-1">Chi 1đ ads đem về 6.8đ doanh thu</div>
-            </div>
-          </div>
-
-          {/* Promo Table */}
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-            <h2 className="text-sm font-bold text-gray-900 mb-3">Hiệu Quả Các Chương Trình Mã Giảm Giá & Flash Sale</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-semibold">
-                    <th className="py-2.5 px-3">Mã khuyến mãi</th>
-                    <th className="py-2.5 px-3">Tên chương trình</th>
-                    <th className="py-2.5 px-3">Mức giảm</th>
-                    <th className="py-2.5 px-3 text-center">Lượt áp dụng</th>
-                    <th className="py-2.5 px-3 text-right">Doanh thu kéo theo</th>
-                    <th className="py-2.5 px-3 text-center">Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {[
-                    { code: 'LAPTOP99VIP', name: 'Tri ân khách hàng thân thiết', discount: 'Giảm 500.000 ₫', used: 48, revenue: 720000000, status: 'Đang chạy' },
-                    { code: 'BACK2SCHOOL', name: 'Đồng hành mùa tựu trường', discount: 'Giảm 8%', used: 64, revenue: 890000000, status: 'Đang chạy' },
-                    { code: 'GAMINGPRO', name: 'Tuần lễ Laptop Gaming RTX 40 series', discount: 'Giảm 1.000.000 ₫', used: 26, revenue: 650000000, status: 'Đang chạy' },
-                    { code: 'MACBOOKNEW', name: 'Đặc quyền mua sắm Apple Silicon', discount: 'Giảm 600.000 ₫', used: 31, revenue: 840000000, status: 'Đang chạy' },
-                  ].map((p, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="py-2.5 px-3 font-mono font-bold text-purple-700">{p.code}</td>
-                      <td className="py-2.5 px-3 font-semibold text-gray-900">{p.name}</td>
-                      <td className="py-2.5 px-3 text-rose-600 font-medium">{p.discount}</td>
-                      <td className="py-2.5 px-3 text-center font-bold">{p.used} lượt</td>
-                      <td className="py-2.5 px-3 text-right font-black text-gray-900">{fmtVND(p.revenue)}</td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                          {p.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
-      {/* TAB 8: BÁO CÁO NHÂN VIÊN & CHI NHÁNH                           */}
-      {/* ============================================================== */}
-      {activeTab === 'staff' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Nhân viên xuất sắc nhất</span>
-              <div className="text-lg font-black text-blue-700 mt-1">Nguyễn Văn Hiếu</div>
-              <div className="text-[10px] text-emerald-600 font-bold mt-1">Doanh số: 345.000.000 ₫</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Tỷ lệ hoàn thành KPI</span>
-              <div className="text-xl font-black text-emerald-600 mt-1">112.5%</div>
-              <div className="text-[10px] text-gray-400 mt-1">Vượt 12.5% chỉ tiêu tháng</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Hoa hồng dự kiến chi trả</span>
-              <div className="text-xl font-black text-purple-700 mt-1">{fmtVND(totalRevenue * 0.02)}</div>
-              <div className="text-[10px] text-gray-400 mt-1">Tính theo mức 2% doanh số gộp</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Thời gian phản hồi khách</span>
-              <div className="text-xl font-black text-teal-600 mt-1">3.2 <span className="text-xs font-normal text-gray-500">phút</span></div>
-              <div className="text-[10px] text-gray-400 mt-1">Tư vấn qua chat & hotline</div>
-            </div>
-          </div>
-
-          {/* Staff Sales Table */}
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-            <h2 className="text-sm font-bold text-gray-900 mb-3">Bảng Doanh Số & Tiến Độ KPI Của Nhân Viên Kinh Doanh</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 text-gray-600 font-semibold">
-                    <th className="py-2.5 px-3">Họ và tên</th>
-                    <th className="py-2.5 px-3">Chi nhánh phụ trách</th>
-                    <th className="py-2.5 px-3">Vai trò</th>
-                    <th className="py-2.5 px-3 text-center">Đơn đã chốt</th>
-                    <th className="py-2.5 px-3 text-right">Doanh số thực hiện</th>
-                    <th className="py-2.5 px-3 text-center">Tiến độ KPI</th>
-                    <th className="py-2.5 px-3 text-right">Hoa hồng tạm tính</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {[
-                    { name: 'Nguyễn Văn Hiếu', branch: 'Trụ sở chính HQ / Hà Nội', role: 'Sales Executive', orders: 18, sales: 345000000, kpi: 125, commission: 6900000 },
-                    { name: 'Trần Thị Thu Thảo', branch: 'Showroom TP. Hồ Chí Minh', role: 'Sales Executive', orders: 14, sales: 280000000, kpi: 110, commission: 5600000 },
-                    { name: 'Lê Hoàng Nam', branch: 'Showroom Hà Nội', role: 'Sales Executive', orders: 12, sales: 240000000, kpi: 95, commission: 4800000 },
-                    { name: 'Phạm Minh Tuấn', branch: 'Chi nhánh Đà Nẵng', role: 'Sales Executive', orders: 8, sales: 165000000, kpi: 88, commission: 3300000 },
-                  ].map((s, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="py-2.5 px-3 font-bold text-gray-900">{s.name}</td>
-                      <td className="py-2.5 px-3 text-gray-600">{s.branch}</td>
-                      <td className="py-2.5 px-3 text-gray-500">{s.role}</td>
-                      <td className="py-2.5 px-3 text-center font-bold text-blue-600">{s.orders}</td>
-                      <td className="py-2.5 px-3 text-right font-black text-gray-900">{fmtVND(s.sales)}</td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          s.kpi >= 100 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {s.kpi}%
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-600">{fmtVND(s.commission)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
-      {/* TAB 9: BÁO CÁO TÀI CHÍNH & THUẾ VAT                             */}
-      {/* ============================================================== */}
-      {activeTab === 'finance' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Dòng tiền thực thu</span>
-              <div className="text-xl font-black text-emerald-600 mt-1">{fmtVND(totalRevenue)}</div>
-              <div className="text-[10px] text-gray-400 mt-1">Đã vào tài khoản ngân hàng / quỹ tiền mặt</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Công nợ phải thu</span>
-              <div className="text-xl font-black text-amber-600 mt-1">{fmtVND(codPending)}</div>
-              <div className="text-[10px] text-gray-400 mt-1">COD đơn vị giao vận & đối tác giữ</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Thuế VAT ước tính (8-10%)</span>
-              <div className="text-xl font-black text-blue-600 mt-1">{fmtVND(Math.round(totalRevenue * 0.08))}</div>
-              <div className="text-[10px] text-gray-400 mt-1">Thuế GTGT đầu ra khấu trừ</div>
-            </div>
-
-            <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs">
-              <span className="text-[11px] text-gray-500 font-medium">Phí cổng thanh toán / POS</span>
-              <div className="text-xl font-black text-rose-600 mt-1">{fmtVND(totalRevenue * 0.012)}</div>
-              <div className="text-[10px] text-gray-400 mt-1">Phí đối soát VietQR / Ngân hàng ~1.2%</div>
-            </div>
-          </div>
-
-          {/* P&L Statement */}
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-            <h2 className="text-sm font-bold text-gray-900 mb-3">Báo Cáo Kết Quả Hoạt Động Kinh Doanh Tóm Tắt (P&L)</h2>
-            <div className="divide-y divide-gray-100 text-xs">
-              <div className="flex justify-between py-2.5 font-bold text-gray-800">
-                <span>1. Doanh thu bán hàng và cung cấp dịch vụ</span>
-                <span className="font-mono text-gray-900">{fmtVND(Math.round(totalRevenue * 1.05))}</span>
-              </div>
-              <div className="flex justify-between py-2 text-gray-600 pl-4">
-                <span>- Các khoản giảm trừ doanh thu (Chiết khấu, Voucher)</span>
-                <span className="font-mono text-rose-600">({fmtVND(Math.round(totalRevenue * 0.05))})</span>
-              </div>
-              <div className="flex justify-between py-2.5 font-bold text-blue-900 bg-blue-50/40 px-2 rounded">
-                <span>2. Doanh thu thuần về bán hàng</span>
-                <span className="font-mono font-black">{fmtVND(totalRevenue)}</span>
-              </div>
-              <div className="flex justify-between py-2 text-gray-600 pl-4">
-                <span>- Giá vốn hàng bán (COGS)</span>
-                <span className="font-mono text-amber-700">({fmtVND(cogs)})</span>
-              </div>
-              <div className="flex justify-between py-2.5 font-bold text-emerald-900 bg-emerald-50/40 px-2 rounded">
-                <span>3. Lợi nhuận gộp về bán hàng</span>
-                <span className="font-mono font-black">{fmtVND(grossProfit)}</span>
-              </div>
-              <div className="flex justify-between py-2 text-gray-600 pl-4">
-                <span>- Chi phí bán hàng & hoa hồng nhân viên</span>
-                <span className="font-mono text-rose-600">({fmtVND(Math.round(totalRevenue * 0.02))})</span>
-              </div>
-              <div className="flex justify-between py-2 text-gray-600 pl-4">
-                <span>- Chi phí quản lý doanh nghiệp & phí cổng thanh toán</span>
-                <span className="font-mono text-rose-600">({fmtVND(Math.round(totalRevenue * 0.015))})</span>
-              </div>
-              <div className="flex justify-between py-3 font-black text-sm text-emerald-700 bg-emerald-100/60 px-3 rounded-lg mt-2">
-                <span>4. LỢI NHUẬN RÒNG TẠM TÍNH (NET PROFIT)</span>
-                <span className="font-mono text-base">{fmtVND(Math.round(grossProfit - totalRevenue * 0.035))}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
       {/* MODAL TRẢ LỜI ĐÁNH GIÁ                                         */}
       {/* ============================================================== */}
       {replyingReview && (
@@ -1715,19 +1390,7 @@ export default function FeedbackReportsPage() {
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-700 mb-1">Loại báo cáo xuất *</label>
-                <select
-                  value={emailForm.reportType}
-                  onChange={(e) => setEmailForm({ ...emailForm, reportType: e.target.value })}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-600 text-xs bg-white"
-                >
-                  <option value="all">Báo cáo Tổng hợp toàn diện (Đầy đủ 9 phần)</option>
-                  <option value="revenue">Báo cáo Doanh thu & Lợi nhuận P&L</option>
-                  <option value="inventory">Báo cáo Tồn kho & Cảnh báo nhập hàng</option>
-                  <option value="orders">Báo cáo Đơn hàng & Tỷ lệ giao</option>
-                </select>
-              </div>
+
 
               <div>
                 <label className="block font-bold text-gray-700 mb-1">Ghi chú gửi kèm</label>

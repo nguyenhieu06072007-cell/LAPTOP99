@@ -5,11 +5,12 @@ import { HiBars3, HiMagnifyingGlass, HiBell, HiChevronDown, HiXMark, HiOutlineCo
 import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import api from '../../api/axios';
+import toast from 'react-hot-toast';
 
 export default function AdminLayout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [userDropdown, setUserDropdown] = useState(false);
-  const { isAuthenticated, loading, user, logout } = useAuth();
+  const { isAuthenticated, loading, user, logout, can } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -47,6 +48,7 @@ export default function AdminLayout() {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchRef = useRef(null);
+  const searchSequence = useRef(0);
   const notificationRef = useRef(null);
 
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function AdminLayout() {
 
   const handleSearchChange = async (e) => {
     const val = e.target.value;
+    const currentSearch = ++searchSequence.current;
     setGlobalSearch(val);
     if (!val || val.trim().length < 2) {
       setSearchResults(null);
@@ -75,32 +78,21 @@ export default function AdminLayout() {
     setShowSearchDropdown(true);
 
     try {
-      // 1. Tìm sản phẩm qua API backend
-      const res = await api.get('/products', { params: { search: val.trim(), limit: 4 } });
-      const products = res.data?.data || [];
-
-      // 2. Tìm đơn hàng & khách hàng
-      const sampleOrders = [
-        { id: 'DH-2026-001', customer: 'Nguyễn Văn An', phone: '0912345678', total: 62990000, product: 'Dell XPS 14 9440', serial: 'SN-DELL-9440-88219' },
-        { id: 'DH-2026-002', customer: 'Trần Thị Bích Ngọc', phone: '0987654321', total: 49990000, product: 'MacBook Pro 14 M3 Pro', serial: 'SN-APL-MBP14-3312' },
-        { id: 'DH-2026-003', customer: 'Lê Hoàng Long', phone: '0903334444', total: 49990000, product: 'Asus ROG Strix G16', serial: 'SN-ASUS-G16-9901' },
-        { id: 'DH-2026-004', customer: 'Phạm Minh Tuấn', phone: '0934567890', total: 52990000, product: 'Lenovo ThinkPad X1 Carbon Gen 11', serial: 'SN-LNV-X1C-1102' },
-      ];
-      const matchingOrders = sampleOrders.filter(o => 
-        o.id.toLowerCase().includes(val.toLowerCase()) || 
-        o.customer.toLowerCase().includes(val.toLowerCase()) || 
-        o.phone.includes(val) ||
-        o.serial.toLowerCase().includes(val.toLowerCase())
-      );
-
-      setSearchResults({
-        products,
-        orders: matchingOrders,
-      });
+      const params = { search: val.trim(), limit: 4 };
+      const [productResult, orderResult] = await Promise.allSettled([
+        can('product:read') ? api.get('/products', { params }) : null,
+        can(['order:read:all', 'order:read:own']) ? api.get('/orders', { params }) : null,
+      ]);
+      const products = productResult.value?.data?.data || [];
+      const orders = (orderResult.value?.data?.data || []).map((order) => ({
+        id: order.code, customer: order.customer_name, total: order.total_amount,
+        phone: order.customer_phone || '—', product: order.product_name || '—',
+      }));
+      if (currentSearch === searchSequence.current) setSearchResults({ products, orders });
     } catch (err) {
       console.error('Search error', err);
     } finally {
-      setIsSearching(false);
+      if (currentSearch === searchSequence.current) setIsSearching(false);
     }
   };
 
@@ -112,18 +104,12 @@ export default function AdminLayout() {
   };
 
   const clearSearch = () => {
+    searchSequence.current++;
+    setIsSearching(false);
     setGlobalSearch('');
     setSearchResults(null);
     setShowSearchDropdown(false);
   };
-
-  if (loading) {
-    return <LoadingSpinner fullPage text="Đang tải dữ liệu..." />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
 
   const [notificationOpen, setNotificationOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -133,196 +119,94 @@ export default function AdminLayout() {
   });
   const [notificationTab, setNotificationTab] = useState('all');
   const [notifications, setNotifications] = useState([]);
-  const [notifLoading, setNotifLoading] = useState(false);
-
-  // Helper format relative time
-  const formatTimeAgo = (dateStr) => {
-    if (!dateStr) return 'Vừa xong';
-    const now = new Date();
-    const past = new Date(dateStr);
-    const diffMs = now - past;
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHr = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHr / 24);
-
-    if (diffSec < 60) return 'Vừa xong';
-    if (diffMin < 60) return `${diffMin} phút trước`;
-    if (diffHr < 24) return `${diffHr} giờ trước`;
-    if (diffDay === 1) return 'Hôm qua';
-    if (diffDay < 7) return `${diffDay} ngày trước`;
-    return past.toLocaleDateString('vi-VN');
-  };
-
-  const getReadNotifIds = () => {
-    try {
-      const stored = localStorage.getItem('laptop99_admin_read_notifs');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const saveReadNotifId = (id) => {
-    try {
-      const list = getReadNotifIds();
-      if (!list.includes(id)) {
-        list.push(id);
-        localStorage.setItem('laptop99_admin_read_notifs', JSON.stringify(list));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const fetchRealNotifications = async () => {
-    try {
-      const readIds = getReadNotifIds();
-
-      // 1. Thử gọi API notifications chính thức từ backend
-      try {
-        const res = await api.get('/notifications?limit=30');
-        if (res.data?.data && Array.isArray(res.data.data)) {
-          const merged = res.data.data.map((item) => ({
-            ...item,
-            read: item.read || readIds.includes(item.id),
-          }));
-          setNotifications(merged);
-          return;
-        }
-      } catch (apiErr) {
-        // Fallback tự động tổng hợp từ orders, inventory và rma
-      }
-
-      // 2. Fallback resilient: Tổng hợp trực tiếp từ orders, inventory và rma
-      const [ordersRes, stockRes, rmasRes] = await Promise.allSettled([
-        api.get('/orders?limit=15'),
-        api.get('/inventory/low-stock'),
-        api.get('/orders/rmas/list?limit=6'),
-      ]);
-
-      const list = [];
-
-      // Đơn hàng thực tế phát sinh từ storefront khách hàng
-      if (ordersRes.status === 'fulfilled' && ordersRes.value.data) {
-        const rawOrders = Array.isArray(ordersRes.value.data)
-          ? ordersRes.value.data
-          : (ordersRes.value.data.data || []);
-        rawOrders.slice(0, 15).forEach((o) => {
-          const isPendingVerif = o.payment_verification_status === 'pending_verification';
-          const orderDate = o.ordered_at || o.created_at;
-          const totalStr = Number(o.total_amount || 0).toLocaleString('vi-VN') + ' ₫';
-          if (isPendingVerif) {
-            list.push({
-              id: `pay-${o.id}`,
-              type: 'order',
-              subType: 'payment_verify',
-              title: `Xác nhận chuyển khoản: #${o.code}`,
-              message: `Khách hàng ${o.customer_name || 'Khách'} đã gửi xác nhận chuyển khoản (${totalStr}) - Chờ đối soát kế toán.`,
-              time: formatTimeAgo(orderDate),
-              timestamp: new Date(orderDate || Date.now()).toISOString(),
-              read: readIds.includes(`pay-${o.id}`),
-              link: '/orders',
-            });
-          } else {
-            let statusText = 'Mới đặt hàng';
-            let isRead = readIds.includes(`ord-${o.id}`);
-            if (o.status === 'confirmed') statusText = 'Đã duyệt';
-            else if (o.status === 'shipping') statusText = 'Đang giao hàng';
-            else if (o.status === 'delivered') { statusText = 'Giao thành công'; isRead = true; }
-            else if (o.status === 'cancelled') { statusText = 'Đã hủy đơn'; isRead = true; }
-
-            list.push({
-              id: `ord-${o.id}`,
-              type: 'order',
-              subType: o.status,
-              title: o.status === 'pending' ? `Đơn hàng mới: #${o.code}` : `Đơn #${o.code} (${statusText})`,
-              message: `Khách ${o.customer_name || 'Khách'} đặt ${o.product_name || 'sản phẩm'} (${totalStr}).`,
-              time: formatTimeAgo(orderDate),
-              timestamp: new Date(orderDate || Date.now()).toISOString(),
-              read: isRead,
-              link: '/orders',
-            });
-          }
-        });
-      }
-
-      // Cảnh báo tồn kho thực tế
-      if (stockRes.status === 'fulfilled' && stockRes.value.data) {
-        const rawStock = Array.isArray(stockRes.value.data)
-          ? stockRes.value.data
-          : (stockRes.value.data.data || []);
-        rawStock.slice(0, 8).forEach((p) => {
-          const isOut = (p.stock_quantity ?? p.stock) === 0;
-          list.push({
-            id: `stock-${p.id}`,
-            type: 'stock',
-            subType: isOut ? 'out_of_stock' : 'low_stock',
-            title: isOut ? 'Hết hàng trong kho (Out of Stock)' : 'Cảnh báo tồn kho tối thiểu',
-            message: `"${p.name}" (SKU: ${p.sku}) ${isOut ? 'đã hết sạch máy trong kho.' : `chỉ còn ${p.stock_quantity ?? p.stock} máy (ngưỡng: ${p.low_stock_threshold || 3}).`}`,
-            time: formatTimeAgo(p.updated_at),
-            timestamp: new Date(p.updated_at || Date.now()).toISOString(),
-            read: readIds.includes(`stock-${p.id}`),
-            link: '/inventory',
-          });
-        });
-      }
-
-      // Yêu cầu đổi trả RMA từ storefront
-      if (rmasRes.status === 'fulfilled' && rmasRes.value.data) {
-        const rawRmas = Array.isArray(rmasRes.value.data)
-          ? rmasRes.value.data
-          : (rmasRes.value.data.data || []);
-        rawRmas.slice(0, 6).forEach((r) => {
-          list.push({
-            id: `rma-${r.id}`,
-            type: 'rma',
-            subType: r.status,
-            title: `Yêu cầu đổi trả ${r.code} (${r.status || 'Chờ duyệt'})`,
-            message: `Đơn #${r.order_code} (${r.product_name || 'Sản phẩm'}): ${r.reason || 'Yêu cầu kiểm định'}`,
-            time: formatTimeAgo(r.created_at),
-            timestamp: new Date(r.created_at || Date.now()).toISOString(),
-            read: readIds.includes(`rma-${r.id}`) || r.status === 'Hoàn tất' || r.status === 'Từ chối',
-            link: '/returns',
-          });
-        });
-      }
-
-      // Sắp xếp thời gian thực mới nhất lên đầu
-      list.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      setNotifications(list);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-    }
-  };
+  const [notifError, setNotifError] = useState(false);
+  const seen = useRef(new Set());
+  const ready = useRef(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const refreshNotifications = useRef(null);
+  const [markingRead, setMarkingRead] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchRealNotifications();
-      const interval = setInterval(fetchRealNotifications, 25000);
-      return () => clearInterval(interval);
+    if (!isAuthenticated || !user?.id) return;
+    let disposed = false;
+    let loadingNotifications = false;
+    let refreshQueued = false;
+    let timer;
+    const controller = new AbortController();
+    ready.current = false;
+    seen.current = new Set();
+    setNotifications([]);
+    setUnreadCount(0);
+    async function refresh() {
+      if (disposed) return;
+      if (loadingNotifications) {
+        refreshQueued = true;
+        return;
+      }
+      loadingNotifications = true;
+      try {
+        const { data } = await api.get('/notifications', {
+          params: { limit: 50 }, timeout: 15000, signal: controller.signal,
+        });
+        if (disposed) return;
+        const events = data.data || [];
+        if (ready.current) {
+          const incoming = events.filter((event) => !seen.current.has(event.id) && !event.read);
+          if (incoming.length) {
+            toast(incoming.length === 1 ? incoming[0].title : `Có ${incoming.length} thông báo mới`, { icon: '🔔' });
+          }
+        }
+        for (const event of events) seen.current.add(event.id);
+        if (seen.current.size > 1000) seen.current = new Set([...seen.current].slice(-500));
+        ready.current = true;
+        setNotifications(events.map((event) => ({
+          ...event, time: new Date(event.timestamp).toLocaleString('vi-VN'),
+        })));
+        setUnreadCount(Number(data.unread_count || 0));
+        setNotifError(false);
+      } catch {
+        if (!disposed) setNotifError(true);
+      } finally {
+        loadingNotifications = false;
+        if (!disposed) {
+          clearTimeout(timer);
+          if (refreshQueued) {
+            refreshQueued = false;
+            refresh();
+          } else {
+            timer = setTimeout(refresh, 10000);
+          }
+        }
+      }
     }
-  }, [isAuthenticated]);
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVisible);
+    refreshNotifications.current = refresh;
+    refresh();
+    return () => {
+      refreshNotifications.current = null;
+      disposed = true;
+      controller.abort();
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [isAuthenticated, user?.id]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAllAsRead = () => {
-    const allIds = notifications.map((n) => n.id);
+  const markRead = async (selection) => {
+    setMarkingRead(true);
     try {
-      localStorage.setItem('laptop99_admin_read_notifs', JSON.stringify(allIds));
-    } catch (e) {}
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const handleNotificationClick = (notif) => {
-    saveReadNotifId(notif.id);
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
-    );
-    setNotificationOpen(false);
-    if (notif.link) {
-      navigate(notif.link);
+      await api.post('/notifications/read', selection);
+      refreshNotifications.current?.();
+    } catch {
+      toast.error('Không lưu được trạng thái đã đọc. Vui lòng thử lại.');
+    } finally {
+      setMarkingRead(false);
     }
+  };
+  const handleNotificationClick = (event) => {
+    if (!event.read) markRead({ ids: [event.id] });
+    setNotificationOpen(false);
+    if (event.link) navigate(event.link);
   };
 
   const getBreadcrumbs = () => {
@@ -345,10 +229,19 @@ export default function AdminLayout() {
   };
 
   const filteredNotifs = notifications.filter((n) => {
+    if (notificationTab === 'review') return n.type === 'review';
     if (notificationTab === 'stock') return n.type === 'stock';
     if (notificationTab === 'order') return n.type === 'order' || n.type === 'rma' || n.type === 'tradein';
     return true;
   });
+
+  if (loading) {
+    return <LoadingSpinner fullPage text="Đang tải dữ liệu..." />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   return (
     <div className="flex h-screen bg-[#f3f4f6] overflow-hidden font-sans">
@@ -464,7 +357,7 @@ export default function AdminLayout() {
                                 key={o.id}
                                 onClick={() => {
                                   clearSearch();
-                                  navigate('/orders');
+                                  navigate(`/orders?search=${encodeURIComponent(o.id)}`);
                                 }}
                                 className="flex items-center justify-between p-2 hover:bg-purple-50/60 rounded-lg cursor-pointer transition"
                               >
@@ -553,7 +446,8 @@ export default function AdminLayout() {
                     </div>
                     {unreadCount > 0 && (
                       <button
-                        onClick={markAllAsRead}
+                        onClick={() => markRead({ all: true })}
+                        disabled={markingRead}
                         className="text-[11px] text-blue-600 hover:underline font-semibold"
                       >
                         Đã đọc tất cả
@@ -565,6 +459,7 @@ export default function AdminLayout() {
                   <div className="flex border-b border-gray-100 bg-gray-50/50 px-2 pt-1 text-[11px]">
                     {[
                       { id: 'all', label: `Tất cả (${notifications.length})` },
+                      { id: 'review', label: 'Đánh giá' },
                       { id: 'stock', label: `Cảnh báo kho (${notifications.filter((n) => n.type === 'stock').length})` },
                       { id: 'order', label: `Đơn & Đổi trả (${notifications.filter((n) => n.type === 'order' || n.type === 'rma' || n.type === 'tradein').length})` },
                     ].map((t) => (
@@ -582,10 +477,14 @@ export default function AdminLayout() {
                     ))}
                   </div>
 
+                  {notifError && notifications.length > 0 && (
+                    <p className="px-3 py-2 text-xs text-amber-700">Chưa lấy được thông báo mới. Sẽ tự thử lại.</p>
+                  )}
+
                   {/* Notification List */}
                   <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
                     {notifications.length === 0 ? (
-                      <div className="p-6 text-center text-gray-400 italic">Đang tải hoặc chưa có thông báo</div>
+                      <div className="p-6 text-center text-gray-400 italic">{notifError ? 'Chưa kết nối được hệ thống thông báo' : 'Chưa có thông báo'}</div>
                     ) : filteredNotifs.length === 0 ? (
                       <div className="p-6 text-center text-gray-400 italic">Không có thông báo trong mục này</div>
                     ) : (
@@ -601,6 +500,9 @@ export default function AdminLayout() {
                         } else if (n.type === 'rma') {
                           badgeColor = 'bg-purple-100 text-purple-700 border-purple-200';
                           badgeText = 'ĐỔI TRẢ';
+                        } else if (n.type === 'review') {
+                          badgeColor = 'bg-violet-100 text-violet-700 border-violet-200';
+                          badgeText = 'ĐÁNH GIÁ';
                         } else if (n.type === 'tradein') {
                           badgeColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
                           badgeText = 'THU CŨ';
