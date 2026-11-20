@@ -30,23 +30,34 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, theme, toggleTh
   const { user, logout, can } = useAuth();
   const location = useLocation();
 
+  const roleDisplayNames = {
+    super_admin: '👑 Super Admin',
+    sales_manager: '💼 Trưởng phòng Sale',
+    sales_executive: '🛒 Nhân viên Sale',
+    warehouse_manager: '📦 Thủ kho',
+    accountant: '💰 Kế toán & Tài chính',
+    product_manager: '💻 Quản lý Sản phẩm',
+    data_entry: '📝 Nhân viên Nhập liệu',
+    technical_warranty: '🔧 Kỹ thuật & RMA',
+  };
+
   const menuGroups = [
     {
       items: [
         { name: 'Tổng quan', path: '/', icon: HiOutlineSquares2X2 },
-        { name: 'Danh mục', path: '/categories', icon: HiOutlineFolder },
-        { name: 'Sản phẩm', path: '/products', icon: HiOutlineComputerDesktop },
-        { name: 'Thêm / sửa SP', path: '/products/new', icon: HiOutlinePlusCircle },
-        { name: 'Đơn hàng & Thanh toán', path: '/orders', icon: HiOutlineShoppingCart },
-        { name: 'Kho', path: '/inventory', icon: HiOutlineArchiveBox },
-        { name: 'Nhập hàng', path: '/batch-import', icon: HiOutlineArrowDownTray },
-        { name: 'Bảo hành (S/N)', path: '/warranty', icon: HiOutlineShieldCheck },
-        { name: 'Đổi trả (RMA)', path: '/returns', icon: HiOutlineArrowPathRoundedSquare },
-        { name: 'Thu cũ đổi mới', path: '/trade-in', icon: HiOutlineSparkles },
-        { name: 'Khuyến mãi', path: '/promotions', icon: HiOutlineTicket },
-        { name: 'Thiết kế Banner', path: '/banners', icon: HiOutlineDocumentText },
-        { name: 'Khách hàng', path: '/customers', icon: HiOutlineUsers },
-        { name: 'Báo cáo', path: '/reports', icon: HiOutlineChartBarSquare },
+        { name: 'Danh mục', path: '/categories', icon: HiOutlineFolder, permission: ['catalog:write', 'product:read'] },
+        { name: 'Sản phẩm', path: '/products', icon: HiOutlineComputerDesktop, permission: 'product:read' },
+        { name: 'Thêm / sửa SP', path: '/products/new', icon: HiOutlinePlusCircle, permission: 'product:write' },
+        { name: 'Đơn hàng & Thanh toán', path: '/orders', icon: HiOutlineShoppingCart, permission: ['order:read:all', 'order:read:own', 'order:write'] },
+        { name: 'Kho', path: '/inventory', icon: HiOutlineArchiveBox, permission: 'inventory:read' },
+        { name: 'Nhập hàng', path: '/batch-import', icon: HiOutlineArrowDownTray, permission: 'import:batch' },
+        { name: 'Bảo hành (S/N)', path: '/warranty', icon: HiOutlineShieldCheck, permission: ['warranty:read', 'inventory:serial:manage', 'inventory:serial:read'] },
+        { name: 'Đổi trả (RMA)', path: '/returns', icon: HiOutlineArrowPathRoundedSquare, permission: ['rma:manage', 'warranty:read'] },
+        { name: 'Thu cũ đổi mới', path: '/trade-in', icon: HiOutlineSparkles, permission: ['tradein:estimate', 'order:read:all', 'warranty:read'] },
+        { name: 'Khuyến mãi', path: '/promotions', icon: HiOutlineTicket, permission: 'promotion:read' },
+        { name: 'Thiết kế Banner', path: '/banners', icon: HiOutlineDocumentText, permission: ['media:upload', 'catalog:write'] },
+        { name: 'Khách hàng', path: '/customers', icon: HiOutlineUsers, permission: 'customer:read' },
+        { name: 'Báo cáo', path: '/reports', icon: HiOutlineChartBarSquare, permission: ['report:read', 'report:sales', 'finance:read'] },
         { name: 'Phân quyền', path: '/users', icon: HiOutlineUserGroup, permission: 'user:manage' },
         { name: 'Audit trail', path: '/audit-logs', icon: HiOutlineClipboardDocumentList, permission: 'audit:read' },
       ],
@@ -131,7 +142,11 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, theme, toggleTh
             </div>
             <div className="truncate">
               <p className="text-xs font-semibold text-white truncate">{user?.full_name || 'Quản trị viên'}</p>
-              <p className="text-[11px] text-gray-400 truncate">{user?.email || 'admin@laptopshop.vn'}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/60 text-blue-300 font-medium border border-blue-700/40 truncate">
+                  {roleDisplayNames[user?.role] || user?.role || 'Staff'}
+                </span>
+              </div>
             </div>
           </div>
           <button

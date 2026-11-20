@@ -326,10 +326,15 @@ export default function ProductListPage() {
                             >
                               {p.name}
                             </Link>
-                            <div className="flex items-center space-x-2 text-[11px] text-gray-400 mt-0.5">
+                            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
                               <span className="font-mono bg-gray-100 px-1 py-0.2 rounded text-gray-600">SKU: {p.sku}</span>
                               <span>·</span>
-                              <span>{p.brand || 'Dell'}</span>
+                              <span className="font-medium text-gray-700">{p.brand || 'Laptop'}</span>
+                              {(p.cpu_model || p.ram_gb || p.storage_gb) && (
+                                <span className="bg-blue-50 text-blue-700 border border-blue-200/60 px-1.5 py-0.2 rounded font-mono text-[10px]">
+                                  {[p.cpu_model, p.ram_gb ? `${p.ram_gb}GB` : null, p.storage_gb ? `${p.storage_gb}GB SSD` : null, p.screen_size_inch ? `${p.screen_size_inch}″` : null].filter(Boolean).join(' · ')}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

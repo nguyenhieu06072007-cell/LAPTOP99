@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://laptop99-ejug.onrender.com/api/admin',
+  baseURL: import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:4000/api/admin' : 'https://laptop99-ejug.onrender.com/api/admin'),
 });
 
 api.interceptors.request.use(
