@@ -18,6 +18,21 @@ export default function LoginPage() {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpCountdown, setOtpCountdown] = useState(60);
 
+  const demoAccounts = [
+    { role: '👑 Super Admin', email: 'admin@laptopshop.vn', desc: 'Toàn quyền 100% chức năng' },
+    { role: '💼 Trưởng phòng Sale', email: 'salesmgr@laptopshop.vn', desc: 'Xem tất cả đơn, duyệt chiết khấu' },
+    { role: '🛒 Nhân viên Sale', email: 'sales@laptopshop.vn', desc: 'Tạo đơn cá nhân, ẩn giá nhập' },
+    { role: '📦 Thủ kho', email: 'warehouse@laptopshop.vn', desc: 'Quản lý kho, nhập hàng, ẩn doanh thu' },
+    { role: '💰 Kế toán', email: 'accountant@laptopshop.vn', desc: 'Xem giá nhập, tài chính, đối soát' },
+    { role: '💻 Quản lý SP', email: 'product@laptopshop.vn', desc: 'Quản lý laptop, hãng, danh mục' },
+  ];
+
+  const selectDemoRole = (acc) => {
+    setEmail(acc.email);
+    setPassword('Admin@123456');
+    toast.success(`Đã chọn: ${acc.role} (${acc.email})`);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -230,6 +245,36 @@ export default function LoginPage() {
           <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
             <span className="font-semibold text-gray-800 block mb-1">Chính sách an ninh:</span>
             <p className="text-gray-500">Lỗi: sai mật khẩu · tài khoản bị khoá (sau 5 lần) · phiên hết hạn · quá số lần thử.</p>
+          </div>
+        </div>
+
+        {/* Quick Demo Role Selector for Examination / Live Demo */}
+        <div className="mt-5 pt-4 border-t border-gray-200 bg-gray-50/60 -mx-6 -mb-6 p-4 sm:p-5 sm:-mx-8 sm:-mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-1 mb-2.5">
+            <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+              <span className="text-amber-500">⚡</span> Chọn nhanh vai trò thử nghiệm phân quyền (Live Demo RBAC):
+            </span>
+            <span className="text-[11px] text-gray-500 font-mono">
+              Mật khẩu: <span className="font-bold text-blue-600">Admin@123456</span>
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            {demoAccounts.map((acc) => (
+              <button
+                key={acc.email}
+                type="button"
+                onClick={() => selectDemoRole(acc)}
+                className={`p-2 rounded-lg border text-left transition hover:shadow-xs flex flex-col justify-between ${
+                  email === acc.email
+                    ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-400'
+                    : 'bg-white border-gray-200 hover:border-blue-300'
+                }`}
+                title={acc.desc}
+              >
+                <span className="text-[11px] font-bold text-gray-800 leading-tight truncate">{acc.role}</span>
+                <span className="text-[10px] text-gray-400 truncate mt-1">{acc.email.split('@')[0]}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

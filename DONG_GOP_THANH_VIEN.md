@@ -1,79 +1,42 @@
-# LAPTOP99 — BÁO CÁO PHÂN CÔNG VÀ ĐÓNG GÓP THÀNH VIÊN DỰ ÁN
+# Phân công và đối chiếu nhánh thành viên Laptop99
 
-> **Khoa Công nghệ Thông tin — Đại học CMC**  
-> **Học phần:** Dự án Laptop99 — Báo cáo phát triển hệ thống  
-> **Lớp:** ICT 4  
-> **Nhánh chính (Tích hợp toàn diện):** `main`
+Học phần Phát triển ứng dụng Web, lớp N04, Đại học CMC. Giảng viên hướng dẫn Thầy Ngô Việt Anh.
 
----
+| Thành viên | Mã sinh viên | Công việc theo báo cáo | Nhánh |
+| --- | --- | --- | --- |
+| Nguyễn Văn Hiếu | BSE250019 | Kiến trúc backend, xác thực, phân quyền, API danh mục, hãng, sản phẩm và khung Admin | [`Nguyễn-Hiếu`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/Nguy%E1%BB%85n-Hi%E1%BA%BFu) |
+| Nguyễn Tiến Đạt | BSE250011 | Lược đồ và ràng buộc CSDL, kịch bản cập nhật, dữ liệu mẫu | [`Tien-Dat`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/Tien-Dat) |
+| Bùi Quang Huy | BIT252677 | API đơn hàng, kho, khách hàng, tiếp thị, dashboard và API Storefront | [`Bùi-Quang-Huy`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/B%C3%B9i-Quang-Huy) |
+| Nguyễn Đam Phong | BSE252331 | Storefront gồm trang chủ, danh mục, chi tiết, giỏ hàng và thanh toán | [`Nguyễn-Đam-Phong`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/Nguy%E1%BB%85n-%C4%90am-Phong) |
+| Trần Minh Đức | BSE252332 | Giao diện Admin vận hành đơn hàng, kho, hậu mãi, banner, khuyến mãi và kiểm thử | [`minh-đức`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/minh-%C4%91%E1%BB%A9c) |
 
-## 👥 1.5. NHÓM THỰC HIỆN VÀ VAI TRÒ (CHÍNH THỨC)
+## Kết quả rà soát
 
-| STT | Thành viên | Lớp / MSV | Vai trò chính theo phân công | Nhánh GitHub (Branch) |
-| :---: | :--- | :---: | :--- | :--- |
-| **1** | **Nguyễn Văn Hiếu** | `ICT 4 — BSE250019` | **Backend Lead** (kiến trúc lõi, Auth, Catalog); **Frontend Admin** (khung, xác thực, quản lý danh mục) | [`Nguyễn-Hiếu`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/Nguy%E1%BB%85n-Hi%E1%BA%BFu) |
-| **2** | **Nguyễn Tiến Đạt** | `ICT 4 — BSE250011` | **Database Engineer**: thiết kế CSDL, migration, dữ liệu mẫu | [`Tien-Dat`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/Tien-Dat) |
-| **3** | **Bùi Quang Huy** | `ICT 4 — BIT252677` | **Backend**: Orders, Inventory, Customers, Marketing, Dashboard, Storefront API | [`Bùi-Quang-Huy`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/B%C3%B9i-Quang-Huy) |
-| **4** | **Nguyễn Đam Phong** | `ICT 4 — BSE252331` | **Frontend**: Customer Storefront và UI/UX | [`Nguyễn-Đam-Phong`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/Nguy%E1%BB%85n-%C4%90am-Phong) |
-| **5** | **Trần Minh Đức** | `ICT 4 — BSE252332` | **Frontend Admin** (nghiệp vụ vận hành) và **Tester/QA** kiêm nhiệm | [`minh-đức`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/minh-%C4%91%E1%BB%A9c) |
+Đối chiếu các tệp chính, commit riêng và bản tích hợp tại [`af00aca`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/tree/af00aca428891af49150945b55c0c8e067836985).
 
----
+### Nguyễn Văn Hiếu
 
-## 🛠️ CHI TIẾT PHẠM VI MÃ NGUỒN TỪNG THÀNH VIÊN TRÊN GITHUB
+- Nhánh có backend lõi, `config/permissions.js`, controller xác thực, sản phẩm, hãng, danh mục và khung Admin. Các tệp lõi đã kiểm tra khớp bản tích hợp.
+- Commit [`ccf7dc0`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/commit/ccf7dc0) giữ lại các thư mục thuộc phạm vi và thêm README. Mã ở hai thư mục Admin và backend có sẵn tại commit chung trước đó. Các tệp `AuthContext.jsx` và `ProductListPage.jsx` đã được cập nhật thêm trên bản tích hợp.
 
-### 1. Nguyễn Văn Hiếu — BSE250019 (Nhánh `Nguyễn-Hiếu`)
-* **Vai trò:** Backend Lead & Frontend Admin Core.
-* **Mã nguồn trong nhánh:**
-  - **Backend Core:** `app.js`, `server.js`, `config/db.js`, `config/env.js`, `config/permissions.js`, `middlewares/auth.js`, `middlewares/error.js`, `controllers/auth.controller.js`, `controllers/products.controller.js`, `controllers/categories.controller.js`, `controllers/brands.controller.js`, `controllers/users.controller.js`.
-  - **Frontend Admin Core:** `AdminLayout.jsx`, `AuthContext.jsx`, `LoginPage.jsx`, `DashboardPage.jsx`, `ProductListPage.jsx`, `ProductFormPage.jsx`, `ProductDetailPage.jsx`, `CategoryListPage.jsx`, `BrandListPage.jsx`, `UserListPage.jsx`.
-  - **Tính năng nổi bật:** Khung điều hướng Admin hiện đại, tích hợp công tắc Dark/Light Mode Topbar & Sidebar, kiến trúc phân quyền RBAC đa vai trò.
+### Nguyễn Tiến Đạt
 
-### 2. Nguyễn Tiến Đạt — BSE250011 (Nhánh `Tien-Dat`)
-* **Vai trò:** Database Engineer.
-* **Mã nguồn trong nhánh:**
-  - **Kịch bản CSDL:** `laptop_shop.sql` hoàn chỉnh 21 bảng dữ liệu, chuẩn mã hóa `utf8mb4_unicode_ci` triệt tiêu lỗi font tiếng Việt.
-  - **Scripts Migration & Dữ liệu mẫu:** `Database/` chứa các kịch bản kiểm thử ràng buộc, trigger, transaction; các kịch bản nạp dữ liệu laptop thật, seed 100 sản phẩm, banner và đơn hàng đa trạng thái.
-  - **Bảo mật CSDL:** Cấu hình kết nối SSL đám mây TiDB Cloud, loại bỏ token/pass nhạy cảm khỏi repo.
+- Nhánh có `laptop_shop.sql` và chín tệp trong `scripts/`. Commit [`95dbfaf`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/commit/95dbfaf) đưa các script ra thư mục gốc để xem riêng. Các script tương ứng nằm trong `src/scripts/` của backend trên bản tích hợp.
+- Tệp SQL có sẵn tại commit chung trước đó và đã thay đổi trên bản tích hợp. Dùng tệp SQL trên `main` để chạy ứng dụng hoàn chỉnh.
 
-### 3. Bùi Quang Huy — BIT252677 (Nhánh `Bùi-Quang-Huy`)
-* **Vai trò:** Backend Nghiệp vụ & Storefront API.
-* **Mã nguồn trong nhánh:**
-  - **Controllers & Models:**
-    + Quản lý đơn hàng: `orders.controller.js`, `order.model.js`, `order.service.js`, `orders.routes.js`.
-    + Quản lý kho: `inventory.controller.js`, `inventory.model.js`, `inventory.routes.js`.
-    + Khách hàng & Marketing: `customers.controller.js`, `customer.model.js`, `promotions.controller.js`, `promotion.model.js`, `banners.controller.js`, `banners.model.js`.
-    + Bảng điều khiển: `dashboard.controller.js`, `dashboard.model.js`.
-    + API Khách hàng: `client.controller.js`, `client.model.js`, `client.routes.js`, `reviews.controller.js`, `review.model.js`.
-  - **Vá lỗi bảo mật & logic:** Khóa brute-force 15 phút sau 5 lần nhập sai, băm OTP đặt lại mật khẩu với `bcrypt`, kiểm tra chống trùng SĐT, xử lý đồng thời 2 tham số `q` & `search`, sửa lọc giá/RAM.
+### Bùi Quang Huy
 
-### 4. Nguyễn Đam Phong — BSE252331 (Nhánh `Nguyễn-Đam-Phong`)
-* **Vai trò:** Frontend Customer Storefront & UI/UX.
-* **Mã nguồn trong nhánh:**
-  - **Storefront MVC:** Toàn bộ thư mục `storefront/` (HTML/CSS/JS), file `index.html`, thư mục ảnh `uploads/`.
-  - **Giao diện người dùng:** Trang chủ `home.view.js` (Hero Slider, Brand Showcase, Flash Sale), Trang sản phẩm `catalog.view.js`, Trang giỏ hàng và thanh toán `checkout.view.js`.
-  - **Tính năng nổi bật:** Mascot Trợ lý AI Robot 24/7 sinh động (`chatbot.view.js`, `chatbot.controller.js`), Chế độ giao diện Sáng / Tối toàn diện, sửa 12 lỗi giao diện và cơ chế tương thích chạy offline giao thức `file:///`.
+- Commit [`d3ce9af`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/commit/d3ce9af) tập hợp backend dưới `src/` ở gốc. Có controller đơn hàng, kho, khách hàng, khuyến mãi, banner, dashboard và API Storefront. Các controller đơn hàng, kho, khách hàng, khuyến mãi và banner đã kiểm tra khớp bản tích hợp.
+- Commit [`e04dfa4`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/commit/e04dfa4) thêm một bản `client.controller.js` ở đường dẫn lồng nhau. Package ở gốc chạy `src/server.js`, nên bản ở đường dẫn lồng nhau nằm ngoài cây backend đang được package đó chạy. Xem sự khác biệt trước khi tích hợp bản sửa địa chỉ giao hàng.
 
-### 5. Trần Minh Đức — BSE252332 (Nhánh `minh-đức`)
-* **Vai trò:** Frontend Admin Nghiệp vụ vận hành & Tester/QA kiêm nhiệm.
-* **Mã nguồn trong nhánh:**
-  - **Màn hình Admin vận hành:**
-    + `OrderKanbanPage.jsx`: Quản lý tiến độ đơn hàng kéo thả dạng Kanban.
-    + `BatchImportPage.jsx`: Nhập danh sách laptop hàng loạt bằng file Excel.
-    + `FeedbackReportsPage.jsx`: Báo cáo, duyệt và phản hồi đánh giá từ khách.
-    + `ReturnsManagementPage.jsx`: Tiếp nhận và xử lý đổi trả, hoàn tiền RMA.
-    + `WarrantySerialPage.jsx`: Tra cứu và kích hoạt bảo hành điện tử theo Serial S/N.
-    + `TradeInPage.jsx`: Chương trình thu cũ đổi mới, trợ giá laptop.
-    + `BannerManagementPage.jsx` & `PromotionCampaignPage.jsx`: Studio quản lý banner và đợt khuyến mãi.
-  - **Tester / QA:** Bộ kịch bản kiểm thử API tự động `verify_all_security_and_logic.js`, test cases xác thực luồng nghiệp vụ.
+### Nguyễn Đam Phong
 
----
+- Nhánh có `index.html`, `storefront/` và `uploads/`. Có mã cho các trang khách hàng, giỏ hàng, thanh toán và chatbot. Commit [`0aa9ca5`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/commit/0aa9ca5) tách phần Storefront có sẵn thành nhánh xem riêng. Sau đó có commit riêng và các lần đồng bộ từ nhánh tích hợp.
+- Bản checkout trên `main` có các cập nhật về tự động xác nhận VietQR nằm ngoài bản Storefront đang giữ ở nhánh này. Dùng bản tích hợp để demo thanh toán.
 
-## 🚀 CÁCH THẦY CÔ KIỂM TRA TỪNG NHÁNH TRÊN GITHUB
+### Trần Minh Đức
 
-* **Xem sản phẩm tổng thể chạy trực tiếp:** `git checkout main` (gồm 100% mã nguồn cả nhóm đã tích hợp và deploy).
-* **Kiểm tra bài làm độc lập của từng sinh viên:**
-  1. `git checkout Nguyễn-Hiếu` &rarr; Xem mã nguồn Backend Lead & Admin Core (Nguyễn Văn Hiếu - BSE250019)
-  2. `git checkout Tien-Dat` &rarr; Xem mã nguồn CSDL & Migration (Nguyễn Tiến Đạt - BSE250011)
-  3. `git checkout Bùi-Quang-Huy` &rarr; Xem mã nguồn Backend Orders, Inventory, Client API (Bùi Quang Huy - BIT252677)
-  4. `git checkout Nguyễn-Đam-Phong` &rarr; Xem mã nguồn Giao diện khách hàng Storefront & Robot AI (Nguyễn Đam Phong - BSE252331)
-  5. `git checkout minh-đức` &rarr; Xem mã nguồn Admin vận hành Kanban/Excel & QA (Trần Minh Đức - BSE252332)
+- Commit [`722e152`](https://github.com/nguyenhieu06072007-cell/LAPTOP99/commit/722e152) tập hợp Admin dưới `src/` ở gốc. Có Kanban, nhập kho Excel, đánh giá, đổi trả, bảo hành, thu cũ, banner và khuyến mãi. Sáu màn hình được kiểm tra khớp bản tích hợp. Kanban và trang đánh giá có thay đổi tiếp trên bản tích hợp.
+- Nhánh `minh-đức` chưa có tệp kiểm thử. Script `verify_all_security_and_logic.js` có trong backend của bản tích hợp và thư mục `scripts/` trên `Tien-Dat`. Lịch sử kiểm tra được chưa đủ để gán quyền tác giả script cho thành viên theo phần phân công QA.
+
+Nhánh thành viên là bản trích theo mảng công việc. Để chấm đóng góp cá nhân, dùng phần phân công cùng với diff của commit và minh chứng do thành viên cung cấp.

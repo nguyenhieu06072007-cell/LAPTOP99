@@ -79,7 +79,17 @@ export default function OrderKanbanPage() {
   const moveOrder = async (orderId, newStatus) => {
     try {
       await api.patch(`/orders/${orderId}/status`, { status: newStatus });
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      const targetOrd = orders.find(o => o.id === orderId);
+      if (newStatus === 'confirmed' && targetOrd && (targetOrd.payment_status === 'pending_verification' || targetOrd.payment_verification_status === 'pending_verification')) {
+        try {
+          await api.patch(`/orders/${orderId}/reconcile-payment`, {});
+        } catch(e) {}
+      }
+      setOrders(prev => prev.map(o => o.id === orderId ? {
+        ...o,
+        status: newStatus,
+        payment_status: (newStatus === 'confirmed' && (o.payment_status === 'pending_verification' || o.payment_verification_status === 'pending_verification')) ? 'paid' : o.payment_status
+      } : o));
       toast.success(`Đã cập nhật trạng thái đơn`);
     } catch (err) {
       toast.error(err.message || 'Lỗi cập nhật trạng thái');
@@ -235,6 +245,18 @@ export default function OrderKanbanPage() {
                           <span className="font-bold text-rose-600">{formatVND(order.total_amount)}</span>
                           <span className="text-[10px] text-gray-500 font-medium">{order.payment_method}</span>
                         </div>
+
+                        {order.payment_status === 'pending_verification' || order.payment_verification_status === 'pending_verification' ? (
+                          <div className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded font-bold flex items-center justify-between">
+                            <span>⏳ Khách báo đã CK</span>
+                            <span className="text-amber-600 font-medium text-[9px]">Chờ sao kê MB</span>
+                          </div>
+                        ) : order.payment_status === 'paid' ? (
+                          <div className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-bold flex items-center justify-between">
+                            <span>✓ Đã nhận đủ tiền</span>
+                            <span className="text-emerald-600 font-medium text-[9px]">Napas 247</span>
+                          </div>
+                        ) : null}
 
                         <div className="pt-1 flex items-center justify-between">
                           <button

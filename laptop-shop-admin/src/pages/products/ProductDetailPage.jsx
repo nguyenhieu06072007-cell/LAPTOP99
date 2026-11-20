@@ -212,6 +212,136 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
+          {/* Bảng thông số kỹ thuật chi tiết theo cơ sở dữ liệu thật */}
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Thông số kỹ thuật chi tiết</h3>
+                <p className="mt-1 text-xs text-gray-500">Dữ liệu thông số phần cứng thời gian thực từ kho hàng LAPTOP99</p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                Chuẩn cấu hình
+              </span>
+            </div>
+            <div className="border-t border-gray-200 px-4 py-3 sm:p-0">
+              <dl className="sm:divide-y sm:divide-gray-200 text-xs">
+                {/* Vi xử lý */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>⚡ Vi xử lý (CPU)</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                    <span className="font-bold text-blue-800">{product.cpu_model || `${product.cpu_brand || ''} Processor`}</span>
+                    {(product.cpu_cores || product.cpu_threads) && (
+                      <span className="text-gray-500 ml-2">
+                        ({[product.cpu_cores ? `${product.cpu_cores} nhân` : null, product.cpu_threads ? `${product.cpu_threads} luồng` : null].filter(Boolean).join(' · ')})
+                      </span>
+                    )}
+                  </dd>
+                </div>
+
+                {/* RAM */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>💾 Bộ nhớ RAM</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                    <span className="font-bold text-gray-900">{product.ram_gb ? `${product.ram_gb} GB` : 'Chưa cập nhật'}</span>
+                    {product.ram_type && <span className="ml-1 text-gray-600">({product.ram_type})</span>}
+                    {product.ram_max_gb && <span className="text-emerald-700 ml-2">· Nâng cấp tối đa {product.ram_max_gb} GB</span>}
+                  </dd>
+                </div>
+
+                {/* Ổ cứng */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>💽 Ổ cứng lưu trữ</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                    <span className="font-bold text-gray-900">{product.storage_gb ? `${product.storage_gb} GB` : 'Chưa cập nhật'}</span>
+                    {product.storage_type && <span className="ml-1 text-gray-600">{product.storage_type}</span>}
+                  </dd>
+                </div>
+
+                {/* Card đồ họa */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>🎮 Card đồ họa (GPU)</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                    <span className="font-bold text-indigo-800">{product.gpu_model || (product.gpu_type === 'discrete' ? 'Card đồ họa rời' : 'Card đồ họa Onboard')}</span>
+                    {product.vram_gb && <span className="text-gray-500 ml-2">({product.vram_gb} GB VRAM)</span>}
+                  </dd>
+                </div>
+
+                {/* Màn hình */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>🖥️ Màn hình</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                    <span className="font-bold text-gray-900">{product.screen_size_inch ? `${product.screen_size_inch} inch` : 'Tiêu chuẩn'}</span>
+                    {[product.screen_resolution, product.screen_panel, product.refresh_rate_hz ? `${product.refresh_rate_hz}Hz` : null, product.touchscreen ? 'Cảm ứng đa điểm' : null].filter(Boolean).length > 0 && (
+                      <span className="text-gray-600 ml-2">
+                        · {[product.screen_resolution, product.screen_panel, product.refresh_rate_hz ? `${product.refresh_rate_hz}Hz` : null, product.touchscreen ? 'Cảm ứng' : null].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+
+                {/* Pin & Sạc */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>🔋 Pin &amp; Sạc</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                    <span>{product.battery_wh ? `${product.battery_wh} Wh` : 'Pin tiêu chuẩn'}</span>
+                    {product.charger_w && <span className="text-gray-600 ml-2">· Củ sạc {product.charger_w}W</span>}
+                  </dd>
+                </div>
+
+                {/* Hệ điều hành */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>⚙️ Hệ điều hành</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2 font-medium">
+                    {product.os || 'Windows 11 Bản quyền / macOS'}
+                  </dd>
+                </div>
+
+                {/* Trọng lượng & Thiết kế */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>⚖️ Trọng lượng &amp; Màu</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                    <span>{product.weight_kg ? `${product.weight_kg} kg` : '-'}</span>
+                    {product.color && <span className="ml-2">· Màu: <strong>{product.color}</strong></span>}
+                    {product.material && <span className="text-gray-500 ml-2">({product.material})</span>}
+                  </dd>
+                </div>
+
+                {/* Cổng kết nối & Tiện ích */}
+                <div className="py-3 sm:py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 hover:bg-gray-50/50">
+                  <dt className="font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span>🔌 Cổng kết nối &amp; Tiện ích</span>
+                  </dt>
+                  <dd className="mt-1 text-gray-900 sm:mt-0 sm:col-span-2">
+                    <div>{product.ports || 'Type-C, USB 3.2, HDMI, Jack 3.5mm'}</div>
+                    <div className="text-gray-500 mt-1 flex flex-wrap gap-2 text-[11px]">
+                      {product.keyboard && <span>Phím: {product.keyboard}</span>}
+                      {product.webcam && <span>· Cam: {product.webcam}</span>}
+                      {product.fingerprint ? <span>· Bảo mật vân tay</span> : null}
+                      {product.wifi && <span>· {product.wifi}</span>}
+                      {product.bluetooth && <span>· Bluetooth {product.bluetooth}</span>}
+                    </div>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg leading-6 font-medium text-gray-900">Hình ảnh</h3>

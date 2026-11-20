@@ -18,10 +18,13 @@ const ProductModel = {
               p.status, p.is_featured, p.is_new, p.is_bestseller, p.view_count, p.sold_count,
               p.version, p.created_at, p.updated_at, p.deleted_at,
               (SELECT i.url FROM product_images i WHERE i.product_id = p.id AND i.is_thumbnail = 1
-                ORDER BY i.sort_order LIMIT 1) AS thumbnail
+                ORDER BY i.sort_order LIMIT 1) AS thumbnail,
+              s.cpu_brand, s.cpu_model, s.ram_gb, s.ram_type, s.storage_gb, s.storage_type,
+              s.gpu_model, s.screen_size_inch, s.screen_resolution, s.os, s.color, s.weight_kg
          FROM products p
          JOIN brands b ON b.id = p.brand_id
          JOIN categories c ON c.id = p.category_id
+         LEFT JOIN product_specs s ON s.product_id = p.id
          ${whereClause}
         ORDER BY ${sortCol} ${dir}, p.id DESC
         LIMIT ? OFFSET ?`,

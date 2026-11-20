@@ -105,6 +105,24 @@ async function upgrade() {
       permissions: JSON.stringify([
         'product:read', 'product:write', 'catalog:write', 'media:upload'
       ])
+    },
+    {
+      name: 'product_manager',
+      display_name: 'Quản lý Sản phẩm & Danh mục',
+      description: 'Quản lý danh mục laptop, thông số kỹ thuật, cấu hình, hình ảnh và giá bán.',
+      badge_color: 'teal',
+      permissions: JSON.stringify([
+        'product:read', 'product:write', 'product:delete', 'catalog:write', 'inventory:read', 'cost:read', 'report:read', 'media:upload', 'import:batch'
+      ])
+    },
+    {
+      name: 'data_entry',
+      display_name: 'Nhân viên Nhập liệu',
+      description: 'Nhập liệu: thêm/sửa cấu hình máy, mô tả, upload ảnh, không có quyền xóa.',
+      badge_color: 'slate',
+      permissions: JSON.stringify([
+        'product:read', 'product:write', 'catalog:write', 'inventory:read', 'media:upload'
+      ])
     }
   ];
 

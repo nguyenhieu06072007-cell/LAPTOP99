@@ -2,7 +2,7 @@
 
 > **Khoa Công nghệ Thông tin — Đại học CMC**  
 > **Dự án:** Laptop99 — Hệ thống bán lẻ Laptop chính hãng  
-> **Sinh viên thực hiện:** **Nguyễn Văn Hiếu** (Lớp: `ICT 4` — MSV: `BSE250019`)  
+> **Sinh viên thực hiện:** **Nguyễn Văn Hiếu** (Lớp: `N04` — MSV: `BSE250019`)  
 > **Vai trò phân công:** **Backend Lead (kiến trúc lõi, Auth, Catalog); Frontend Admin (khung, xác thực, quản lý danh mục)**
 
 ---

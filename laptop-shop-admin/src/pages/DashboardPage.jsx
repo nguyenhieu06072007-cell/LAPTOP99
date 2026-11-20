@@ -107,7 +107,7 @@ export default function DashboardPage() {
       {/* Top Filter and Actions Row */}
       <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-2xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-1 sm:space-x-2">
-          {['today', '7d', '30d'].map((range) => (
+          {['today', '7d', '30d', 'all'].map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
@@ -117,7 +117,7 @@ export default function DashboardPage() {
                   : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-300'
               }`}
             >
-              {range === 'today' ? 'Hôm nay' : range === '7d' ? '7 ngày' : '30 ngày'}
+              {range === 'today' ? 'Hôm nay' : range === '7d' ? '7 ngày' : range === '30d' ? '30 ngày' : 'Toàn bộ'}
             </button>
           ))}
           <select
@@ -125,9 +125,9 @@ export default function DashboardPage() {
             onChange={(e) => setTimeRange(e.target.value)}
             className="px-2.5 py-1.5 text-xs border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none"
           >
-            <option value="custom">Tùy chọn</option>
             <option value="quarter">Quý này</option>
             <option value="year">Năm nay</option>
+            <option value="all">Toàn bộ lịch sử</option>
           </select>
         </div>
 

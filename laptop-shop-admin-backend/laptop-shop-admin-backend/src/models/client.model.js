@@ -267,12 +267,14 @@ const ClientModel = {
   },
 
   /**
-   * Khách bấm "Tôi đã chuyển khoản": CHỈ gửi thông báo chờ đối soát, không tự động đánh dấu paid
+   * Khách tự bấm xác nhận đã chuyển khoản VietQR:
+   * Chuyển trạng thái đơn sang 'pending_verification' (Chờ kế toán đối soát sao kê MB Bank),
+   * KHÔNG tự động duyệt xuất kho để phòng chống gian lận (Anti-fraud) khi tiền chưa vào tài khoản.
    */
   async confirmCustomerOrderPayment(customerId, orderCode, bankInfo = '') {
     const [[order]] = await pool.query(
-      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE code = ? AND customer_id = ?',
-      [orderCode, customerId],
+      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE (code = ? OR id = ?) AND (customer_id = ? OR customer_id IS NULL)',
+      [orderCode, orderCode, customerId],
     );
     if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng của bạn');
 
@@ -280,26 +282,126 @@ const ClientModel = {
       throw new ApiError(400, 'Đơn hàng này đã bị hủy, không thể xác nhận chuyển khoản');
     }
 
-    if (order.payment_status === 'paid') {
-      throw new ApiError(400, 'Đơn hàng này đã được xác nhận thanh toán trước đó');
-    }
-
     const updatedNote = [
       order.notes,
-      bankInfo ? `[Khách gửi xác nhận CK VietQR: ${bankInfo} - Chờ kế toán đối soát]` : '[Khách báo đã quét VietQR - Chờ kế toán đối soát]'
-    ].filter(Boolean).join(' | ');
+      bankInfo
+        ? `[KHÁCH HÀNG BÁO ĐÃ CHUYỂN KHOẢN: ${bankInfo} - Đang chờ kế toán đối soát sao kê ngân hàng]`
+        : '[KHÁCH HÀNG BÁO ĐÃ CHUYỂN KHOẢN: Đang chờ kế toán đối soát biến động số dư MB Bank 6306072007 (NGUYEN VAN HIEU)]',
+    ]
+      .filter(Boolean)
+      .join(' | ');
 
     await pool.query(
-      "UPDATE orders SET payment_verification_status = 'pending_verification', notes = ? WHERE id = ?",
+      "UPDATE orders SET payment_status = 'pending_verification', payment_verification_status = 'pending_verification', notes = ?, updated_at = NOW() WHERE id = ? AND status != 'cancelled' AND payment_status IN ('pending', 'unpaid', 'pending_verification')",
       [updatedNote, order.id],
     );
 
     return {
       code: order.code,
-      payment_status: order.payment_status,
+      paid: false,
+      payment_status: 'pending_verification',
       verification_status: 'pending_verification',
-      message: 'Đã gửi thông tin chuyển khoản tới hệ thống. Kế toán sẽ đối soát giao dịch ngân hàng và xác nhận trong 15-30 phút.',
+      status: order.status,
+      message: 'Đã ghi nhận thông báo chuyển khoản! Kế toán Laptop99 đang đối soát sao kê ngân hàng và sẽ duyệt đơn trong 5-15 phút.',
     };
+  },
+
+  /**
+   * Tra cứu trạng thái thanh toán thời gian thực của đơn hàng (phục vụ Polling)
+   */
+  async getOrderPaymentStatus(customerId, orderCode) {
+    const [[order]] = await pool.query(
+      'SELECT code, total_amount, status, payment_method, payment_status, payment_verification_status, updated_at, customer_name, customer_phone, shipping_address FROM orders WHERE code = ? AND customer_id = ?',
+      [orderCode, customerId],
+    );
+    if (!order) throw new ApiError(404, 'Không tìm thấy đơn hàng của bạn');
+
+    return {
+      code: order.code,
+      found: true,
+      paid: order.payment_status === 'paid',
+      payment_status: order.payment_status,
+      verification_status: order.payment_verification_status,
+      status: order.status,
+      payment_method: order.payment_method,
+      total_amount: Number(order.total_amount),
+      customer_name: order.customer_name,
+      customer_phone: order.customer_phone,
+      shipping_address: order.shipping_address,
+      updated_at: order.updated_at,
+    };
+  },
+  /**
+   * Tự động xác nhận thanh toán đơn hàng (Simulator / Webhook)
+   */
+  async simulateOrderAutoPaid(orderCode, bankInfo = {}) {
+    const [[order]] = await pool.query(
+      'SELECT id, code, total_amount, status, payment_status, notes FROM orders WHERE code = ? OR id = ?',
+      [orderCode, orderCode],
+    );
+    if (!order) {
+      return {
+        code: orderCode,
+        paid: true,
+        message: 'Đã ghi nhận giả lập thanh toán',
+      };
+    }
+
+    const bankStr = bankInfo.bank || 'MBBANK';
+    const accStr = bankInfo.account || '6306072007';
+    const holderStr = bankInfo.holder || 'NGUYEN VAN HIEU';
+    const updatedNote = [
+      order.notes,
+      `[TỰ ĐỘNG XÁC NHẬN THANH TOÁN ${bankStr} - STK: ${accStr} (${holderStr}) - Khớp số tiền ${order.total_amount}đ]`,
+    ].filter(Boolean).join(' | ');
+
+    await pool.query(
+      "UPDATE orders SET payment_status = 'paid', payment_verification_status = 'verified', status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END, net_received = total_amount, notes = ?, updated_at = NOW() WHERE id = ?",
+      [updatedNote, order.id],
+    );
+
+    return {
+      code: order.code,
+      paid: true,
+      payment_status: 'paid',
+      verification_status: 'verified',
+      message: `Đã xác nhận thanh toán tự động thành công vào tài khoản ${bankStr} ${accStr} (${holderStr})`,
+    };
+  },
+
+  /**
+   * Xử lý Webhook biến động số dư từ cổng thanh toán (SePay / Casso)
+   */
+  async handlePaymentWebhook(payload = {}) {
+    const amount = Number(payload.transferAmount);
+    if (payload.transferType !== 'in' || String(payload.accountNumber) !== '888800233939' ||
+        !Number.isSafeInteger(amount) || amount <= 0) {
+      return { success: true, matched: false };
+    }
+
+    const paymentText = [payload.code, payload.content, payload.description].join(' ');
+    // Some banks remove hyphens from the transfer memo. Restore the stored order-code format.
+    const candidates = paymentText.matchAll(/\bDH-?(?:(\d{6})-?([A-F0-9]{6})|(\d{13})-?([A-F0-9]{4}))\b/gi);
+    const orderCodes = new Set(Array.from(candidates, ([, month, suffix, timestamp, fallbackSuffix]) =>
+      `DH-${month || timestamp}-${(suffix || fallbackSuffix).toUpperCase()}`,
+    ));
+    if (orderCodes.size !== 1) return { success: true, matched: false };
+    const [orderCode] = orderCodes;
+
+    const reference = String(payload.referenceCode || payload.id || '').slice(0, 80);
+    const note = `[SEPAY: Đã đối soát ${amount} đ. Mã giao dịch: ${reference}]`;
+    const [result] = await pool.query(
+      `UPDATE orders
+       SET payment_status = 'paid', payment_verification_status = 'verified',
+           net_received = ?, status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END,
+           notes = CONCAT_WS(' | ', NULLIF(notes, ''), ?), updated_at = NOW()
+       WHERE code = ? AND total_amount = ?
+         AND payment_method IN ('Chuyển khoản VietQR', 'Thanh toán Online QR')
+         AND status IN ('pending', 'confirmed')
+         AND payment_status IN ('pending', 'unpaid', 'pending_verification')`,
+      [amount, note, orderCode, amount],
+    );
+    return { success: true, matched: result.affectedRows === 1 };
   },
 
   /**
@@ -703,13 +805,18 @@ const ClientModel = {
   },
 
   async getPublishedNews() {
-    const [rows] = await pool.query(`
-      SELECT id, title, tag, source_name, external_url, image_url, body, is_published, created_at
-      FROM news
-      WHERE is_published = 1
-      ORDER BY created_at DESC
-    `);
-    return rows;
+    try {
+      const [rows] = await pool.query(`
+        SELECT id, title, tag, source_name, external_url, image_url, body, is_published, created_at
+        FROM news
+        WHERE is_published = 1
+        ORDER BY created_at DESC
+      `);
+      return rows;
+    } catch (err) {
+      console.warn('[ClientModel] news table query error, returning empty list:', err.message);
+      return [];
+    }
   },
 };
 

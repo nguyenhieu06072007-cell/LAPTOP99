@@ -110,9 +110,38 @@ export const AuthProvider = ({ children }) => {
     if (!user) return false;
     // Super admin has full access to everything
     if (user.role === 'super_admin') return true;
-    if (!user.permissions) return false;
-    if (user.permissions.includes('*')) return true;
-    return user.permissions.includes(permission);
+
+    // Normalize user's permissions array
+    let userPerms = Array.isArray(user.permissions) ? user.permissions : [];
+    if (!userPerms.length && user.role) {
+      // Fallback matrix in case user object was loaded from minimal session
+      const fallbackMap = {
+        sales_manager: ['order:read:all', 'order:write', 'order:discount:approve', 'order:cancel', 'order:print', 'product:read', 'customer:read', 'customer:write', 'promotion:read', 'promotion:write', 'report:sales', 'report:read'],
+        sales_executive: ['order:read:own', 'order:write', 'order:print', 'product:read', 'customer:read', 'customer:write', 'promotion:read'],
+        warehouse_manager: ['inventory:read', 'inventory:write', 'inventory:serial:manage', 'import:batch', 'product:read', 'warranty:read'],
+        accountant: ['cost:read', 'report:read', 'report:sales', 'finance:read', 'finance:reconcile', 'order:read:all', 'inventory:read', 'product:read'],
+        product_manager: ['product:read', 'product:write', 'product:delete', 'catalog:write', 'inventory:read', 'cost:read', 'report:read', 'media:upload', 'import:batch'],
+        data_entry: ['product:read', 'product:write', 'catalog:write', 'inventory:read', 'media:upload'],
+        technical_warranty: ['warranty:read', 'warranty:write', 'rma:manage', 'tradein:estimate', 'product:read', 'inventory:serial:read'],
+        content_seo: ['product:read', 'product:write', 'catalog:write', 'media:upload']
+      };
+      userPerms = fallbackMap[user.role] || [];
+    }
+
+    if (userPerms.includes('*')) return true;
+
+    const matchOne = (target) => {
+      if (!target) return false;
+      if (userPerms.includes(target)) return true;
+      const prefix = target.split(':')[0] + ':*';
+      if (userPerms.includes(prefix)) return true;
+      return false;
+    };
+
+    if (Array.isArray(permission)) {
+      return permission.some((p) => matchOne(p));
+    }
+    return matchOne(permission);
   };
 
   const isAuthenticated = !!token && !!user;
