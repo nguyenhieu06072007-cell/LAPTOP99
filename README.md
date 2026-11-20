@@ -2,7 +2,7 @@
 
 > **Khoa Công nghệ Thông tin — Đại học CMC**  
 > **Dự án:** Laptop99 — Hệ thống bán lẻ Laptop chính hãng  
-> **Sinh viên thực hiện:** **Bùi Quang Huy** (Lớp: `ICT 4` — MSV: `BIT252677`)  
+> **Sinh viên thực hiện:** **Bùi Quang Huy** (Lớp: `N04` — MSV: `BIT252677`)  
 > **Vai trò phân công:** **Backend: Orders, Inventory, Customers, Marketing, Dashboard, Storefront API**
 
 ---
@@ -27,4 +27,4 @@ Nhánh này chứa mã nguồn **Máy chủ RESTful API Node.js/Express** phục
 npm install
 npm start
 ```
-Máy chủ API chạy tại: `http://localhost:5000`
+Máy chủ API chạy tại: `http://localhost:4000`
