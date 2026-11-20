@@ -3,27 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Laptop99 | Hệ thống bán lẻ Laptop chính hãng</title>
   <link rel="icon" type="image/png" href="storefront/assets/logo-laptop99.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Storefront Design System & Styles (MVC View Styles) -->
-  <link rel="stylesheet" href="storefront/css/styles.css?v=20261028_v2">
+  <link rel="stylesheet" href="storefront/css/styles.css?v=20261119_v1">
   <script>
     (function() {
       try {
         var t = localStorage.getItem('laptop99_theme');
         if (t) document.documentElement.setAttribute('data-theme', t);
       } catch(e) {}
+
+      // Bộ giám sát Watchdog độc lập ngay trong <head>
+      // Giải cứu tự động tức thì nếu trình duyệt bị nghẽn mạng hoặc Render Backend đang Cold Start
+      setTimeout(function() {
+        var appEl = document.getElementById('app');
+        var isStuck = !window.__APP_MOUNTED__ || (appEl && !document.getElementById('nav'));
+        if (isStuck && appEl) {
+          console.warn('[Watchdog] Kích hoạt chế độ tải tức thì...');
+          if (typeof window.__RESCUE_MOUNT__ === 'function') {
+            window.__RESCUE_MOUNT__();
+          }
+        }
+      }, 1000);
     })();
   </script>
 </head>
 <body>
-      <div id="app">
-    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0b1329;color:#94a3b8;font-family:system-ui,-apple-system,sans-serif">
-      <div style="width:42px;height:42px;border:3px solid rgba(220,38,38,0.2);border-top-color:#dc2626;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:14px"></div>
-      <div style="font-size:14px;color:#cbd5e1;font-weight:500">Đang tải LAPTOP99...</div>
+  <div id="app">
+    <div style="min-height:100vh;background:#F8FAFC;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,-apple-system,sans-serif">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="width:40px;height:40px;border-radius:10px;background:#dc2626;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:20px;box-shadow:0 4px 12px rgba(220,38,38,0.3)">99</div>
+        <span style="font-size:22px;font-weight:900;color:#0f172a;letter-spacing:-0.5px">LAPTOP<span style="color:#dc2626">99</span></span>
+      </div>
+      <div style="width:160px;height:3px;background:#e2e8f0;border-radius:99px;overflow:hidden">
+        <div style="width:60px;height:100%;background:#dc2626;border-radius:99px;animation:spin 1s infinite ease-in-out"></div>
+      </div>
     </div>
   </div>
   <div id="modal" role="dialog" aria-modal="true"></div>
@@ -34,42 +55,42 @@
   <!-- ==================================================================== -->
 
   <!-- 1. Utils & Router Layer -->
-  <script src="storefront/js/utils/helpers.js?v=20261028_v2"></script>
-  <script src="storefront/js/utils/formatters.js?v=20261028_v2"></script>
-  <script src="storefront/js/app/router.js?v=20261028_v2"></script>
+  <script src="storefront/js/utils/helpers.js?v=20261119_v1"></script>
+  <script src="storefront/js/utils/formatters.js?v=20261119_v1"></script>
+  <script src="storefront/js/app/router.js?v=20261119_v1"></script>
 
   <!-- 2. Service Layer: REST API Client & Domain Services -->
-  <script src="storefront/js/services/api.service.js?v=20261028_v2"></script>
-  <script src="storefront/js/services/product.service.js?v=20261028_v2"></script>
-  <script src="storefront/js/services/order.service.js?v=20261028_v2"></script>
-  <script src="storefront/js/services/auth.service.js?v=20261028_v2"></script>
-  <script src="storefront/js/services/promotions.service.js?v=20261028_v2"></script>
+  <script src="storefront/js/services/api.service.js?v=20261119_v1"></script>
+  <script src="storefront/js/services/product.service.js?v=20261119_v1"></script>
+  <script src="storefront/js/services/order.service.js?v=20261119_v4"></script>
+  <script src="storefront/js/services/auth.service.js?v=20261119_v1"></script>
+  <script src="storefront/js/services/promotions.service.js?v=20261119_v1"></script>
 
   <!-- 3. Model Layer: Domain Entities, Business Calculations & State Store -->
-  <script src="storefront/js/models/product.model.js?v=20261028_v2"></script>
-  <script src="storefront/js/models/cart.model.js?v=20261028_v2"></script>
-  <script src="storefront/js/models/store.model.js?v=20261028_v2"></script>
+  <script src="storefront/js/models/product.model.js?v=20261119_v1"></script>
+  <script src="storefront/js/models/cart.model.js?v=20261119_v1"></script>
+  <script src="storefront/js/models/store.model.js?v=20261119_v1"></script>
 
   <!-- 4. View Components & Layout Views -->
-  <script src="storefront/js/views/components/common.view.js?v=20261028_v2"></script>
-  <script src="storefront/js/views/components/product-card.view.js?v=20261028_v2"></script>
-  <script src="storefront/js/views/components/chatbot.view.js?v=20261028_v2"></script>
-  <script src="storefront/js/views/layouts/layout.view.js?v=20261028_v2"></script>
+  <script src="storefront/js/views/components/common.view.js?v=20261119_v1"></script>
+  <script src="storefront/js/views/components/product-card.view.js?v=20261119_v1"></script>
+  <script src="storefront/js/views/components/chatbot.view.js?v=20261119_v1"></script>
+  <script src="storefront/js/views/layouts/layout.view.js?v=20261119_v3"></script>
 
   <!-- 5. Page Views -->
-  <script src="storefront/js/views/pages/home.view.js?v=20261028_v2"></script>
-  <script src="storefront/js/views/pages/catalog.view.js?v=20261028_v2"></script>
-  <script src="storefront/js/views/pages/checkout.view.js?v=20261028_v2"></script>
-  <script src="storefront/js/views/pages/services.view.js?v=20261028_v2"></script>
+  <script src="storefront/js/views/pages/home.view.js?v=20261119_v3"></script>
+  <script src="storefront/js/views/pages/catalog.view.js?v=20261119_v1"></script>
+  <script src="storefront/js/views/pages/checkout.view.js?v=20261119_v2"></script>
+  <script src="storefront/js/views/pages/services.view.js?v=20261119_v1"></script>
 
   <!-- 6. Controller Layer: Domain Controllers & Central App Dispatcher -->
-  <script src="storefront/js/controllers/home.controller.js?v=20261028_v2"></script>
-  <script src="storefront/js/controllers/catalog.controller.js?v=20261028_v2"></script>
-  <script src="storefront/js/controllers/cart.controller.js?v=20261028_v2"></script>
-  <script src="storefront/js/controllers/checkout.controller.js?v=20261028_v2"></script>
-  <script src="storefront/js/controllers/auth.controller.js?v=20261028_v2"></script>
-  <script src="storefront/js/controllers/services.controller.js?v=20261028_v2"></script>
-  <script src="storefront/js/controllers/chatbot.controller.js?v=20261028_v2"></script>
-  <script src="storefront/js/controllers/app.controller.js?v=20261028_v2"></script>
+  <script src="storefront/js/controllers/home.controller.js?v=20261119_v1"></script>
+  <script src="storefront/js/controllers/catalog.controller.js?v=20261119_v1"></script>
+  <script src="storefront/js/controllers/cart.controller.js?v=20261119_v1"></script>
+  <script src="storefront/js/controllers/checkout.controller.js?v=20261119_v2"></script>
+  <script src="storefront/js/controllers/auth.controller.js?v=20261119_v3"></script>
+  <script src="storefront/js/controllers/services.controller.js?v=20261119_v1"></script>
+  <script src="storefront/js/controllers/chatbot.controller.js?v=20261119_v1"></script>
+  <script src="storefront/js/controllers/app.controller.js?v=20261119_v3"></script>
 </body>
 </html>

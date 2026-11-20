@@ -458,7 +458,7 @@ function storeShell(inner, r) {
         </a>
         ${
           u
-            ? `<a class="nav-act primary" href="#/account" title="Tài khoản của tôi">${ic('user', 15)} <span class="lbl">${esc(u.name.split(' ').pop())}</span></a>`
+            ? `<a class="nav-act primary" href="#/account" title="Tài khoản của tôi">${ic('user', 15)} <span class="lbl">${esc((u.name || u.full_name || 'Tài khoản').trim().split(/\s+/).pop())}</span></a>`
             : `<button type="button" class="nav-act primary" onclick="A.authModal()">${ic('user', 15)} <span class="lbl">Đăng nhập</span></button>`
         }
         <button type="button" class="ib mnu" onclick="A.toggleMenu()" aria-label="Mở menu">${ic('menu', 18)}</button>

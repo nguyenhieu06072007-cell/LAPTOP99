@@ -72,7 +72,7 @@ const AuthController = {
       db.session = {
         role: 'customer',
         id: res.data.customer.id,
-        name: res.data.customer.name,
+        name: res.data.customer.name || res.data.customer.full_name || '',
         email: res.data.customer.email,
         phone: res.data.customer.phone,
         addr: res.data.customer.address || '',
@@ -135,7 +135,7 @@ const AuthController = {
       db.session = {
         role: 'customer',
         id: res.data.customer.id,
-        name: res.data.customer.name,
+        name: res.data.customer.name || res.data.customer.full_name || '',
         email: res.data.customer.email,
         phone: res.data.customer.phone,
         addr: res.data.customer.address || '',
@@ -195,7 +195,7 @@ const AuthController = {
       db.session = {
         role: 'customer',
         id: res.data.customer.id,
-        name: res.data.customer.name,
+        name: res.data.customer.name || res.data.customer.full_name || '',
         email: res.data.customer.email,
         phone: res.data.customer.phone,
         addr: res.data.customer.address || '',

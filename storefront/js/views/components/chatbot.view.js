@@ -114,10 +114,8 @@ function renderChatbotWidget() {
       </div>
     </div>
 
-    <!-- Quick Prompts Row -->
-    <div class="chatbot-quick-wrap" id="chatbot-quick-wrap" aria-label="Gợi ý câu hỏi nhanh">
-      <!-- Injected dynamically -->
-    </div>
+    <!-- Quick Prompts Row - Ẩn hoàn toàn vì đã chuyển trực tiếp vào đoạn chat -->
+    <div class="chatbot-quick-wrap" id="chatbot-quick-wrap" style="display:none !important" aria-hidden="true"></div>
 
     <!-- Input Form -->
     <form class="chatbot-footer" onsubmit="event.preventDefault(); A.submitChatMessage();">

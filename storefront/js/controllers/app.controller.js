@@ -45,6 +45,10 @@ const A = {
   ...ChatbotController,
 };
 
+if (typeof window !== 'undefined') {
+  window.A = A;
+}
+
 async function storeRoute(r) {
   const m = {
     '': viewHome,
@@ -121,6 +125,20 @@ function finishRouteProgress() {
 let lastPath = null;
 let renderSeq = 0;
 
+window.__RESCUE_MOUNT__ = async function() {
+  window.__APP_MOUNTED__ = true;
+  const r = typeof route === 'function' ? route() : { path: '/', parts: [''], q: {} };
+  try {
+    const inner = await viewHome();
+    const appEl = document.getElementById('app');
+    if (appEl && typeof storeShell === 'function') {
+      appEl.innerHTML = storeShell(inner, r);
+    }
+  } catch(e) {
+    console.warn('[RescueMount] Error handled cleanly:', e);
+  }
+};
+
 async function render() {
   window.__APP_MOUNTED__ = true;
   const mySeq = ++renderSeq;
@@ -134,8 +152,8 @@ async function render() {
   const isNewPage = !lastPath || lastPath !== r.path;
 
   // Cleanup active timers before re-render
-  A.pauseHero();
-  A.pauseTrust();
+  if (A && typeof A.pauseHero === 'function') A.pauseHero();
+  if (A && typeof A.pauseTrust === 'function') A.pauseTrust();
 
   if (isNewPage) {
     startRouteProgress();
@@ -147,19 +165,27 @@ async function render() {
 
   // Nếu tải trang lần đầu, render khung skeleton ngay lập tức tránh màn hình trắng
   if (!lastPath) {
-    $('#app').innerHTML = storeShell(
-      `<div class="wrap" style="padding:20px 16px 60px">
-        <div class="skel" style="height:28px;width:240px;margin-bottom:16px"></div>
-        ${renderSkeletonGrid(4)}
-      </div>`,
-      r,
-    );
+    try {
+      const appEl = document.getElementById('app');
+      if (appEl) {
+        appEl.innerHTML = storeShell(
+          `<div class="wrap" style="padding:20px 16px 60px">
+            <div class="skel" style="height:28px;width:240px;margin-bottom:16px"></div>
+            ${typeof renderSkeletonGrid === 'function' ? renderSkeletonGrid(4) : ''}
+          </div>`,
+          r,
+        );
+      }
+    } catch (e) {
+      console.warn('[Storefront] Skeleton render warn:', e);
+    }
   }
 
   try {
     const inner = await storeRoute(r);
     if (mySeq !== renderSeq) return;
     $('#app').innerHTML = storeShell(inner, r);
+    A.watchPayment(document.querySelector('[data-payment-order]')?.dataset.paymentOrder || null);
   } catch (err) {
     if (mySeq !== renderSeq) return;
     const errHtml = `<div class="wrap" style="padding:60px 16px">
@@ -365,17 +391,19 @@ if (API.getToken() && db.session) {
   API.get('/auth/me', true)
     .then((res) => {
       if (res && res.data) {
-        db.session.name = res.data.full_name;
+        db.session.name = res.data.name || res.data.full_name || db.session.name;
         db.session.email = res.data.email;
         db.session.phone = res.data.phone;
         db.session.addr = res.data.address;
         save();
       }
     })
-    .catch(() => {
-      API.setToken(null);
-      db.session = null;
-      save();
+    .catch((err) => {
+      if (err && err.status === 401) {
+        API.setToken(null);
+        db.session = null;
+        save();
+      }
     });
 }
 

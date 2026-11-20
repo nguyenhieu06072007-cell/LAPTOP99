@@ -3,86 +3,62 @@
    ========================================================================== */
 
 const CheckoutController = {
-  async selectCheckoutPay(method) {
+  selectCheckoutPay(method) {
     cache.checkoutPay = method;
-    const container = $('#checkout-qr-container');
-    if (!container) {
-      render();
-      return;
-    }
-    if (method === 'bank' || method === 'card') {
-      const c = await calcCart();
-      const u = me();
-      const memo = `LAPTOP99 ${u && u.phone ? u.phone : 'THANHTOAN'}`;
-      container.innerHTML = renderBankQrBox(c.total, memo, '');
-    } else {
-      container.innerHTML = '';
-    }
+    const hint = $('#checkout-qr-hint');
+    if (hint) hint.hidden = !isQrPayment(method);
   },
 
-  selectQrBank(bankKey, amount, memo, orderCode = '') {
-    cache.qrBank = bankKey;
-    const box = $('#vietqr-box');
-    if (box) {
-      box.outerHTML = renderBankQrBox(amount, memo, orderCode);
-    } else {
-      render();
-    }
+  openBankQrModal(orderCode) {
+    location.hash = '#/order-done/' + encodeURIComponent(orderCode);
   },
 
-  openBankQrModal(orderCode, amount = 0, payMethod = 'bank') {
-    const memo = `LAPTOP99 ${orderCode}`;
-    modal(
-      mHead('Cổng Thanh Toán Mã QR Ngân Hàng (VietQR Napas 247)', `Đơn hàng: ${orderCode} · Tự động điền số tiền & nội dung`) +
-        renderBankQrBox(amount, memo, orderCode),
-      true,
-    );
-  },
+  paymentPoll: null,
 
-  async confirmQrPayment(orderCode) {
-    const btn = $('#btn-confirm-qr');
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = 'Đang xác nhận giao dịch...';
-    }
-    const bankKey = cache.qrBank || 'MB';
-    const b = BANK_ACCOUNTS[bankKey] || BANK_ACCOUNTS.MB;
-    try {
-      const res = await (typeof OrderService !== 'undefined'
-        ? OrderService.confirmPayment(orderCode)
-        : API.post(`/orders/${orderCode}/confirm-payment`, {
-            bank_info: `${b.short} - ${b.acc}`,
-          }));
-      if (Array.isArray(db.orders)) {
-        const ord = db.orders.find((x) => (x.code || x.id) === orderCode);
-        if (ord) {
-          ord.payment_verification = 'pending_verification';
-          save();
+  watchPayment(orderCode) {
+    if (this.paymentPoll?.orderCode === orderCode) return;
+    clearTimeout(this.paymentPoll?.timer);
+    this.paymentPoll = null;
+    if (!orderCode || !API.getToken()) return;
+
+    const payment = { orderCode, hash: location.hash, timer: null };
+    this.paymentPoll = payment;
+    const isCurrent = () => this.paymentPoll === payment && location.hash === payment.hash;
+    const checkPayment = async () => {
+      if (!isCurrent()) return;
+
+      try {
+        const { data } = await OrderService.getPaymentStatus(orderCode);
+        if (!isCurrent()) return;
+        if (data.status === 'cancelled') {
+          this.watchPayment(null);
+          await render();
+          return;
         }
-      }
-      if (Array.isArray(cache.myOrders)) {
-        const ord = cache.myOrders.find((x) => (x.code || x.id) === orderCode);
-        if (ord) ord.payment_verification = 'pending_verification';
-      }
-      closeModal();
-      toast(res.message || 'Đã xác nhận thanh toán QR ngân hàng thành công!');
-      render();
-    } catch (err) {
-      if (Array.isArray(db.orders)) {
-        const ord = db.orders.find((x) => (x.code || x.id) === orderCode);
-        if (ord) {
-          ord.payment_verification = 'pending_verification';
-          save();
+        if (data.payment_status === 'paid') {
+          this.watchPayment(null);
+          toast('Thanh toán thành công!');
+          location.replace('#/account?tab=orders&order=' + encodeURIComponent(orderCode));
+          return;
         }
+      } catch (err) {
+        if (!isCurrent()) return;
+        const status = $('#payment-live-status');
+        if (err.status === 401 || err.status === 404) {
+          this.watchPayment(null);
+          if (status) status.textContent = err.message;
+          return;
+        }
+        if (status) status.textContent = 'Đang kết nối lại để kiểm tra thanh toán…';
+        payment.timer = setTimeout(checkPayment, 5000);
+        return;
       }
-      if (Array.isArray(cache.myOrders)) {
-        const ord = cache.myOrders.find((x) => (x.code || x.id) === orderCode);
-        if (ord) ord.payment_verification = 'pending_verification';
-      }
-      closeModal();
-      toast('Đã ghi nhận yêu cầu xác nhận chuyển khoản!');
-      render();
-    }
+
+      const status = $('#payment-live-status');
+      if (status) status.textContent = 'Đang chờ ngân hàng xác nhận thanh toán…';
+      payment.timer = setTimeout(checkPayment, 3000);
+    };
+    checkPayment();
   },
 
   async place() {
@@ -149,10 +125,11 @@ const CheckoutController = {
         ? OrderService.createOrder(payload)
         : API.post('/orders', payload));
       const o = res.data;
-      cache.lastOrder = o;
+      const orderCode = o.code;
+      cache.lastOrder = { ...o, name: n, phone: ph, address: ad };
       if (!Array.isArray(db.orders)) db.orders = [];
-      if (!db.orders.some((x) => (x.code || x.id) === (o.code || o.id))) {
-        db.orders.unshift(o);
+      if (!db.orders.some((x) => (x.code || x.id) === orderCode)) {
+        db.orders.unshift(cache.lastOrder);
       }
       db.cart = [];
       db.cartCoupon = '';
@@ -160,70 +137,13 @@ const CheckoutController = {
       u.phone = ph;
       u.addr = ad;
       save();
-      toast('Đặt hàng thành công!');
-      const orderCode = o.code || o.id;
-      location.hash = '#/order-done/' + orderCode;
-      if (pay === 'bank' || pay === 'card') {
-        setTimeout(() => {
-          A.openBankQrModal(orderCode, o.total || o.totalAmount, pay);
-        }, 250);
-      }
+      location.hash = '#/order-done/' + encodeURIComponent(orderCode);
     } catch (err) {
-      console.warn('API createOrder failed, fallback to local storage:', err);
-      const calc = await calcCart();
-      const fallbackCode = 'DH-' + Math.floor(100000 + Math.random() * 900000);
-      const fallbackOrder = {
-        id: fallbackCode,
-        code: fallbackCode,
-        name: n,
-        phone: ph,
-        address: ad,
-        shipping_address: ad,
-        notes: val('co-note') || '',
-        payment_method: pay,
-        pay: pay,
-        paid: false,
-        raw_status: 'pending',
-        status: 'pending',
-        status_text: 'Chờ xác nhận',
-        total: calc.total,
-        totalAmount: calc.total,
-        subtotal: calc.sub,
-        discount: calc.disc,
-        coupon: validCoupon,
-        items: db.cart.map((i) => {
-          const p = P(i.pid) || {};
-          return {
-            pid: i.pid,
-            product_id: i.pid,
-            name: p.name || 'Laptop chính hãng',
-            price: p.price || 0,
-            unit_price: p.price || 0,
-            qty: i.qty,
-            quantity: i.qty,
-            line_total: (p.price || 0) * i.qty,
-            sku: p.sku || 'LAPTOP99',
-            serials: ['CHỜ XUẤT KHO'],
-          };
-        }),
-        at: Date.now(),
-        created_at: Date.now(),
-      };
-      cache.lastOrder = fallbackOrder;
-      if (!Array.isArray(db.orders)) db.orders = [];
-      db.orders.unshift(fallbackOrder);
-      db.cart = [];
-      db.cartCoupon = '';
-      db.cartTI = '';
-      u.phone = ph;
-      u.addr = ad;
-      save();
-      toast('Đặt hàng thành công!');
-      location.hash = '#/order-done/' + fallbackCode;
-      if (pay === 'bank' || pay === 'card') {
-        setTimeout(() => {
-          A.openBankQrModal(fallbackCode, fallbackOrder.total, pay);
-        }, 250);
+      toast(err.message || 'Không thể tạo đơn hàng. Vui lòng thử lại.', 1);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Xác nhận đặt hàng';
       }
     }
   },

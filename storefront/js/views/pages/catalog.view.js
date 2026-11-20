@@ -572,6 +572,267 @@ async function viewProduct(r) {
   </div>`;
 }
 
+function getAIComparisonAnalysis(L, currentNeed = 'all') {
+  if (!L || L.length < 2) return null;
+
+  const analysis = L.map((p) => {
+    const rawGpu = (p.gpu || '').toLowerCase();
+    const rawCpu = (p.cpu || '').toLowerCase();
+    const rawRam = parseInt(p.ram, 10) || 16;
+    const rawWeight = parseFloat(p.weight) || 1.8;
+    const isGamingGpu = rawGpu.includes('rtx') || rawGpu.includes('gtx') || rawGpu.includes('rx') || rawGpu.includes('radeon');
+    const isDedicated = isGamingGpu;
+
+    let gamingScore = 55;
+    if (rawGpu.includes('4080') || rawGpu.includes('4090')) gamingScore = 98;
+    else if (rawGpu.includes('4070')) gamingScore = 94;
+    else if (rawGpu.includes('4060')) gamingScore = 88;
+    else if (rawGpu.includes('4050') || rawGpu.includes('3050')) gamingScore = 78;
+    else if (p.brand === 'Apple') gamingScore = 74;
+    else if (rawGpu.includes('arc') || rawGpu.includes('iris') || rawGpu.includes('adreno')) gamingScore = 58;
+
+    let workScore = 70;
+    if (rawRam >= 32) workScore += 18;
+    else if (rawRam >= 16) workScore += 12;
+    if (rawCpu.includes('ultra') || rawCpu.includes('i7') || rawCpu.includes('i9') || rawCpu.includes('ryzen 7') || rawCpu.includes('m3') || rawCpu.includes('m2') || rawCpu.includes('snapdragon')) workScore += 10;
+    workScore = Math.min(99, workScore);
+
+    let mobilityScore = 70;
+    if (rawWeight <= 1.25) mobilityScore = 98;
+    else if (rawWeight <= 1.45) mobilityScore = 92;
+    else if (rawWeight <= 1.75) mobilityScore = 80;
+    else if (rawWeight <= 2.1) mobilityScore = 68;
+    else mobilityScore = 55;
+
+    const rawScreen = (p.screen || '').toLowerCase();
+    let displayScore = 75;
+    if (rawScreen.includes('oled') || rawScreen.includes('retina') || rawScreen.includes('2.8k') || rawScreen.includes('3k') || rawScreen.includes('4k')) displayScore = 96;
+    else if (rawScreen.includes('144hz') || rawScreen.includes('165hz') || rawScreen.includes('120hz') || rawScreen.includes('fhd+')) displayScore = 88;
+
+    const pros = [];
+    const cons = [];
+
+    if (isDedicated) pros.push(`Card đồ họa rời ${p.gpu || 'hiệu năng cao'}, chơi mượt game 3D & render video đồ họa`);
+    else if (p.brand === 'Apple') pros.push('Hệ điều hành macOS tối ưu siêu mượt, thời lượng pin cả ngày');
+    else pros.push('Tiết kiệm điện năng, máy vận hành êm ái và mát mẻ');
+
+    if (rawRam >= 16) pros.push(`RAM ${rawRam}GB đa nhiệm thoải mái hơn 30 tabs Chrome & mở IDE cùng lúc`);
+    else cons.push('RAM 8GB có thể bị giới hạn khi mở nhiều ứng dụng đồ họa nặng');
+
+    if (rawWeight <= 1.4) pros.push(`Trọng lượng siêu nhẹ chỉ ${p.weight}, rất tiện mang đi học, đi làm hoặc cafe`);
+    else if (rawWeight >= 2.0) cons.push(`Máy nặng ${p.weight}, củ sạc lớn khi mang balo đường dài`);
+
+    if (rawScreen.includes('120hz') || rawScreen.includes('144hz') || rawScreen.includes('165hz')) {
+      pros.push(`Màn hình tần số quét cao ${p.screen}, cuộn lướt và hiển thị đồ họa mượt mà`);
+    }
+
+    if (!isDedicated && (p.cat === '2' || (p.catName || '').toLowerCase().includes('gaming'))) {
+      cons.push('Không có card rời, khó chơi các tựa game AAA nặng');
+    }
+
+    return {
+      product: p,
+      gamingScore,
+      workScore,
+      mobilityScore,
+      displayScore,
+      pros: pros.slice(0, 3),
+      cons: cons.length ? cons.slice(0, 2) : ['Giá niêm yết có thể biến động theo chương trình'],
+    };
+  });
+
+  const minPrice = Math.min(...analysis.map((a) => a.product.price));
+  const maxPrice = Math.max(...analysis.map((a) => a.product.price));
+
+  analysis.forEach((a) => {
+    let score = 80;
+    let reason = '';
+    if (currentNeed === 'gaming') {
+      score = Math.round(a.gamingScore * 0.65 + a.workScore * 0.2 + a.displayScore * 0.15);
+      reason = a.product.gpu && (a.product.gpu.includes('RTX') || a.product.gpu.includes('GTX'))
+        ? `Trang bị card đồ họa rời ${a.product.gpu} cho sức mạnh đồ họa và FPS vượt trội so với card on-board.`
+        : `Đáp ứng tốt nhu cầu game eSports và giải trí đa phương tiện cơ bản.`;
+    } else if (currentNeed === 'office') {
+      score = Math.round(a.workScore * 0.55 + a.mobilityScore * 0.25 + a.displayScore * 0.2);
+      reason = `Bộ nhớ RAM ${a.product.ram} và CPU ${a.product.cpu} xử lý đa nhiệm, code & mở hàng chục file Excel nặng cực kỳ trơn tru.`;
+    } else if (currentNeed === 'student') {
+      const pricePenalty = maxPrice > minPrice ? ((a.product.price - minPrice) / (maxPrice - minPrice)) * 25 : 0;
+      score = Math.round(a.mobilityScore * 0.55 + a.workScore * 0.25 + (25 - pricePenalty));
+      reason = `Trọng lượng lý tưởng chỉ ${a.product.weight}, pin tối ưu cực tốt cho nhu cầu mang lên giảng đường, cafe học tập cả ngày.`;
+    } else if (currentNeed === 'budget') {
+      const priceFactor = maxPrice > minPrice ? (1 - (a.product.price - minPrice) / (maxPrice - minPrice)) : 1;
+      score = Math.round(priceFactor * 45 + a.workScore * 0.3 + a.mobilityScore * 0.25);
+      reason = `Giá bán tốt nhất chỉ ${vnd(a.product.price)}, tiết kiệm chi phí tối đa mà vẫn đảm bảo hiệu năng bền bỉ trong phân khúc.`;
+    } else {
+      score = Math.round(a.workScore * 0.3 + a.gamingScore * 0.25 + a.mobilityScore * 0.25 + a.displayScore * 0.2);
+      reason = `Cân bằng xuất sắc giữa sức mạnh CPU, đồ họa, độ mỏng nhẹ ${a.product.weight} và giá thành hợp lý.`;
+    }
+    score = Math.min(99, Math.max(65, score));
+    a.suitabilityScore = score;
+    a.reasonText = reason;
+  });
+
+  const sorted = [...analysis].sort((x, y) => y.suitabilityScore - x.suitabilityScore);
+  const winner = sorted[0];
+
+  return { analysis, winner, currentNeed };
+}
+
+function renderAIComparisonAnalysis(L, aiData) {
+  if (!aiData || !aiData.analysis) return '';
+
+  const { analysis, winner, currentNeed } = aiData;
+  const NEEDS = [
+    { key: 'all', label: '✨ Toàn diện' },
+    { key: 'gaming', label: '🎮 Game & Đồ họa 3D' },
+    { key: 'office', label: '💼 Lập trình / Văn phòng' },
+    { key: 'student', label: '🎒 Sinh viên / Mỏng nhẹ' },
+    { key: 'budget', label: '💰 Tiết kiệm ngân sách' },
+  ];
+
+  return `
+    <div class="card" style="margin-bottom:20px;border:1.5px solid #3b82f6;background:linear-gradient(180deg, rgba(59,130,246,0.05) 0%, rgba(255,255,255,0) 100%);padding:20px 22px;border-radius:14px;box-shadow:0 4px 20px rgba(59,130,246,0.08)">
+      <div class="row between" style="margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div class="row" style="gap:10px;align-items:center">
+          <div style="width:38px;height:38px;border-radius:10px;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.25rem;box-shadow:0 4px 12px rgba(37,99,235,0.3)">
+            🤖
+          </div>
+          <div>
+            <div style="font-size:1.05rem;font-weight:800;color:var(--fg);display:flex;align-items:center;gap:8px">
+              <span>LAPTOP99 AI Engine · Tư Vấn &amp; Đề Xuất Theo Nhu Cầu</span>
+              <span class="bd ok" style="font-size:10px;padding:2px 7px;font-weight:700">Live AI Advisor</span>
+            </div>
+            <div class="muted sm" style="font-size:12px;margin-top:2px">Chọn nhu cầu của bạn để AI phân tích thông số thực tế và tự động gợi ý mẫu laptop phù hợp nhất:</div>
+          </div>
+        </div>
+        <button class="btn sm" onclick="A.openChat('Hãy so sánh chi tiết ưu nhược điểm giữa ${L.map((p) => p.name).join(' và ')} cho tôi')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-weight:700">
+          💬 Hỏi thêm Trợ lý AI
+        </button>
+      </div>
+
+      <!-- Persona / Need Filter Tabs -->
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:18px;background:rgba(59,130,246,0.06);padding:10px 14px;border-radius:10px;border:1px solid rgba(59,130,246,0.15);align-items:center">
+        <span style="font-size:12px;font-weight:700;color:var(--fg);margin-right:4px">🎯 Nhu cầu của bạn:</span>
+        ${NEEDS.map(
+          (n) => `
+          <button class="btn sm ${currentNeed === n.key ? 'a' : 'secondary'}" onclick="A.setCompareNeed('${n.key}')" style="border-radius:20px;font-weight:700;font-size:12px;padding:5px 13px;transition:all .15s ease">
+            ${n.label}
+          </button>
+        `,
+        ).join('')}
+      </div>
+
+      <!-- AI Recommended Winner Box -->
+      <div id="ai-recommendation-box" style="background:linear-gradient(135deg, rgba(34,197,94,0.07) 0%, rgba(255,255,255,1) 50%, rgba(16,185,129,0.05) 100%);border:2px solid #22c55e;border-radius:14px;padding:18px 20px;margin-bottom:20px;box-shadow:0 6px 24px rgba(34,197,94,0.12)">
+        <div class="row between" style="align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+          <div class="row" style="gap:8px;align-items:center">
+            <span style="background:linear-gradient(135deg, #22c55e, #16a34a);color:#fff;font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(34,197,94,0.3)">
+              🏆 AI GỢI Ý CHỌN MUA
+            </span>
+            <span style="font-size:12px;font-weight:800;color:#166534;background:#dcfce7;padding:3px 10px;border-radius:16px">
+              Độ phù hợp: <b style="font-size:13px">${winner.suitabilityScore}%</b> (${NEEDS.find((n) => n.key === currentNeed)?.label || 'Toàn diện'})
+            </span>
+          </div>
+          <div class="muted sm" style="font-size:11px">
+            ⚡ Phân tích trực tiếp từ cấu hình kho hàng LAPTOP99
+          </div>
+        </div>
+
+        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          <div class="cmp-img-box" style="width:130px;height:105px;flex-shrink:0;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:6px;box-shadow:0 2px 6px rgba(0,0,0,0.04)">
+            ${pimg(winner.product, 'cmp-img')}
+          </div>
+          <div style="flex:1;min-width:260px">
+            <div style="font-size:1.1rem;font-weight:800;color:var(--fg);margin-bottom:3px">
+              <a href="#/product/${winner.product.id}" style="color:inherit;text-decoration:none">${esc(winner.product.name)}</a>
+            </div>
+            <div style="font-size:1.2rem;font-weight:800;color:var(--promo);margin-bottom:8px">
+              ${vnd(winner.product.price)}
+            </div>
+            <div style="background:rgba(255,255,255,0.9);border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:12px;line-height:1.6;color:#334155;margin-bottom:12px">
+              <div style="font-weight:700;color:#166534;margin-bottom:2px">💡 Đánh giá của AI:</div>
+              <div>${winner.reasonText}</div>
+              <div style="color:#059669;font-weight:600;margin-top:3px">✓ ${winner.pros[0] || 'Cấu hình tối ưu trong phân khúc'}</div>
+              ${winner.pros[1] ? `<div style="color:#059669;font-weight:600">✓ ${winner.pros[1]}</div>` : ''}
+            </div>
+            <div class="row" style="gap:10px;flex-wrap:wrap">
+              <button class="btn a" onclick="A.add('${winner.product.id}')" style="background:#16a34a;border-color:#16a34a;font-weight:800;padding:8px 18px">
+                ${ic('cart', 15)} Chọn mua máy này (Thêm vào giỏ)
+              </button>
+              <button class="btn secondary" onclick="A.openChat('Hãy tư vấn chi tiết hơn lý do tôi nên chọn ${esc(winner.product.name)} thay vì các máy khác')" style="font-weight:700;font-size:12px">
+                💬 Hỏi thêm Trợ lý AI
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Radar Comparison Score Bars -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;margin-bottom:16px">
+        ${analysis.map((a) => {
+          const isWin = a.product.id === winner.product.id;
+          return `
+          <div style="background:var(--bg-card, #fff);border:${isWin ? '2px solid #22c55e' : '1px solid var(--border)'};border-radius:12px;padding:16px;position:relative;box-shadow:${isWin ? '0 4px 16px rgba(34,197,94,0.12)' : 'none'}">
+            ${isWin ? `<div style="position:absolute;top:-10px;right:14px;background:#22c55e;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;text-transform:uppercase">Khuyên chọn</div>` : ''}
+            <div style="font-weight:800;font-size:.92rem;color:var(--fg);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px">${esc(a.product.name)}</span>
+              <span style="color:var(--promo);font-size:.9rem">${vnd(a.product.price)}</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:11px">
+              <div>
+                <div class="row between muted" style="margin-bottom:3px">
+                  <span>🎮 Gaming &amp; Đồ họa 3D</span>
+                  <b style="color:var(--fg)">${a.gamingScore}/100</b>
+                </div>
+                <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${a.gamingScore}%;background:${a.gamingScore > 80 ? '#10b981' : a.gamingScore > 65 ? '#3b82f6' : '#f59e0b'};border-radius:99px"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="row between muted" style="margin-bottom:3px">
+                  <span>💼 Đa nhiệm &amp; Lập trình</span>
+                  <b style="color:var(--fg)">${a.workScore}/100</b>
+                </div>
+                <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${a.workScore}%;background:${a.workScore > 80 ? '#10b981' : '#3b82f6'};border-radius:99px"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="row between muted" style="margin-bottom:3px">
+                  <span>🚀 Tính di động &amp; Pin</span>
+                  <b style="color:var(--fg)">${a.mobilityScore}/100</b>
+                </div>
+                <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${a.mobilityScore}%;background:${a.mobilityScore > 80 ? '#10b981' : a.mobilityScore > 65 ? '#3b82f6' : '#f59e0b'};border-radius:99px"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="row between muted" style="margin-bottom:3px">
+                  <span>🖥️ Màn hình &amp; Hiển thị</span>
+                  <b style="color:var(--fg)">${a.displayScore}/100</b>
+                </div>
+                <div style="height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${a.displayScore}%;background:#8b5cf6;border-radius:99px"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:6px;font-size:11px">
+              ${a.pros.map((pr) => `<div style="color:#059669;display:flex;align-items:flex-start;gap:6px"><span>✓</span><span>${esc(pr)}</span></div>`).join('')}
+              ${a.cons.map((cn) => `<div style="color:#dc2626;display:flex;align-items:flex-start;gap:6px"><span>✕</span><span>${esc(cn)}</span></div>`).join('')}
+            </div>
+          </div>
+        `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
 async function viewCompare() {
   const pids = db.compare || [];
   if (!pids.length) {
@@ -601,6 +862,10 @@ async function viewCompare() {
     return `<div class="wrap pg-head"><h1>So sánh</h1><div class="card center" style="margin-top:20px;padding:50px"><p class="muted">Không tìm thấy sản phẩm cần so sánh.</p><a class="btn a" href="#/products">Chọn laptop</a></div></div>`;
   }
 
+  const currentNeed = cache.compareNeed || 'all';
+  const aiData = getAIComparisonAnalysis(L, currentNeed);
+  const winnerId = aiData && aiData.winner ? aiData.winner.product.id : null;
+
   const rows = [
     ['Mức giá hiện tại', (p) => vnd(p.price)],
     ['Thương hiệu', (p) => p.brand],
@@ -627,23 +892,30 @@ async function viewCompare() {
         <button class="btn sm danger" onclick="db.compare=[];save();render()">Xóa tất cả</button>
       </div>
     </div>
+    ${renderAIComparisonAnalysis(L, aiData)}
     <div class="card tw" style="padding:0;overflow:hidden">
       <table class="tbl" style="min-width:640px">
         <tr>
           <th style="width:180px">Thông số</th>
-          ${L.map(
-            (p) => `
-            <th style="width:${80 / L.length}%;text-align:center;text-transform:none">
-              <div style="width:130px;margin:0 auto 8px">${pimg(p, 'cmp-img')}</div>
+          ${L.map((p) => {
+            const isWin = p.id === winnerId;
+            return `
+            <th style="width:${80 / L.length}%;text-align:center;text-transform:none;${isWin ? 'background:rgba(34,197,94,0.05);border-top:3px solid #22c55e;' : ''}">
+              <div style="min-height:24px;margin-bottom:6px">
+                ${isWin ? `<span class="bd ok" style="background:#22c55e;color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:12px;box-shadow:0 2px 6px rgba(34,197,94,0.35)">⭐ AI Khuyên Chọn</span>` : ''}
+              </div>
+              <div class="cmp-img-box" style="width:140px;height:110px;max-width:100%;margin:0 auto 10px;background:#ffffff;display:flex;align-items:center;justify-content:center;padding:8px;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.04)">
+                ${pimg(p, 'cmp-img')}
+              </div>
               <a href="#/product/${p.id}" style="color:var(--fg);font-size:.88rem;font-weight:700;white-space:normal;display:block;min-height:2.4em">${esc(p.name)}</a>
               <div style="color:var(--promo);font-size:1rem;font-weight:800;margin:6px 0">${vnd(p.price)}</div>
               <div class="row" style="justify-content:center;gap:6px;margin-top:6px">
-                <button class="btn a sm" onclick="A.add('${p.id}')">${ic('cart', 13)} Thêm giỏ</button>
+                <button class="btn a sm" onclick="A.add('${p.id}')" style="${isWin ? 'background:#16a34a;border-color:#16a34a;font-weight:800' : ''}">${ic('cart', 13)} Thêm giỏ</button>
                 <button class="btn danger sm" onclick="A.cmp('${p.id}')">Bỏ</button>
               </div>
             </th>
-          `,
-          ).join('')}
+          `;
+          }).join('')}
         </tr>
         ${rows
           .map((r) => {
@@ -651,7 +923,10 @@ async function viewCompare() {
             const isDiff = L.length > 1 && new Set(vals).size > 1;
             return `<tr class="${cache.diffOnly && isDiff ? 'diff-row' : ''}">
             <td class="muted" style="font-weight:600">${esc(r[0])}</td>
-            ${L.map((p) => `<td style="text-align:center;font-weight:${isDiff && cache.diffOnly ? '700' : '500'}">${esc(r[1](p))}</td>`).join('')}
+            ${L.map((p) => {
+              const isWinCol = p.id === winnerId;
+              return `<td style="text-align:center;font-weight:${isDiff && cache.diffOnly ? '700' : '500'};${isWinCol ? 'background:rgba(34,197,94,0.03);' : ''}">${esc(r[1](p))}</td>`;
+            }).join('')}
           </tr>`;
           })
           .join('')}

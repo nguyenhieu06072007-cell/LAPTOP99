@@ -56,17 +56,29 @@ const cache = {
 };
 
 async function ensureCategories() {
-  if (cache.cats.length) return cache.cats;
+  if (cache.cats && cache.cats.length) return cache.cats;
   try {
     const res = await (typeof ProductService !== 'undefined' ? ProductService.getCategories() : API.get('/categories', true));
-    cache.cats = (res.data || []).map((c) => ({
-      id: String(c.id),
-      name: c.name,
-      slug: c.slug,
-      desc: c.description || 'Laptop chính hãng phân phối tại Laptop99',
-      count: Number(c.product_count || 0),
-    }));
+    if (res && Array.isArray(res.data) && res.data.length) {
+      cache.cats = res.data.map((c) => ({
+        id: String(c.id),
+        name: c.name,
+        slug: c.slug,
+        desc: c.description || 'Laptop chính hãng phân phối tại Laptop99',
+        count: Number(c.product_count || 0),
+      }));
+    }
   } catch (e) {}
+  if (!cache.cats || !cache.cats.length) {
+    cache.cats = [
+      { id: '1', name: 'Laptop Văn Phòng', slug: 'laptop-van-phong', desc: 'Máy gọn nhẹ, pin trâu', count: 12 },
+      { id: '2', name: 'Laptop Gaming', slug: 'laptop-gaming', desc: 'Cấu hình khủng, màn hình tần số quét cao', count: 18 },
+      { id: '3', name: 'MacBook & Mỏng Nhẹ', slug: 'macbook-mong-nhe', desc: 'Mỏng nhẹ cao cấp, màn hình sắc nét', count: 14 },
+      { id: '4', name: 'Đồ Họa - Kỹ Thuật', slug: 'do-hoa-ky-thuat', desc: 'Card rời mạnh mẽ, chuẩn màu đồ họa', count: 10 },
+      { id: '5', name: 'Laptop Sinh Viên', slug: 'laptop-sinh-vien', desc: 'Giá tốt, độ bền cao, bảo hành dài hạn', count: 16 },
+      { id: '6', name: 'Laptop Doanh Nhân', slug: 'laptop-doanh-nhan', desc: 'Bảo mật vân tay, thiết kế sang trọng', count: 8 },
+    ];
+  }
   return cache.cats;
 }
 

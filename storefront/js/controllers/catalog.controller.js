@@ -236,5 +236,14 @@ const CatalogController = {
     save();
     render();
   },
+
+  setCompareNeed(need) {
+    cache.compareNeed = need;
+    render();
+    setTimeout(() => {
+      const el = document.getElementById('ai-recommendation-box');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  },
 };
 
