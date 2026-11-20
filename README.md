@@ -2,7 +2,7 @@
 
 > **Khoa Công nghệ Thông tin — Đại học CMC**  
 > **Dự án:** Laptop99 — Hệ thống bán lẻ Laptop chính hãng  
-> **Sinh viên thực hiện:** **Nguyễn Tiến Đạt** (Lớp: `ICT 4` — MSV: `BSE250011`)  
+> **Sinh viên thực hiện:** **Nguyễn Tiến Đạt** (Lớp: `N04` — MSV: `BSE250011`)  
 > **Vai trò phân công:** **Database Engineer: thiết kế CSDL, migration, dữ liệu mẫu**
 
 ---
@@ -12,7 +12,7 @@
 Nhánh này chứa toàn bộ tài nguyên và mã nguồn **Cơ sở dữ liệu (Database)** của dự án:
 * `laptop_shop.sql`: Kịch bản CSDL đầy đủ **21 bảng dữ liệu** (chuẩn hóa 3NF):
   - Bảng sản phẩm & danh mục: `products`, `product_images`, `categories`, `brands`.
-  - Bảng bán hàng & đơn hàng: `orders`, `order_items`, `customers`, `coupons`.
+  - Bảng bán hàng & đơn hàng: `orders`, `order_items`, `customers`, `promotions`.
   - Bảng quản trị & nghiệp vụ: `banners`, `product_reviews`, `news`, `audit_logs`, `password_resets`.
   - Chuẩn mã hóa: `SET NAMES utf8mb4;` và collation `utf8mb4_unicode_ci` triệt tiêu lỗi font tiếng Việt.
 * `scripts/`: Bộ kịch bản di chuyển và nạp dữ liệu:
@@ -24,3 +24,5 @@ Nhánh này chứa toàn bộ tài nguyên và mã nguồn **Cơ sở dữ liệ
 1. Mở MySQL Workbench hoặc DBeaver / Navicat.
 2. Tạo database: `CREATE DATABASE laptop_shop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
 3. Chạy file `laptop_shop.sql` để nạp toàn bộ cấu trúc 21 bảng và dữ liệu mẫu.
+
+Để chạy các script Node.js với đầy đủ phụ thuộc, dùng nhánh `main`, vào `laptop-shop-admin-backend/laptop-shop-admin-backend/`, chạy `npm ci`, cấu hình kết nối MySQL thử nghiệm rồi gọi `node src/scripts/<tên-script>.js`.
