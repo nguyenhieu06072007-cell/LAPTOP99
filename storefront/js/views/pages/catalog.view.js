@@ -427,7 +427,7 @@ async function viewProduct(r) {
 
         <div class="row" style="margin-top:12px;gap:10px">
           <span class="pd-rate-badge">${rate(p)} ★</span>
-          <span class="sm muted">(${p.reviews.length} đánh giá khách hàng · Đã bán ${p.soldCount} máy)</span>
+          <span class="sm muted">(${p.reviews.length} đánh giá khách hàng · ${p.stock > 0 ? 'Còn ' + p.stock + ' máy' : 'Hết hàng'} · Đã bán ${p.soldCount} máy)</span>
         </div>
 
         <div class="pd-price-block">
