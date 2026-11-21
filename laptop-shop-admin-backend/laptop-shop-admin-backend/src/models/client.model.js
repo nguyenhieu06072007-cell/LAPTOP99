@@ -3,6 +3,8 @@ const { ApiError, generateUniqueCode, addCalendarMonths } = require('../utils/he
 const OrderModel = require('./order.model');
 const OrderService = require('../services/order.service');
 
+const { loadDeliveredSales } = require('./storefront-sales');
+
 const ClientModel = {
   async getActiveCategories() {
     const [rows] = await pool.query(`
@@ -98,7 +100,7 @@ const ClientModel = {
     }
 
     if (q.featured) where.push('p.is_featured = 1');
-    if (q.bestseller) where.push('p.is_bestseller = 1');
+    const rankBySales = q.bestseller === '1' || q.bestseller === 'true' || q.sort === 'bestseller';
     if (q.new) where.push('p.is_new = 1');
 
     let orderBy = 'p.sort_order ASC, p.id DESC';
@@ -106,7 +108,7 @@ const ClientModel = {
     else if (q.sort === 'price_desc' || q.sort === 'desc') orderBy = 'final_price DESC';
     else if (q.sort === 'newest') orderBy = 'p.id DESC';
     else if (q.sort === 'popular') orderBy = 'p.view_count DESC';
-    else if (q.sort === 'bestseller') orderBy = 'p.sold_count DESC';
+
 
     const limit = Math.min(200, Math.max(1, Number(q.limit) || 40));
 
@@ -117,7 +119,7 @@ const ClientModel = {
         c.id AS category_id, c.name AS category, c.slug AS category_slug,
         p.price, p.sale_price, COALESCE(p.sale_price, p.price) AS final_price,
         p.stock_quantity, p.warranty_months, p.short_description, p.description,
-        p.sold_count, p.view_count, p.is_bestseller, p.is_new,
+        p.view_count, p.is_bestseller, p.is_new,
         s.cpu_model, s.cpu_brand, s.ram_gb, s.ram_type, s.storage_gb, s.storage_type,
         s.gpu_model, s.gpu_type, s.screen_size_inch, s.screen_resolution, s.refresh_rate_hz,
         s.weight_kg,
@@ -130,12 +132,15 @@ const ClientModel = {
       LEFT JOIN product_specs s ON s.product_id = p.id
       WHERE ${where.join(' AND ')}
       ORDER BY ${orderBy}
-      LIMIT ?
+      ${rankBySales ? '' : 'LIMIT ?'}
     `;
-    params.push(limit);
+    if (!rankBySales) params.push(limit);
 
-    const [rows] = await pool.query(sql, params);
-    return rows;
+    const [[rows], sold] = await Promise.all([pool.query(sql, params), loadDeliveredSales(pool)]);
+    for (const product of rows) product.sold_count = sold(product);
+    if (!rankBySales) return rows;
+    return rows.filter(p => p.sold_count > 0)
+      .sort((a, b) => b.sold_count - a.sold_count || b.id - a.id).slice(0, limit);
   },
 
   async getProductDetail(idOrSlug) {
@@ -148,7 +153,7 @@ const ClientModel = {
         c.id AS category_id, c.name AS category, c.slug AS category_slug,
         p.price, p.sale_price, COALESCE(p.sale_price, p.price) AS final_price,
         p.stock_quantity, p.warranty_months, p.short_description, p.description,
-        p.sold_count, p.view_count,
+        p.view_count,
         s.cpu_model, s.cpu_brand, s.cpu_cores, s.cpu_threads,
         s.ram_gb, s.ram_type, s.ram_max_gb,
         s.storage_gb, s.storage_type,
@@ -168,6 +173,7 @@ const ClientModel = {
 
     const product = prods[0];
     if (!product) return null;
+    product.sold_count = (await loadDeliveredSales(pool))(product);
 
     pool.query('UPDATE products SET view_count = view_count + 1 WHERE id = ?', [product.id]).catch(() => {});
 
