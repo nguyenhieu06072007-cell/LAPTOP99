@@ -122,7 +122,7 @@ function pcard(p) {
       ${
         d > 0
           ? `<span class="pc-ribbon-left">Giảm ${d}%</span>`
-          : p.isBestseller
+          : p.isBestseller && p.soldCount > 0
           ? `<span class="pc-ribbon-left">Bán chạy</span>`
           : `<span class="pc-ribbon-left">Giá tốt</span>`
       }
@@ -155,9 +155,8 @@ function pcard(p) {
 
       <div class="pc-gift-note">${esc(brandInfo.gift)}</div>
 
-      <div class="pc-sold-bar" title="Số lượng đã bán">
-        <div class="pc-sold-fill" style="width:${Math.min(92, Math.max(38, (Number(p.soldCount || 15) * 4) % 95))}%"></div>
-        <span class="pc-sold-txt">🔥 Đã bán ${p.soldCount || 18} máy</span>
+      <div class="pc-sold-bar">
+        <span class="pc-sold-txt">${p.stock > 0 ? 'Còn ' + p.stock + ' máy' : 'Hết hàng'} · Đã bán ${p.soldCount ?? 0} máy</span>
       </div>
 
       <div class="pc-meta">
